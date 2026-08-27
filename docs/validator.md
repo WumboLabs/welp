@@ -14,16 +14,16 @@ The canonical new-campaign validator.
 
 ## Required manifest fields
 
-- `protocol_snapshot.id` — must match `^welp-next-snapshot-YYYY-MM-DD-...$`
+- `protocol_snapshot.id` — new campaigns: `^welp-next-snapshot-YYYY-MM-DD-...$`. Frozen historical campaigns may retain their original snapshot identifiers.
 - `serving_profile.gate_baseline_reasoning_state` — REASONING_OFF | ON | NOT_APPLICABLE
 - `serving_profile.reasoning_requested` and `serving_profile.reasoning_effective` (both required)
 - `phase2_harness_version` (string)
 - `generation_evidence[]` — absolute paths; COMPLETE entries must have sha256 + rows; INVALIDATED entries must have reason
-- `contracts` — keys must start with `welp-`
+- `contracts` — new campaigns: keys must start with `welp-`
 
 ## Required preflight fields
 
-- `preflight` const — `welp-preflight`
+- `preflight` const — `welp-preflight` (new campaigns)
 - `protocol.snapshot_id` — same pattern as manifest
 - `protocol.welp_status` — `DRAFT` (until v1.0)
 - `publication.localmaxxing_auth_status` — READY | AUTH_BLOCKED | CLI_INCOMPATIBLE | NOT_APPLICABLE
@@ -33,7 +33,7 @@ The canonical new-campaign validator.
 
 - **N01** snapshot id pattern mismatch.
 - **N02** preflight const invalid.
-- **N03** silently rewritten legacy manifest: welp-* snapshot_id referencing only legacy contracts.
+- **N03** current-looking snapshot_id whose evidence still references only frozen historical contracts.
 - M01–M11 carried over from `validate_campaign_v2.py` 0.2.0-draft.
 
 ## Usage
@@ -43,6 +43,6 @@ python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
 python3 validate_campaign_welp.py selftest           # run embedded 5-fixture suite
 ```
 
-## Backwards compatibility
+## Frozen historical campaigns
 
-The WELP validator is a strict superset of the frozen `validate_campaign_v2.py` (0.2.0-draft). Historical campaigns continue to validate against either validator; new WELP campaigns validate against `validate_campaign_welp.py`.
+The validator accepts frozen historical campaign artifacts where needed (conformance filename, snapshot id, contract prefix, preflight const). New campaigns must use WELP identifiers. Do not rewrite frozen evidence to match new names.

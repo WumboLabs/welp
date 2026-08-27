@@ -20,6 +20,6 @@ lab-records/<model-slug>/welp-<YYYY-MM-DD>/
 
 No model binaries ever. Public/private eligibility per artifact_index entries.
 
-## Compatibility note
+## Frozen campaign directories
 
-The directory name `welp-<YYYY-MM-DD>/` is the WELP-canonical convention. Historical campaigns continue to use `wlep-<YYYY-MM-DD>/` and their filesystem path is provenance — do NOT rename those directories.
+Do not rename frozen campaign directories. Exact historical paths are provenance.

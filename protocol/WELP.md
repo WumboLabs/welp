@@ -24,7 +24,7 @@ Model → Provenance → Admission → Performance → Practical Viability
 
 ## Canonical contracts (current)
 
-- `welp-practical-viability` 0.1.4-draft (successor to `wlep-practical-viability` 0.1.3-draft)
+- `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.1.0-draft
 - `welp-context` 0.1.0-draft
 - `welp-optimization` 0.1.0-draft

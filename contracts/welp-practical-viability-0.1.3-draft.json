@@ -462,7 +462,7 @@
     {
       "version": "0.1.4-draft",
       "date": "2026-08-26",
-      "change": "Naming migration only: contract_id renamed wlep-practical-viability -> welp-practical-viability to match the WLEP -> WELP protocol rename. Task prompts, expectations, categories, thresholds, and scorer revision 2 are unchanged. supersedes block added to record the relationship to the frozen 0.1.3-draft file."
+      "change": "Canonical contract_id welp-practical-viability. Task prompts, expectations, categories, thresholds, and scorer revision 2 are unchanged. supersedes block records the frozen 0.1.3-draft file."
     }
   ],
   "scorer": {
@@ -479,6 +479,6 @@
     "frozen_sha256": "003ee7f797f78a115c72a3a22d632b79e9ba2eb21c2e50d1d76dd0626faba239",
     "alternate_frozen_path": "post-apodex-maintenance/pf01-scorer/contracts/wlep-practical-viability-0.1.3-draft.json",
     "migration_type": "naming-only",
-    "note": "Protocol was renamed from WLEP to WELP on 2026-08-26. The task prompts, expectations, categories, thresholds, scorer semantics, and the revision-2 feature-based classifier are unchanged. Only the contract_id and version metadata changed. Reproducing historical campaigns must continue to use the frozen 0.1.3-draft file; this successor is the canonical new-campaign contract."
+    "note": "The task prompts, expectations, categories, thresholds, scorer semantics, and the revision-2 feature-based classifier are unchanged. Reproducing historical campaigns must continue to use the frozen 0.1.3-draft file; this successor is the canonical new-campaign contract."
   }
 }

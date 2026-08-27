@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "canonical": "WELP",
+  "token": "wlep",
+  "exceptions": [
+    {
+      "path": "validators/validate_campaign_welp.py",
+      "classification": "FUNCTIONAL_COMPATIBILITY_KEEP",
+      "reason": "Accepts frozen historical campaign snapshot IDs, contract prefixes, preflight const, and conformance filenames."
+    },
+    {
+      "path": "validators/check_canonical_welp_naming.py",
+      "classification": "FUNCTIONAL_COMPATIBILITY_KEEP",
+      "reason": "Scanner and embedded self-test fixtures must mention the banned token."
+    },
+    {
+      "path": "validators/welp-legacy-exceptions.json",
+      "classification": "FUNCTIONAL_COMPATIBILITY_KEEP",
+      "reason": "Explicit approved-exception registry for the canonical naming check."
+    },
+    {
+      "path": "snapshot-freeze/manifest.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Hash-bound freeze record of historical snapshot IDs and vault note filenames."
+    },
+    {
+      "path": "contracts/welp-modules.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes.contract_id and frozen_path bind successor modules to immutable historical contracts."
+    },
+    {
+      "path": "contracts/welp-context-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-optimization-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-stability-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-final-classification-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-reliability-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-preflight-0.1.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical artifact id and frozen_path."
+    },
+    {
+      "path": "contracts/welp-practical-viability-0.1.3-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "supersedes block records frozen historical contract_id, frozen_path, and frozen_sha256."
+    }
+  ]
+}

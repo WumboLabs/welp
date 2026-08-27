@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""validate_campaign_welp.py — WELP campaign validator, WLEP/WELP dual-prefix (Stage 6).
+"""validate_campaign_welp.py — WELP campaign validator.
 
-Extends post-apodex-maintenance/validators/validate_campaign_v2.py (frozen 0.2.0-draft)
-to accept the renamed WELP campaign identity while continuing to validate historical
-WLEP campaigns unchanged.
+Canonical validator for new WELP campaigns. Also accepts frozen historical
+campaign artifacts so previously completed evidence bundles remain valid.
 
 Accepts:
-  - WLEP-CONFORMANCE.md (legacy campaigns) OR WELP-CONFORMANCE.md (new campaigns)
-  - protocol_snapshot.id starting with wlep-next-snapshot- OR welp-next-snapshot-
-  - contract_id values with wlep- OR welp- prefix
-  - preflight const wlep-preflight OR welp-preflight
-  - snapshot_status WELP status (DRAFT) regardless of historical or new prefix
+  - WELP-CONFORMANCE.md (new campaigns) OR WLEP-CONFORMANCE.md (frozen historical campaigns)
+  - protocol_snapshot.id starting with welp-next-snapshot- OR wlep-next-snapshot-
+  - contract_id values with welp- OR wlep- prefix
+  - preflight const welp-preflight OR wlep-preflight
+  - snapshot_status WELP status (DRAFT) regardless of identifier generation
 
 New rules:
-  N01  Protocol snapshot id must match ^(wlep|welp)-next-snapshot-
-  N02  Pre-flight "preflight" field must be one of wlep-preflight or welp-preflight
-  N03  Legacy WLEP manifest whose snapshot_id has been silently rewritten to welp- (but
-       whose evidence bundle still references wlep-*) is REJECTED
-  N04  WELP campaign using legacy-compatible evidence (e.g. welp-next-snapshot-* with
-       wlep_*.schema.json validation paths) is ACCEPTED
+  N01  Protocol snapshot id must match ^(welp|wlep)-next-snapshot-
+  N02  Pre-flight "preflight" field must be one of welp-preflight or wlep-preflight
+  N03  Manifest whose snapshot_id has been rewritten to welp- while the evidence
+       bundle still references only frozen historical wlep-* contracts is REJECTED
+  N04  WELP campaign using frozen-compatible evidence (e.g. welp-next-snapshot-*
+       with wlep_*.schema.json validation paths) is ACCEPTED
 
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """

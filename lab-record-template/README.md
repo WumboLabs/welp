@@ -22,13 +22,11 @@ Required sections:
 
 | Convention | When to use |
 |---|---|
-| `WELP-CONFORMANCE.md` | New WELP campaigns (canonical for fresh testing). |
-| `WLEP-CONFORMANCE.md` | Legacy historical WLEP campaigns; preserved unchanged. |
+| `WELP-CONFORMANCE.md` | New WELP campaigns (canonical). |
 | `summaries/welp_conformance.json` | New WELP campaigns (canonical). |
-| `summaries/wlep_conformance.json` | Legacy historical WLEP campaigns. |
 | `lab-records/<model-slug>/welp-<YYYY-MM-DD>/` | New WELP campaigns. |
-| `lab-records/<model-slug>/wlep-<YYYY-MM-DD>/` | Historical WLEP campaigns; filesystem path is provenance, never renamed. |
 | `manifest.json` validated against `welp_campaign_manifest.schema.json` | New WELP campaigns. |
-| `manifest.json` validated against `wlep_campaign_manifest.schema.json` (legacy) | Historical WLEP campaigns. |
 
-Both validators accept either filename; the WELP validator at `validators/validate_campaign_welp.py` is the canonical new-campaign validator.
+Do not rename frozen campaign directories or frozen evidence filenames. Exact historical paths are provenance.
+
+The canonical new-campaign validator is `validators/validate_campaign_welp.py`. It accepts frozen historical campaign artifacts where needed.

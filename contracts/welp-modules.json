@@ -1,7 +1,7 @@
 {
   "schema": "welp-modules-index/0.1.0-draft",
   "created": "2026-08-26",
-  "note": "Index of WELP-named successor contracts for Phase 5 capability modules. Each entry supersedes a frozen wlep-* 0.1.0-draft contract; the historical wlep-* files are immutable and remain valid for reproducing old campaigns.",
+  "note": "Index of WELP Phase 5 capability module contracts. Each entry records the frozen historical contract it supersedes. Those files are immutable and remain valid for reproducing historical campaigns.",
   "modules": [
     {
       "contract_id": "welp-coding",

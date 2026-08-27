@@ -9,7 +9,7 @@
     "frozen_path": "post-apodex-maintenance/publication/repo-candidate/contracts/preflight/wlep-preflight-0.1.0-draft.json",
     "frozen_sha256": "bfb68f4cbb58004d61c1b6274d6caea4b43249c07cc4d90cfac87c64725c89fc",
     "migration_type": "naming-only",
-    "note": "Protocol was renamed from WLEP to WELP on 2026-08-26. The sections, selection rule, decision vocabulary, LocalMaxxing auth statuses, and outputs are unchanged. Only the artifact name changed."
+    "note": "The sections, selection rule, decision vocabulary, LocalMaxxing auth statuses, and outputs are unchanged. Reproducing historical campaigns must use the frozen artifact at frozen_path."
   },
   "purpose": "Unified campaign-start preflight: hardware, installed toolchain discovery, protocol snapshot identity, model/runtime compatibility, LocalMaxxing publication readiness, safety rules, and durable-output readiness. MUST run before model acquisition or inference.",
   "sections": [

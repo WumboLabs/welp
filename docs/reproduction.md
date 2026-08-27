@@ -26,14 +26,13 @@
 
 ## Compatibility
 
-- Historical campaigns reproduce unchanged with the frozen snapshot.
-- New WELP campaigns use the WELP snapshot + WELP-named successor contracts.
-- The validator accepts both prefixes; either filename (`WELP-CONFORMANCE.md` / legacy) is valid.
+- Historical campaigns reproduce unchanged against their frozen snapshot.
+- New WELP campaigns use the current WELP snapshot and WELP-named contracts.
+- The validator accepts frozen historical campaign artifacts where needed.
+- Current-facing publication uses WELP terminology. Frozen identifiers stay exact.
 
-## What is NOT in scope for the migration
+## Out of scope here
 
-- git init (human)
-- LICENSE selection (human)
-- Public GitHub push (human)
-- New model campaign execution (this migration is naming-only)
-- LLMGauge / runtimes / model binaries — all unchanged
+- git init, LICENSE selection, and public push (human)
+- New model campaign execution
+- LLMGauge / runtimes / model binaries

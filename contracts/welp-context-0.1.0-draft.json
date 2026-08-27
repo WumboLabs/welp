@@ -8,7 +8,7 @@
     "version": "0.1.0-draft",
     "frozen_path": "final-hardening/phase6-context/wlep-context-contract.json",
     "migration_type": "naming-only",
-    "note": "Protocol was renamed from WLEP to WELP on 2026-08-26. The deterministic seeded generator, live /tokenize two-pass targeting (±10% tolerance), B/M/E retrieval + absent-evidence screening, and the ×4 ladder + midpoint policy v0.2 are unchanged."
+    "note": "The deterministic seeded generator, live /tokenize two-pass targeting (±10% tolerance), B/M/E retrieval + absent-evidence screening, and the ×4 ladder + midpoint policy v0.2 are unchanged. Reproducing historical campaigns must use the frozen contract at frozen_path."
   },
   "purpose": "Determine behaviorally useful context depth under a frozen serving profile. Allocation != useful context.",
   "policy": {
