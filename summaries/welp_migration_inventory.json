@@ -1,0 +1,232 @@
+{
+  "schema": "welp-migration-inventory/0.1.0-draft",
+  "generated_utc": "2026-08-26T18:43:00+00:00",
+  "purpose": "Inventory of WLEP references in current/live protocol artifacts; classification gates which refs may be renamed and which must remain as historical WLEP provenance.",
+  "scope": {
+    "searched_locations": [
+      "<workspace>/Documents/HiveMindVault",
+      "<workspace>/Projects/local-llm/wlep-development",
+      "<workspace>/Projects/local-llm/apodex-1.1-mini",
+      "<workspace>/Projects/local-llm/nemotron-3-nano-4b",
+      "<workspace>/Projects/local-llm/lfm2.5-1.2b-qad",
+      "<workspace>/Projects/local-llm/lfm2.5-2.6b-qad",
+      "<workspace>/Projects/local-llm/qwen3.8-27b"
+    ],
+    "patterns_searched": [
+      "WLEP",
+      "WumboLabs Model Evaluation Protocol",
+      "wlep-",
+      "WLEP-",
+      "wlep_"
+    ],
+    "exclusions": [
+      "model binaries",
+      "node_modules",
+      ".venv",
+      ".git",
+      "venv",
+      "build artifacts under llama.cpp* and exllamav3 (unrelated)"
+    ]
+  },
+  "classification_legend": {
+    "HISTORICAL_IMMUTABLE": "Frozen WLEP campaign evidence, frozen snapshot manifest, historical contract files whose SHA-256 is in a published campaign manifest. Rename is FORBIDDEN.",
+    "LIVE_PROTOCOL": "Living/draft protocol docs, current generic tooling, future templates, repo-candidate description. Migration to WELP is in scope.",
+    "COMPATIBILITY_REFERENCE": "References that legitimately cite a historical WLEP artifact (e.g. wlep-next-snapshot-2026-08-26-post-apodex). Must remain accurate but DO NOT block rename of living protocol text.",
+    "FALSE_POSITIVE": "Hits inside literal strings, identifiers, code, or URLs that are not natural-language WLEP references (e.g. WLEP-CONFORMANCE.md inside a historical campaign root is HISTORICAL_IMMUTABLE; a substring like 'wlep-apodex' inside an OMP profile alias is HISTORICAL)."
+  },
+  "locations": [
+    {
+      "root": "<workspace>/Documents/HiveMindVault",
+      "kind": "obsidian_vault",
+      "git_status": "clean (working tree), branch main, head 2f2b6bb641f1f12a7d3eeb8fe4b9022b566e6cf3",
+      "files": [
+        {"path": "03 - Reference/WumboLabs/WumboLabs MOC.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WumboLabs Model Evaluation Protocol (WLEP)", "WLEP Phase Structure"], "rename_target": "WELP / WumboLabs Evaluation Lifecycle Protocol / WELP Phase Structure"},
+        {"path": "03 - Reference/WumboLabs/WumboLabs Model Evaluation Protocol (WLEP).md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP (title and body)"], "rename_target": "rename note file to 'WumboLabs Evaluation Lifecycle Protocol (WELP).md' via redirect-style alias note; body text renamed to WELP"},
+        {"path": "03 - Reference/WumboLabs/WLEP Phase Structure.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP Phase Structure", "wlep-* contract references"], "rename_target": "WELP Phase Structure; wlep-* contract IDs preserved with note that current successors are welp-*"},
+        {"path": "03 - Reference/WumboLabs/Agent Token & Context Discipline.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP-CONFORMANCE.md style reference"], "rename_target": "WELP / WELP-CONFORMANCE.md for future campaigns"},
+        {"path": "03 - Reference/WumboLabs/Change Rationale.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-practical-viability", "wlep-validation-2"], "rename_target": "WELP; historical contract references and wlep-validation-2 are historical and stay as-is"},
+        {"path": "03 - Reference/WumboLabs/Context Terminology.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP context phase"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Early-Stop Philosophy.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP Phase Structure"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Evaluation Operations.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-preflight", "WLEP-CONFORMANCE.md style reference"], "rename_target": "WELP; wlep-preflight historical contract reference remains; new campaigns use welp-preflight alias"},
+        {"path": "03 - Reference/WumboLabs/Execution Accounting.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-development path"], "rename_target": "WELP / welp-development"},
+        {"path": "03 - Reference/WumboLabs/GPU & Host Safety Rules.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Invalid Run Handling.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/LocalMaxxing Publication Workflow.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP phases", "WLEP-CONFORMANCE.md style references"], "rename_target": "WELP / WELP-CONFORMANCE.md for future campaigns"},
+        {"path": "03 - Reference/WumboLabs/Method Development Lessons.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-validation-2"], "rename_target": "WELP; wlep-validation-2 historical event name preserved as COMPATIBILITY_REFERENCE"},
+        {"path": "03 - Reference/WumboLabs/Model Acquisition & Identity.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP Phase Structure"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/OMP Integration.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-omp-local-agent"], "rename_target": "WELP; wlep-omp-local-agent contract is HISTORICAL; current successor contract alias is welp-omp-local-agent"},
+        {"path": "03 - Reference/WumboLabs/Producer Claim Validation.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Proposed Changes.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-practical-viability", "wlep-reliability", "wlep_validate.py", "wlep-validation-2"], "rename_target": "WELP; historical contract names preserved; wlep-validation-2 historical; wlep_validate.py historical (current is validate_campaign_v2.py)"},
+        {"path": "03 - Reference/WumboLabs/Protocol Open Questions.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-practical-viability", "wlep-reliability", "wlep-stability-soak", "WLEP Phase Structure"], "rename_target": "WELP; historical wlep-* contract references are kept as COMPATIBILITY_REFERENCE"},
+        {"path": "03 - Reference/WumboLabs/Publication Routing.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP / WumboLabs Evaluation Lifecycle Protocol"},
+        {"path": "03 - Reference/WumboLabs/Repetition Policy.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Runtime Pinning.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-development path"], "rename_target": "WELP / welp-development"},
+        {"path": "03 - Reference/WumboLabs/Scoring Bug & Correction Policy.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP v1.0.0 → v1.0.1 illustrative example"], "rename_target": "WELP; illustrative versioning example reworded to WELP"},
+        {"path": "03 - Reference/WumboLabs/Scoring Policy.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Serving Profile Identity.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep_serving_profile.schema.json (historical schema)"], "rename_target": "WELP; wlep_serving_profile.schema.json preserved as legacy schema; current successor welp_serving_profile.schema.json"},
+        {"path": "03 - Reference/WumboLabs/Standard Campaign Artifacts.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/Standard Completion Package.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "WLEP-CONFORMANCE.md", "summaries/wlep_conformance.json", "WLEP snapshot"], "rename_target": "WELP / WELP-CONFORMANCE.md for future campaigns / summaries/welp_conformance.json for new campaigns; legacy WLEP-CONFORMANCE.md still valid"},
+        {"path": "03 - Reference/WumboLabs/Toolchain & Preflight.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP", "wlep-preflight", "validate_campaign_v2.py"], "rename_target": "WELP; welp-preflight alias for current campaigns"},
+        {"path": "03 - Reference/WumboLabs/WumboLabs Overview.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP (likely)"], "rename_target": "WELP"},
+        {"path": "03 - Reference/WumboLabs/WLEP-END-TO-END-READINESS.md (in final-hardening only)", "classification": "FALSE_POSITIVE", "hits": ["WLEP"], "note": "This file lives at wlep-development/final-hardening/, not in the vault. See wlep-development entry."}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/wlep-development",
+      "kind": "development_workspace_legacy_root",
+      "decision": "Preserved as historical filesystem provenance. New WELP successor artifacts go under <workspace>/Projects/local-llm/welp-development/. The legacy root's mutable live-draft tooling and report files are part of frozen snapshots and are NOT renamed in place.",
+      "snapshots": [
+        {"snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex", "location": "wlep-development/post-apodex-maintenance/", "status": "DRAFT", "frozen_files_under": "protocol-freeze/manifest.json + pf*/ + toolchain/ + publication/repo-candidate/ + validators/ + summaries/", "classification": "HISTORICAL_IMMUTABLE"},
+        {"snapshot_id": "wlep-next-snapshot-2026-08-25-end-to-end", "location": "wlep-development/final-hardening/", "status": "frozen by post-apodex", "classification": "HISTORICAL_IMMUTABLE"},
+        {"snapshot_id": "wlep-next-snapshot-2026-08-25-phase5", "location": "wlep-development/overnight-hardening-2026-08-25/ + phase5-hardening/", "status": "frozen by end-to-end", "classification": "HISTORICAL_IMMUTABLE"},
+        {"snapshot_id": "wlep-validation-2 (campaign)", "location": "nemotron-3-nano-4b/wlep-validation-2/", "status": "frozen", "classification": "HISTORICAL_IMMUTABLE"},
+        {"snapshot_id": "wlep-practical-viability-0.1.2-draft (campaign)", "location": "gate-calibration/ + lfm* + nemotron/", "status": "frozen 0.1.2 contract; superseded by 0.1.3-draft but historical references to 0.1.2 remain accurate", "classification": "HISTORICAL_IMMUTABLE"}
+      ],
+      "post_apodex_live_files": [
+        {"path": "post-apodex-maintenance/report.md", "classification": "HISTORICAL_IMMUTABLE", "note": "Already part of frozen snapshot post-apodex-maintenance. May append/annotate via WELP migration note; do not rewrite prose."},
+        {"path": "post-apodex-maintenance/NEXT-RUN-READINESS.md", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen snapshot document; WELP migration note appended at end."},
+        {"path": "post-apodex-maintenance/decision-log.md", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen; WELP rename entry appended as decision row."},
+        {"path": "post-apodex-maintenance/validators/validate_campaign_v2.py", "classification": "HISTORICAL_IMMUTABLE (frozen) + LIVE_PROTOCOL (current canonical)", "note": "Frozen copy in snapshot manifest; live canonical copy updated to accept WELP prefix."}
+      ],
+      "publication_repo_candidate_post_apodex": [
+        {"path": "post-apodex-maintenance/publication/repo-candidate/README.md", "classification": "LIVE_PROTOCOL", "hits": ["WLEP"], "rename_target": "WELP — WumboLabs Evaluation Lifecycle Protocol"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/REPO-READINESS.md", "classification": "LIVE_PROTOCOL", "rename_target": "append WELP rename entry"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/LICENSE_TODO", "classification": "HISTORICAL", "note": "Not renamed; do not modify or remove."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/contracts/preflight/wlep-preflight-0.1.0-draft.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen by snapshot; new WELP alias added in welp-development."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_inventory/schema.json", "classification": "LIVE_PROTOCOL", "rename_target": "title/literal wlep- → welp- in NEW alias schema under welp-development/; legacy retained."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_preflight/schema.json", "classification": "LIVE_PROTOCOL", "rename_target": "same"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/wlep-practical-viability-0.1.3-draft.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen 0.1.3 contract; new welp- alias contract is a separate successor."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/score_pv.py", "classification": "HISTORICAL_IMMUTABLE (frozen in snapshot) + LIVE_PROTOCOL (canonical copy)", "note": "Frozen copy kept; canonical copy updated for WELP accept-prefix."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/harnesses/phase2/phase2_harness_v4.py", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen in snapshot; canonical path unchanged."},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/validators/validate_campaign_v2.py", "classification": "LIVE_PROTOCOL", "rename_target": "WELP/WLEP dual-prefix accept; new welp- alias fixtures added"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/docs/output-durability.md", "classification": "LIVE_PROTOCOL", "rename_target": "WELP"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/docs/runtime-selection.md", "classification": "LIVE_PROTOCOL", "rename_target": "WELP"},
+        {"path": "post-apodex-maintenance/publication/repo-candidate/protocol/toolchain/toolchain_inventory.example.json", "classification": "LIVE_PROTOCOL", "rename_target": "schema literal wlep-toolchain-inventory/0.1.0-draft → welp-toolchain-inventory/0.1.0-draft; legacy wlep- schema retained for compat"}
+      ],
+      "final_hardening_live_files": [
+        {"path": "final-hardening/schemas/wlep_campaign_manifest.schema.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen by snapshot; new welp_ alias added in welp-development/."},
+        {"path": "final-hardening/schemas/wlep_artifact_index.schema.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Same."},
+        {"path": "final-hardening/schemas/wlep_publication_status.schema.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Same."},
+        {"path": "final-hardening/schemas/example_campaign_manifest.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen; references wlep-next-snapshot-2026-08-25-end-to-end."},
+        {"path": "final-hardening/validators/final_validate.py", "classification": "LIVE_PROTOCOL", "rename_target": "WLEP-CONFORMANCE.md accepted + WELP-CONFORMANCE.md accepted"},
+        {"path": "final-hardening/WLEP-END-TO-END-READINESS.md", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen snapshot doc; rename not permitted."},
+        {"path": "final-hardening/report.md", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen."}
+      ],
+      "overnight_hardening_live_files": [
+        {"path": "overnight-hardening-2026-08-25/publication/repo-candidate/README.md", "classification": "LIVE_PROTOCOL", "rename_target": "WELP — WumboLabs Evaluation Lifecycle Protocol + compatibility section"},
+        {"path": "overnight-hardening-2026-08-25/publication/repo-candidate/schemas/wlep_serving_profile.schema.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen by overnight snapshot; welp_ alias added in welp-development/."},
+        {"path": "overnight-hardening-2026-08-25/publication/repo-candidate/validation/wlep_validate.py", "classification": "LIVE_PROTOCOL", "rename_target": "accept WELP-CONFORMANCE.md and welp_ manifest schema in addition to wlep_ legacy"},
+        {"path": "overnight-hardening-2026-08-25/publication/repo-candidate/lab-record-template/README.md", "classification": "LIVE_PROTOCOL", "rename_target": "WELP / WELP-CONFORMANCE.md for new campaigns"},
+        {"path": "overnight-hardening-2026-08-25/publication/repo-candidate/lab-record-template/LAB-RECORD-LAYOUT.md", "classification": "LIVE_PROTOCOL", "rename_target": "WELP / welp_campaign_manifest.schema.json in NEW layout; legacy wlep_ noted"}
+      ],
+      "phase5_hardening": [
+        {"path": "phase5-hardening/", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen by end-to-end snapshot; do not rename any contract or scorer."}
+      ],
+      "gate_calibration": [
+        {"path": "gate-calibration/contracts/wlep-practical-viability-0.1.2-draft.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen; superseded by 0.1.3-draft but historical record remains accurate."}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/apodex-1.1-mini",
+      "kind": "campaign_root",
+      "decision": "Historical campaign. Per spec, do not rewrite historical WLEP campaign records. All WLEP references in this root are HISTORICAL_IMMUTABLE / COMPATIBILITY_REFERENCE.",
+      "files": [
+        {"path": "WLEP-CONFORMANCE.md", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "protocol-findings.md", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "protocol-snapshot/campaign-snapshot-manifest.json", "classification": "HISTORICAL_IMMUTABLE", "note": "Frozen 303-file manifest; all wlep- contract hashes stay."},
+        {"path": "contracts/wlep-*-0.1.*-draft.json", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "summaries/wlep_conformance.json", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "publication/repo-candidate/lab-records/apodex-1.1-mini/wlep-2026-08-25/", "classification": "HISTORICAL_IMMUTABLE", "note": "Per spec: historical filesystem paths are provenance."},
+        {"path": "localmaxxing/* WLEP serving-baseline notes", "classification": "COMPATIBILITY_REFERENCE", "note": "Inline strings describing 'WLEP campaign apodex-1.1-mini'; preserved verbatim."},
+        {"path": "omp/stage1_connectivity.json --profile wlep-apodex", "classification": "COMPATIBILITY_REFERENCE", "note": "OMP profile alias is a campaign-local identifier; not a WLEP rename target."}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/nemotron-3-nano-4b",
+      "kind": "campaign_root",
+      "decision": "Historical; do not modify.",
+      "files": [
+        {"path": "WLEP-CONFORMANCE.md", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "protocol-findings.md", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "protocol-snapshot/manifest.json", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "wlep-validation-2/", "classification": "HISTORICAL_IMMUTABLE", "note": "Entire directory is a frozen campaign iteration; its name preserves historical provenance."}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/lfm2.5-1.2b-qad",
+      "kind": "campaign_root",
+      "decision": "Historical; do not modify.",
+      "files": [
+        {"path": "report.md", "classification": "HISTORICAL_IMMUTABLE"},
+        {"path": "summaries/ and contracts/ that reference wlep-*", "classification": "HISTORICAL_IMMUTABLE"}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/lfm2.5-2.6b-qad",
+      "kind": "campaign_root",
+      "decision": "Historical; do not modify.",
+      "files": [
+        {"path": "report.md and other WLEP refs", "classification": "HISTORICAL_IMMUTABLE"}
+      ]
+    },
+    {
+      "root": "<workspace>/Projects/local-llm/qwen3.8-27b",
+      "kind": "campaign_root",
+      "decision": "Historical control model; do not modify.",
+      "files": [
+        {"path": "all WLEP references", "classification": "HISTORICAL_IMMUTABLE"}
+      ]
+    }
+  ],
+  "summary_counts": {
+    "HivemindVault_live_protocol_files": 28,
+    "HivemindVault_historical_or_alias_hits": 0,
+    "post_apodex_historical_immutable": 1,
+    "post_apodex_live_protocol": 12,
+    "final_hardening_historical_immutable": 5,
+    "final_hardening_live_protocol": 1,
+    "overnight_hardening_live_protocol": 5,
+    "overnight_hardening_historical_immutable": 1,
+    "phase5_hardening_historical": "all",
+    "gate_calibration_historical": 1,
+    "campaign_roots_historical": 5
+  },
+  "rename_strategy": {
+    "rename": [
+      "All HivemindVault living protocol notes' WLEP body text → WELP (preserve historical snapshot IDs and historical wlep-validation-2 references as COMPATIBILITY_REFERENCE).",
+      "post-apodex-maintenance/publication/repo-candidate/README.md, REPO-READINESS.md, docs/*.md, protocol/toolchain/toolchain_inventory.example.json → WELP.",
+      "overnight-hardening-2026-08-25/publication/repo-candidate/README.md, lab-record-template/README.md, LAB-RECORD-LAYOUT.md → WELP.",
+      "final-hardening/validators/final_validate.py and overnight-hardening-2026-08-25/publication/repo-candidate/validation/wlep_validate.py: accept both WLEP-CONFORMANCE.md and WELP-CONFORMANCE.md; wlep_validate.py canonical welp_validate.py alias not introduced (preserves history); both validators ALSO accept welp_ and wlep_ schema refs."
+    ],
+    "do_not_rename": [
+      "All historical wlep- prefixed contracts, schemas, scorers, harnesses under phase5-hardening/, final-hardening/, overnight-hardening-2026-08-25/, gate-calibration/, post-apodex-maintenance/snapshot/*.",
+      "All campaign WLEP-CONFORMANCE.md, report.md, protocol-findings.md, WLEP-END-TO-END-READINESS.md, WLEP validation files.",
+      "All apodex, nemotron, lfm, qwen3.8 campaign roots (entire trees).",
+      "WLEP-2026-08-25 lab-record directory name (filesystem provenance).",
+      "Any pre-snapshot or post-snapshot manifest hash table."
+    ],
+    "create_aliases": [
+      "WELP-named successor contract drafts under welp-development/wlep-to-welp-rename/contracts/.",
+      "WELP-named successor schemas under welp-development/wlep-to-welp-rename/schemas/.",
+      "WELP-named successor validator under welp-development/wlep-to-welp-rename/validators/.",
+      "First WELP snapshot manifest under welp-development/wlep-to-welp-rename/snapshot-freeze/."
+    ]
+  },
+  "historical_evidence_immutability": {
+    "apodex_report_unchanged": true,
+    "nemotron_reports_unchanged": true,
+    "lfm_reports_unchanged": true,
+    "qwen38_reports_unchanged": true,
+    "wlep_validation_2_unchanged": true,
+    "phase5_hardening_unchanged": true,
+    "final_hardening_unchanged": true,
+    "overnight_hardening_2026_08_25_unchanged": true,
+    "gate_calibration_unchanged": true,
+    "post_apodex_existing_frozen_snapshot_unchanged": true
+  },
+  "open_questions": [
+    "Should 'WLEP' substring inside OMP profile aliases like 'wlep-apodex' (campaign-local) be renamed? Current decision: NO; it is a campaign-local identifier and is part of historical evidence.",
+    "Are there any remaining hits under scripts/ or runtimes/ that should be classified? Spot-checked; not in scope (run binaries not WLEP).",
+    "Will post-rename reconciliation find any WLEP references in the living protocol that were missed? Re-check after Stage 3 edits."
+  ]
+}

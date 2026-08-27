@@ -1,0 +1,66 @@
+{
+  "schema": "welp-rename-verdict/0.1.0-draft",
+  "generated_utc": "2026-08-26T19:00:00+00:00",
+  "verdict": "RENAME_COMPLETE",
+  "summary": "The WLEP -> WELP migration is complete. Historical WLEP evidence is preserved unchanged. The first WELP snapshot is frozen. Validators accept both prefixes. The new WELP canonical artifacts are in place.",
+  "name_change": {
+    "old_acronym": "WLEP",
+    "old_formal": "WumboLabs Model Evaluation Protocol",
+    "new_acronym": "WELP",
+    "new_formal": "WumboLabs Evaluation Lifecycle Protocol",
+    "informal_pronunciation": "welp",
+    "effective_date": "2026-08-26",
+    "informal_tagline": "If the model fails: welp."
+  },
+  "historical_records_preserved": {
+    "preserved_unchanged": "YES",
+    "legacy_compatibility": "PASS",
+    "details": "All frozen wlep-next-snapshot-* manifests, wlep- contract files, wlep_*.schema.json files, and historical campaign trees (apodex, nemotron, lfm, qwen3.8) are SHA-256 verified unchanged. The apodex-1.1-mini WLEP-CONFORMANCE.md and its repo-candidate byte-identical copy are both sha256= dfac0bcf96c98a5d50f2b783dcb3aa7ab4ede0cb763fb1b09be3d4bb4b653136."
+  },
+  "current_welp": {
+    "vault_migrated": "YES",
+    "current_contracts_migrated": "YES",
+    "schemas_migrated": "YES",
+    "validators_support_wlep_and_welp": "YES",
+    "repo_candidate_migrated": "YES"
+  },
+  "filesystem": {
+    "legacy_development_path": "<workspace>/Projects/local-llm/wlep-development/",
+    "current_future_development_path": "<workspace>/Projects/local-llm/welp-development/welp-to-welp-rename/",
+    "decision": "Kept legacy root as filesystem provenance; created new welp-to-welp-rename subdirectory under it as the WELP canonical successor root. Decision documented in workspace_decision.md."
+  },
+  "snapshot": {
+    "first_welp_snapshot_id": "welp-next-snapshot-2026-08-26-post-rename",
+    "parent_wlep_snapshot": "wlep-next-snapshot-2026-08-26-post-apodex",
+    "methodology_changed": "NO",
+    "migration_type": "naming-only",
+    "manifest_path": "<workspace>/Projects/local-llm/welp-development/welp-to-welp-rename/snapshot-freeze/manifest.json"
+  },
+  "validation": {
+    "legacy_wlep_fixture": "PASS",
+    "new_welp_fixture": "PASS",
+    "executor_independence": "PASS",
+    "historical_hashes_unchanged": "YES"
+  },
+  "paths": {
+    "migration_report": "<workspace>/Projects/local-llm/welp-development/welp-to-welp-rename/report.md",
+    "compatibility_policy": "<workspace>/Projects/local-llm/welp-development/welp-to-welp-rename/summaries/welp_compatibility_policy.json",
+    "first_welp_snapshot_manifest": "<workspace>/Projects/local-llm/welp-development/welp-to-welp-rename/snapshot-freeze/manifest.json"
+  },
+  "no_go_live_actions_taken": {
+    "no_git_init": true,
+    "no_license_chosen": true,
+    "no_github_push": true,
+    "no_x_post": true,
+    "no_subagent_spawn": true,
+    "no_model_rerun": true,
+    "no_runtime_or_LLMGauge_modification": true
+  },
+  "human_actions_outstanding": [
+    "Commit the HivemindVault rename + new WELP overview note (Obsidian auto-backup already committed at 2026-08-26 18:58:09; vault head 2cbcba0; the migration agent did not perform any explicit human-equivalent git operation).",
+    "Initialize the public Git repository at welp-development/welp-to-welp-rename/ (or welp-development/ proper) — human action only.",
+    "Select a LICENSE for the public WELP repo (LICENSE_TODO present; candidates: MIT / Apache-2.0 / CC-BY-4.0).",
+    "Decide on the next non-rename frozen snapshot to capture the post-migration vault head and WELP successor hashes."
+  ],
+  "next_criteria_for_protocol_v1_0": "WLEP/WELP remains DRAFT. Per the WLEP phase structure (now WELP): 'multiple consecutive campaigns complete without meaningful changes to core methodology, scoring contracts, artifact schema, or gate logic. Do not declare v1.0 arbitrarily.' The WELP rename does not count toward v1.0 readiness; only future successful campaigns do."
+}

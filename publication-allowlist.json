@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "policy": "ALLOWLIST_FIRST",
+  "default_public_eligibility": "DO_NOT_PUBLISH",
+  "root": "welp",
+  "future_repo": "WumboLabs/welp",
+  "default": "DO_NOT_PUBLISH",
+  "allowed": [
+    "LICENSE",
+    "README.md",
+    "contracts/**",
+    "docs/**",
+    "examples/**",
+    "fixtures/**",
+    "lab-record-template/**",
+    "operator_summary.md",
+    "protocol/**",
+    "report.md",
+    "schemas/**",
+    "snapshot-freeze/**",
+    "summaries/**",
+    "validators/**",
+    "PUBLICATION-MANIFEST.json",
+    "publication-allowlist.json",
+    ".gitignore"
+  ],
+  "excluded": [
+    "LICENSE-DECISION.md",
+    "REPO-READINESS.md",
+    "workspace_decision.md",
+    ".env",
+    ".env.*",
+    "credentials*",
+    "secrets*",
+    "auth*",
+    "**/__pycache__/**",
+    "*.pyc"
+  ],
+  "reason": "WumboLabs-authored evaluation methodology and reproducibility framework."
+}

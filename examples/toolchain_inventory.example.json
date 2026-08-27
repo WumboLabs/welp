@@ -1,0 +1,51 @@
+{
+  "schema": "welp-toolchain-inventory/0.1.0-draft",
+  "generated_utc": "2026-08-26T19:00:00+00:00",
+  "host": "WumboJetsII",
+  "gpu": "NVIDIA GeForce RTX 5070 12 GB",
+  "driver": "610.57.04",
+  "cuda_toolkit": "/usr/local/cuda-13.3 (V13.3.73)",
+  "os": "Fedora Linux kernel 7.1.10-200.fc44.x86_64",
+  "host_ram_gb": 30,
+  "policy": "DISCOVER FIRST / REUSE WHEN COMPATIBLE / UPDATE OR BUILD ONLY ON PROVEN INCOMPATIBILITY",
+  "tools": [
+    {
+      "tool": "localmaxxing-cli",
+      "purpose": "external publication + speed submission",
+      "installed": true,
+      "path": "/usr/local/sbin/lmx",
+      "version": "v0.1.33",
+      "commit": "4a36be4871d0bf26960b2868e18771269df4dc8e",
+      "environment": "system binary; saved CLI-native auth config",
+      "compatible_status": "COMPATIBLE",
+      "preferred": true,
+      "notes": "clean-env (LMX_API_KEY/LOCALMAXXING_API_KEY unset) auth whoami PASS 2026-08-26; no key recorded anywhere"
+    },
+    {
+      "tool": "llmgauge",
+      "purpose": "production evaluation harness",
+      "installed": true,
+      "path": "<welp-local-root>/llmgauge",
+      "commit": "880e6a8d135cf5aa48b96a2e041f7b3080ecb550",
+      "version": "0.74.0 (pyproject); v0.73-6-g880e6a8",
+      "environment": "uv project",
+      "compatible_status": "COMPATIBLE_DO_NOT_MODIFY",
+      "preferred": true,
+      "notes": "production state recorded, untouched"
+    },
+    {
+      "tool": "llama.cpp",
+      "purpose": "primary local serving runtime",
+      "installed": true,
+      "candidates": [
+        {"commit": "0d9ceae1e38291035605613ab41a8f5e693d6fcd", "build": 10449, "purpose": "preferred stable default"},
+        {"commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0", "build": 10615, "purpose": "newest compatible (QWEN35MOE-capable)"}
+      ],
+      "compatible_status": "COMPATIBLE",
+      "preferred_commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0",
+      "notes": "selection per-model; per-runtime cache-metric probe required before cache-sensitive runs"
+    }
+  ],
+  "welp_snapshot_id": "welp-next-snapshot-2026-08-26-post-rename",
+  "last_verified": "2026-08-26T19:00:00+00:00"
+}

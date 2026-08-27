@@ -1,0 +1,115 @@
+{
+  "schema": "welp-schema-mapping/0.1.0-draft",
+  "generated_utc": "2026-08-26T18:58:00+00:00",
+  "purpose": "Mapping from historical wlep_*.schema.json files to current welp_*.schema.json successors. Frozen schemas are immutable; current schemas add a supersedes block and tighten the snapshot_id pattern to allow welp-* or wlep-* prefixes.",
+  "mappings": [
+    {
+      "historical": {
+        "schema": "wlep_campaign_manifest.schema.json",
+        "frozen_path": "final-hardening/schemas/wlep_campaign_manifest.schema.json",
+        "frozen_sha256": "37e2ea8b77fba2389f7c9fa3425ecd4e4f378cafa056fb09790e035e5115be74"
+      },
+      "successor": {
+        "schema": "welp_campaign_manifest.schema.json",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_campaign_manifest.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "protocol_snapshot.id.pattern now allows ^(welp|wlep)-next-snapshot-...; contracts.patternProperties allows both prefixes"
+      }
+    },
+    {
+      "historical": {
+        "schema": "wlep_artifact_index.schema.json",
+        "frozen_path": "final-hardening/schemas/wlep_artifact_index.schema.json",
+        "frozen_sha256": "7cdface2df30417483526fa57822cc098fb74b06e6d3ab78f4db0aa08a741e55"
+      },
+      "successor": {
+        "schema": "welp_artifact_index.schema.json",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_artifact_index.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "no field changes; title literal updated"
+      }
+    },
+    {
+      "historical": {
+        "schema": "wlep_publication_status.schema.json",
+        "frozen_path": "final-hardening/schemas/wlep_publication_status.schema.json",
+        "frozen_sha256": "88ae9c913d3ca12aac320ff183c7a7c213781e2ea9f22537d8f0e216c01a4a7e"
+      },
+      "successor": {
+        "schema": "welp_publication_status.schema.json",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_publication_status.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "no field changes; title literal updated"
+      }
+    },
+    {
+      "historical": {
+        "schema": "wlep_serving_profile.schema.json",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/schemas/wlep_serving_profile.schema.json",
+        "frozen_sha256": "85f18f5bcfda6cebb01266fb9042b23d0c63ae7fabee0d213d938b5bb72144ce"
+      },
+      "successor": {
+        "schema": "welp_serving_profile.schema.json",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_serving_profile.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "effective schema adds gate_baseline_reasoning_state enum + reasoning_requested/effective strings (PF-02 hardening); backwards-compatible (additive)"
+      }
+    },
+    {
+      "historical": {
+        "schema": "wlep-toolchain-preflight/0.1.0-draft (title-only literal in JSON Schema const)",
+        "frozen_path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_preflight/schema.json",
+        "frozen_sha256": "2f1c4aa17bad15dace838aed3bc91fc0219bd3bb204505489783d7f1cd885cfc"
+      },
+      "successor": {
+        "schema": "welp-preflight/0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_toolchain_preflight.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "preflight const wlep-preflight -> welp-preflight; protocol.snapshot_id pattern accepts welp-* and wlep-*-prefixed snapshots; protocol.welp_status enum (DRAFT only)"
+      }
+    },
+    {
+      "historical": {
+        "schema": "wlep-toolchain-inventory/0.1.0-draft (title-only literal in JSON Schema const)",
+        "frozen_path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_inventory/schema.json",
+        "frozen_sha256": "03ba39879a6e0931a6dcb17b65e2fb5d2b96a1534a1566bd7e379466ae0b5316"
+      },
+      "successor": {
+        "schema": "welp-toolchain-inventory/0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/schemas/welp_toolchain_inventory.schema.json",
+        "version": "0.1.0-draft",
+        "field_changes": "schema const literal welp-toolchain-inventory/0.1.0-draft (was wlep- in frozen file); no field changes"
+      }
+    },
+    {
+      "historical": {
+        "schema": "execution_counts.schema.json",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/schemas/execution_counts.schema.json",
+        "frozen_sha256": "c1d76b2a7996a1e739ef7b0df8e891fad7a26b8889b28a0a07b78f45893f4075"
+      },
+      "successor": {
+        "schema": "execution_counts.schema.json (unchanged)",
+        "path": "(re-use frozen schema)",
+        "field_changes": "no changes; the schema is the protocol-neutral execution-counts schema"
+      }
+    },
+    {
+      "historical": {
+        "schema": "not_reached.schema.json",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/schemas/not_reached.schema.json",
+        "frozen_sha256": "f90df69774341a66df75ba72bbd3ea672990f60f116dd0b07b4a21a345bbd3f2"
+      },
+      "successor": {
+        "schema": "not_reached.schema.json (unchanged)",
+        "path": "(re-use frozen schema)",
+        "field_changes": "no changes"
+      }
+    }
+  ],
+  "rules": {
+    "frozen_schemas_immutable": true,
+    "validators_accept_legacy_and_current": true,
+    "protocol_snapshot_id_pattern_in_new_schemas": "^(welp|wlep)-next-snapshot-",
+    "wlep_status_value": "DRAFT (not v1.0)"
+  }
+}

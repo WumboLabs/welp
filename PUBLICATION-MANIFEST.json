@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "release": "INITIAL_PUBLIC_RELEASE",
+  "future_repo": "WumboLabs/welp",
+  "candidate_root": "welp",
+  "allowlist": "publication-allowlist.json",
+  "included_patterns": [
+    "LICENSE",
+    "README.md",
+    "contracts/**",
+    "docs/**",
+    "examples/**",
+    "fixtures/**",
+    "lab-record-template/**",
+    "operator_summary.md",
+    "protocol/**",
+    "report.md",
+    "schemas/**",
+    "snapshot-freeze/**",
+    "summaries/**",
+    "validators/**",
+    "PUBLICATION-MANIFEST.json",
+    "publication-allowlist.json",
+    ".gitignore"
+  ],
+  "excluded_patterns": [
+    "LICENSE-DECISION.md",
+    "REPO-READINESS.md",
+    "workspace_decision.md",
+    ".env",
+    ".env.*",
+    "credentials*",
+    "secrets*",
+    "auth*",
+    "**/__pycache__/**",
+    "*.pyc"
+  ],
+  "excluded_source_policy": "EXCLUDED_INITIAL_RELEASE",
+  "large_file_review_threshold_bytes": 5242880,
+  "human_git_gate_required": true
+}

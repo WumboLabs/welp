@@ -1,0 +1,17 @@
+# Publication defense in depth
+## The allowlist is canonical; these rules only prevent accidental staging.
+.env
+.env.*
+credentials*
+secrets*
+auth*
+*.pem
+*.key
+*.p12
+*.gguf
+*.safetensors
+*.bin
+__pycache__/
+*.pyc
+.cache/
+cache/

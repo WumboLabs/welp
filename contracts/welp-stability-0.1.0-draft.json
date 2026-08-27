@@ -1,0 +1,33 @@
+{
+  "contract_id": "welp-stability",
+  "version": "0.1.0-draft",
+  "status": "READY_DRAFT",
+  "created": "2026-08-26",
+  "supersedes": {
+    "contract_id": "wlep-stability",
+    "version": "0.1.0-draft",
+    "frozen_path": "final-hardening/phase9-stability/soak.py (no separate contract file)",
+    "migration_type": "naming-only"
+  },
+  "levels": {
+    "SCREENING_SOAK": {
+      "duration_minutes": 30,
+      "cycles": 0
+    },
+    "LOCKIN_SOAK": {
+      "duration_minutes": 120,
+      "startup_shutdown_cycles_at_least": 3,
+      "vram_release_checks_required": true
+    }
+  },
+  "hard_stops": [
+    "Xid",
+    "GPU reset",
+    "GSP error",
+    "channel error",
+    "CUDA fatal",
+    "display collapse"
+  ],
+  "drift_definition": "first-vs-last window means; RSS growth alone never a leak claim",
+  "sentinel_workload_required": true
+}

@@ -1,0 +1,22 @@
+{
+  "contract_id": "welp-optimization",
+  "version": "0.1.0-draft",
+  "status": "READY_DRAFT (CONDITIONAL/OPTIONAL)",
+  "created": "2026-08-26",
+  "supersedes": {
+    "contract_id": "wlep-optimization",
+    "version": "0.1.0-draft",
+    "frozen_path": "final-hardening/phase8-optimization/wlep-optimization-0.1.0-draft.json",
+    "migration_type": "naming-only"
+  },
+  "rule": "Baseline never replaced; ONE declared delta per comparison unless predeclared factorial.",
+  "outcomes": [
+    "BASELINE_RETAINED",
+    "OPTIMIZED_PROFILE_FOUND",
+    "NO_MATERIAL_GAIN",
+    "QUALITY_REGRESSION",
+    "PHYSICALLY_UNTESTABLE",
+    "NOT_APPLICABLE"
+  ],
+  "principle": "A faster profile that breaks required capability is a different role/profile, not a recommendation."
+}

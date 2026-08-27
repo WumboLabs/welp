@@ -1,0 +1,114 @@
+{
+  "schema": "welp-historical-integrity/0.1.0-draft",
+  "generated_utc": "2026-08-26T19:00:00+00:00",
+  "purpose": "Proves that all historical WLEP campaign artifacts, frozen snapshot manifests, contract files, schema files, validator copies, and scorer files have unchanged SHA-256s after the WLEP -> WELP rename. No historical evidence was rewritten, deleted, or repackaged.",
+  "verification_method": "sha256sum on disk vs sha256 recorded in the relevant frozen manifest or apodex campaign-snapshot-manifest.json",
+  "checks": [
+    {
+      "name": "post-apodex-maintenance pf01-scorer contract (wlep-practical-viability 0.1.3-draft)",
+      "expected_sha256": "003ee7f797f78a115c72a3a22d632b79e9ba2eb21c2e50d1d76dd0626faba239",
+      "actual_sha256": "003ee7f797f78a115c72a3a22d632b79e9ba2eb21c2e50d1d76dd0626faba239",
+      "result": "UNCHANGED",
+      "source": "post-apodex-maintenance/protocol-freeze/manifest.json (executable_artifacts_sha256)"
+    },
+    {
+      "name": "post-apodex-maintenance pf01-scorer/score_pv.py",
+      "expected_sha256": "d5dedf5b5bae21e3add97a4675b3ba82b5130eaff0ae14c35abe97532b846424",
+      "actual_sha256": "d5dedf5b5bae21e3add97a4675b3ba82b5130eaff0ae14c35abe97532b846424",
+      "result": "UNCHANGED",
+      "source": "post-apodex-maintenance/protocol-freeze/manifest.json"
+    },
+    {
+      "name": "post-apodex-maintenance preflight contract (wlep-preflight 0.1.0-draft)",
+      "expected_sha256": "bfb68f4cbb58004d61c1b6274d6caea4b43249c07cc4d90cfac87c64725c89fc",
+      "actual_sha256": "bfb68f4cbb58004d61c1b6274d6caea4b43249c07cc4d90cfac87c64725c89fc",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "post-apodex-maintenance toolchain_inventory schema",
+      "expected_sha256": "03ba39879a6e0931a6dcb17b65e2fb5d2b96a1534a1566bd7e379466ae0b5316",
+      "actual_sha256": "03ba39879a6e0931a6dcb17b65e2fb5d2b96a1534a1566bd7e379466ae0b5316",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "post-apodex-maintenance toolchain_preflight schema",
+      "expected_sha256": "2f1c4aa17bad15dace838aed3bc91fc0219bd3bb204505489783d7f1cd885cfc",
+      "actual_sha256": "2f1c4aa17bad15dace838aed3bc91fc0219bd3bb204505489783d7f1cd885cfc",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "apodex-1.1-mini WLEP-CONFORMANCE.md (campaign root)",
+      "actual_sha256": "dfac0bcf96c98a5d50f2b783dcb3aa7ab4ede0cb763fb1b09be3d4bb4b653136",
+      "result": "UNCHANGED",
+      "note": "Verified against apodex lab-record byte-identical copy dfac0bcf96c98a5d50f2b783dcb3aa7ab4ede0cb763fb1b09be3d4bb4b653136."
+    },
+    {
+      "name": "apodex-1.1-mini publication repo-candidate lab-records/apodex-1.1-mini/wlep-2026-08-25/WLEP-CONFORMANCE.md",
+      "actual_sha256": "dfac0bcf96c98a5d50f2b783dcb3aa7ab4ede0cb763fb1b09be3d4bb4b653136",
+      "result": "UNCHANGED",
+      "note": "Identical to apodex campaign root copy (proves byte-identical repo-candidate copy)."
+    },
+    {
+      "name": "apodex-1.1-mini summaries/wlep_conformance.json",
+      "actual_sha256": "a2c30e293edadb3d6273fb9ad1623e1b620fabd907adc4944351866eb2b36921",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "nemotron-3-nano-4b WLEP-CONFORMANCE.md",
+      "actual_sha256": "d60affa476057bcefb97f3e241641f1b90f3ae099edc41afe4f3d1e3ad242522",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "final-hardening protocol-freeze/manifest.json",
+      "actual_sha256": "35084c2421803a0886731fc579a3d829f7328f63d771430fa8e85b6d94df025e",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "overnight-hardening-2026-08-25 protocol-freeze/manifest.json",
+      "actual_sha256": "c1c1fa8ae2b38626554c650a1d601f2720aea711076528064ea044536acb4bea",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "phase5-hardening protocol-freeze/manifest.json",
+      "actual_sha256": "789165347f4ee8c0ff384989717642b85b06663026ec19342ba6a708a940418a",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "post-apodex-maintenance pre_snapshot/manifest.json",
+      "actual_sha256": "fce20d39b3ceef2b46cfc51d65a2fce5d051afc0ba07303e8d1521cd42743f34",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "post-apodex-maintenance protocol-freeze/manifest.json",
+      "actual_sha256": "97f278b35838b4e82f9b825b967e12f888031cf9fc95dc7ea1c9dc7d9ae69f81",
+      "result": "UNCHANGED"
+    },
+    {
+      "name": "post-apodex-maintenance pf02/pf03/pf04/pf05/pf06 executables and toolchain",
+      "result": "UNCHANGED",
+      "note": "Verified by listing the protocol-freeze manifest's executable_artifacts_sha256 table; all 16 entries are reachable at their recorded paths and produced hashes identical to those recorded."
+    }
+  ],
+  "scorer_self_tests": [
+    {
+      "name": "post-apodex-maintenance pf01-scorer/score_pv.py (frozen 0.1.3-draft)",
+      "result": "PASS (60/60 fixtures, output verified)",
+      "note": "Historical scorer self-tests are unchanged; the WELP successor contract references the same scorer at the same SHA-256 d5dedf5b5bae21e3add97a4675b3ba82b5130eaff0ae14c35abe97532b846424."
+    }
+  ],
+  "overall_result": "HISTORICAL_INTEGRITY_PRESERVED",
+  "what_was_NOT_modified": [
+    "Historical wlep-next-snapshot-* manifest files (post-apodex-maintenance, final-hardening, overnight-hardening-2026-08-25, phase5-hardening).",
+    "Historical wlep- contract files in apodex-1.1-mini/contracts/, gate-calibration/contracts/, overnight-hardening-2026-08-25/publication/repo-candidate/contracts/, final-hardening/phase6-context/wlep-context-contract.json, final-hardening/phase8-optimization/wlep-optimization-0.1.0-draft.json, final-hardening/phase9-stability/soak.py, final-hardening/phase10-classification/classify.py.",
+    "Historical wlep_*.schema.json files (final-hardening/schemas/, overnight-hardening-2026-08-25/publication/repo-candidate/schemas/).",
+    "Historical validator copies (post-apodex-maintenance/validators/validate_campaign_v2.py, overnight-hardening-2026-08-25/publication/repo-candidate/validation/wlep_validate.py, final-hardening/validators/final_validate.py).",
+    "Apodex, Nemotron, LFM, Qwen3.8 campaign trees (entire trees preserved).",
+    "OMP profile aliases (e.g. --profile wlep-apodex) are campaign-local identifiers, not renamed."
+  ],
+  "what_was_modified": [
+    "Living protocol notes in HivemindVault (WLEP body text -> WELP).",
+    "post-apodex-maintenance publication/repo-candidate/README.md (added WELP header).",
+    "post-apodex-maintenance publication/repo-candidate/docs/{output-durability,runtime-selection}.md (added WELP header line).",
+    "welp-development/ tree is brand new; nothing in wlep-development/ was renamed or removed."
+  ]
+}

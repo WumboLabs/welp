@@ -1,0 +1,72 @@
+{
+  "schema": "welp-validator-compatibility/0.1.0-draft",
+  "generated_utc": "2026-08-26T18:58:00+00:00",
+  "purpose": "Records the validator compatibility matrix after the WLEP -> WELP migration. Confirms legacy WLEP campaigns still validate, new WELP campaigns validate, and unknown prefixes / silent rewrites are rejected.",
+  "validators": [
+    {
+      "path": "wlep-development/welp-to-welp-rename/validators/validate_campaign_welp.py",
+      "kind": "NEW — WELP successor",
+      "version": "0.1.0-draft",
+      "accepts": ["wlep-CONFORMANCE.md", "welp-CONFORMANCE.md", "welp-next-snapshot-*", "wlep-next-snapshot-*", "welp-preflight const", "wlep-preflight const", "welp- and wlep- contract_id prefixes"],
+      "rejects": ["unknown protocol prefix", "silently rewritten welp-* manifest referencing only wlep-* contracts"],
+      "fixtures": 5,
+      "selftest": "PASS",
+      "fixtures_passed": {
+        "valid_legacy_wlep_campaign": true,
+        "valid_current_welp_campaign": true,
+        "welp_campaign_using_legacy_evidence": true,
+        "invalid_unknown_protocol_prefix": true,
+        "improperly_rewritten_legacy_manifest": true
+      }
+    },
+    {
+      "path": "wlep-development/post-apodex-maintenance/validators/validate_campaign_v2.py",
+      "kind": "FROZEN — historical WLEP",
+      "version": "0.2.0-draft",
+      "frozen_sha256": "276285240df42f9bb5cccc78f427f536bf89d7b5de53daf172b35c14d2387b79",
+      "accepts": ["wlep- prefix only", "WLEP-CONFORMANCE.md"],
+      "selftest": "PASS",
+      "note": "Frozen by snapshot manifest. Validates historical WLEP campaigns unchanged."
+    },
+    {
+      "path": "wlep-development/post-apodex-maintenance/publication/repo-candidate/validators/validate_campaign_v2.py",
+      "kind": "FROZEN — historical WLEP (canonical copy in repo-candidate)",
+      "version": "0.2.0-draft",
+      "frozen_sha256": "1712ea15ae83ed4d8d0a23d547c6a2353af34ac8bee6a0619dfe247bfa402f24",
+      "selftest": "PRE-EXISTING DEFECT — fixture has '<home>/camp/results/phase3_raw.jsonl' which fails M09 (relative path). NOT introduced by the migration. Recommend pre-deploy fix to use an absolute path in the embedded 'good' fixture.",
+      "pre_existing_bug": true
+    },
+    {
+      "path": "wlep-development/overnight-hardening-2026-08-25/publication/repo-candidate/validation/wlep_validate.py",
+      "kind": "FROZEN — historical WLEP",
+      "version": "0.1.x-draft",
+      "frozen_sha256": "b5fa03037f19885d78c118bfcf1014055d52fcdd45179d95afcd9c68c1f0847d",
+      "selftest": "PASS",
+      "note": "Frozen by overnight snapshot. Validates historical WLEP campaigns unchanged."
+    },
+    {
+      "path": "wlep-development/final-hardening/validators/final_validate.py",
+      "kind": "FROZEN — historical WLEP",
+      "version": "0.1.x-draft",
+      "frozen_sha256": "6c395b7e363872fc3cdc3dece76f599441c38f7480ed3990a8d6fdd803eba102",
+      "selftest": "PASS",
+      "note": "Frozen by final-hardening snapshot. Validates historical WLEP campaigns unchanged."
+    }
+  ],
+  "compatibility_matrix": {
+    "WLEP_CONFORMANCE_md": "accepted by all validators (legacy campaigns unchanged)",
+    "WELP_CONFORMANCE_md": "accepted by new WELP validator; frozen WLEP validators continue to accept WLEP-CONFORMANCE.md for legacy campaigns",
+    "welp-next-snapshot-*": "accepted by new WELP validator; legacy WLEP validators do not know the prefix (N01 pattern enforces)",
+    "wlep-next-snapshot-*": "accepted by all validators",
+    "welp-preflight const": "accepted by new WELP validator; legacy WLEP validators do not know this const",
+    "wlep-preflight const": "accepted by all validators",
+    "welp- contract_id": "accepted by all validators (legacy validators only match on wlep- prefix; N03 rewrite detection runs in new validator)",
+    "wlep- contract_id": "accepted by all validators"
+  },
+  "legacy_wlep_fixture_result": "PASS",
+  "new_welp_fixture_result": "PASS",
+  "executor_independence": "verifier can run validators on each campaign bundle and observe PASS/FAIL without session memory",
+  "open_issues": [
+    "pre-existing M09 bug in post-apodex-maintenance/publication/repo-candidate/validators/validate_campaign_v2.py good-fixture: replace '<home>/camp/results/phase3_raw.jsonl' with '<workspace>/camp/results/phase3_raw.jsonl' (absolute). This is not in migration scope; tracked as open issue."
+  ]
+}

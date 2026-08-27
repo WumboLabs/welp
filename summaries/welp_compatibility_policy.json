@@ -1,0 +1,104 @@
+{
+  "schema": "welp-compatibility-policy/0.1.0-draft",
+  "generated_utc": "2026-08-26T18:43:00+00:00",
+  "old_name": {
+    "acronym": "WLEP",
+    "formal": "WumboLabs Model Evaluation Protocol",
+    "status": "LEGACY DRAFT PROTOCOL NAME (pre-2026-08-26)",
+    "snapshot_ids": [
+      "wlep-validation-2 (campaign iteration)",
+      "wlep-next-snapshot-2026-08-25-phase5",
+      "wlep-next-snapshot-2026-08-25-end-to-end",
+      "wlep-next-snapshot-2026-08-26-post-apodex"
+    ]
+  },
+  "new_name": {
+    "acronym": "WELP",
+    "formal": "WumboLabs Evaluation Lifecycle Protocol",
+    "informal_pronunciation": "welp",
+    "status": "CURRENT AND FUTURE CANONICAL PROTOCOL NAME (effective 2026-08-26)",
+    "first_snapshot_id": "welp-next-snapshot-2026-08-26-post-rename"
+  },
+  "effective_migration_date": "2026-08-26",
+  "historical_preservation_rule": {
+    "rule": "Historical WLEP campaign artifacts, frozen snapshots, manifests, hashes, contract identities, conformance records, and model evidence remain identified as WLEP.",
+    "what_is_preserved": [
+      "Frozen snapshot IDs starting with wlep-",
+      "Frozen protocol-freeze/manifest.json contents and hash tables",
+      "Frozen contract files starting with wlep- and their SHA-256",
+      "Frozen schema files starting with wlep_ and their SHA-256",
+      "Frozen campaign WLEP-CONFORMANCE.md, WLEP-END-TO-END-READINESS.md, WLEP validation files",
+      "Frozen Lab Record directory names (e.g. lab-records/<model>/wlep-2026-08-25/)",
+      "Frozen apodex, nemotron, lfm, qwen3.8 campaign evidence",
+      "Frozen OMP profile aliases (e.g. --profile wlep-apodex) that are campaign-local identifiers",
+      "Historical wlep-validation-2 campaign iteration path and contents"
+    ],
+    "what_is_not_silently_rewritten": [
+      "Historical WLEP reports → WELP (FORBIDDEN)",
+      "Historical wlep- contract filenames → welp- (FORBIDDEN, would invalidate frozen hashes)",
+      "Historical wlep_ schema filenames → welp_ (FORBIDDEN, would invalidate frozen hashes)",
+      "Historical snapshot manifest hash tables (FORBIDDEN)"
+    ]
+  },
+  "compatibility_behavior": {
+    "validators": {
+      "rule": "Current validators must accept BOTH legacy WLEP campaign identity AND current WELP campaign identity. They must NOT silently rewrite old IDs.",
+      "legacy_wlep_compatible": true,
+      "current_welp_canonical": true,
+      "fixtures_required": [
+        "valid historical WLEP campaign",
+        "valid current WELP campaign",
+        "invalid unknown protocol prefix",
+        "historical WLEP manifest whose identity was improperly rewritten (REJECTED)",
+        "WELP campaign using legacy-compatible evidence (ACCEPTED)"
+      ]
+    },
+    "schemas": {
+      "rule": "Both wlep_*.schema.json (legacy) and welp_*.schema.json (current) machine-readable vocabularies are accepted by validators. Schema references inside frozen manifests remain unchanged.",
+      "legacy_wlep_retained": true,
+      "current_welp_added": true
+    },
+    "contracts": {
+      "rule": "Frozen contract files starting with wlep- are immutable. New living-draft successor contracts are introduced as new files with the welp- prefix and a new version number.",
+      "frozen_wlep_immutable": true,
+      "successor_relationship": "welp-<name> 0.1.x-draft is the new living successor draft of wlep-<name> 0.1.x-draft. The two files may be byte-identical aside from identifier metadata; if so the relationship is recorded explicitly in welp_contract_mapping.json."
+    },
+    "conformance_filename": {
+      "legacy": "WLEP-CONFORMANCE.md (valid for legacy WLEP campaigns)",
+      "current": "WELP-CONFORMANCE.md (canonical for new WELP campaigns)",
+      "validator_rule": "validators accept either filename; both pass required-file checks; campaign_validator_v2 logs which convention was used."
+    },
+    "lab_record_directory": {
+      "rule": "Historical WLEP Lab Record directory names (e.g. .../wlep-2026-08-25/) are filesystem provenance. New campaigns may use a welp- prefixed directory name; legacy directories are NEVER renamed.",
+      "examples": {
+        "historical_unchanged": "lab-records/apodex-1.1-mini/wlep-2026-08-25/",
+        "future_canonical": "lab-records/<model-slug>/welp-<YYYY-MM-DD>/"
+      }
+    },
+    "snapshot_ids": {
+      "rule": "Historical wlep-next-snapshot-* IDs are immutable. The first WELP snapshot uses welp-next-snapshot-2026-08-26-post-rename (DRAFT — NOT v1.0).",
+      "naming_pattern_unchanged": "welp-next-snapshot-YYYY-MM-DD-<suffix>"
+    },
+    "publication_routing": {
+      "rule": "Future records say: WELP snapshot / WELP conformance / WELP protocol findings / WELP Lab Record. Historical records that already say WLEP are not retroactively renamed in public records.",
+      "channels": {
+        "github": "canonical public WELP evidence/protocol source",
+        "wumbocore": "human-readable WELP Lab Records",
+        "localmaxxing": "community benchmark/report distribution layer",
+        "obsidian": "internal WELP operational handbook"
+      }
+    }
+  },
+  "first_welp_snapshot": {
+    "snapshot_id": "welp-next-snapshot-2026-08-26-post-rename",
+    "parent": "wlep-next-snapshot-2026-08-26-post-apodex",
+    "migration_type": "naming-only",
+    "methodology_change": "NONE"
+  },
+  "machine_readable_aliases": {
+    "canonical_prefix": "welp-",
+    "legacy_prefix": "wlep-",
+    "both_accepted_by_validators": true
+  },
+  "informal_tagline_optional": "Run the evidence. Follow the gates. If the model fails: welp."
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WELP toolchain inventory",
+  "version": "0.1.0-draft",
+  "supersedes": {
+    "schema": "welp-toolchain-inventory/0.1.0-draft",
+    "frozen_path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_inventory/schema.json",
+    "frozen_sha256": "03ba39879a6e0931a6dcb17b65e2fb5d2b96a1534a1566bd7e379466ae0b5316",
+    "migration_type": "naming-only"
+  },
+  "type": "object",
+  "required": [
+    "schema",
+    "generated_utc",
+    "host",
+    "tools"
+  ],
+  "properties": {
+    "schema": {
+      "const": "welp-toolchain-inventory/0.1.0-draft"
+    },
+    "generated_utc": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "gpu": {
+      "type": "string"
+    },
+    "driver": {
+      "type": "string"
+    },
+    "cuda_toolkit": {
+      "type": "string"
+    },
+    "policy": {
+      "type": "string"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "tool",
+          "installed",
+          "compatible_status"
+        ],
+        "properties": {
+          "tool": {"type": "string"},
+          "purpose": {"type": "string"},
+          "installed": {"type": "boolean"},
+          "path": {"type": ["string", "null"]},
+          "version": {"type": ["string", "null"]},
+          "commit": {"type": ["string", "null"]},
+          "environment": {"type": ["object", "string", "null"]},
+          "compatible_status": {"type": "string"},
+          "preferred": {"type": ["boolean", "null"]},
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  }
+}

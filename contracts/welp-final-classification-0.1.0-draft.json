@@ -1,0 +1,33 @@
+{
+  "contract_id": "welp-final-classification",
+  "version": "0.1.0-draft",
+  "status": "READY_DRAFT",
+  "created": "2026-08-26",
+  "supersedes": {
+    "contract_id": "wlep-final-classification",
+    "version": "0.1.0-draft",
+    "frozen_path": "final-hardening/phase10-classification/classify.py (no separate contract file)",
+    "migration_type": "naming-only"
+  },
+  "engine": "classify.py consumes evidence bundle deterministically",
+  "roles": [
+    "coding_specialist",
+    "tool_agent",
+    "omp_agent",
+    "extraction_helper",
+    "router_classifier",
+    "primary_assistant"
+  ],
+  "readiness_states": [
+    "READY",
+    "READY_WITH_GUARDRAILS",
+    "LIMITED_ROLE_ONLY",
+    "NOT_READY",
+    "INTEGRATION_BLOCKED"
+  ],
+  "semantics": {
+    "NOT_REACHED_not_equal_PASS": true,
+    "NOT_APPLICABLE_not_equal_FAIL": true,
+    "producer_claims_reported_separately": true
+  }
+}

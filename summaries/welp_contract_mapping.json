@@ -1,0 +1,228 @@
+{
+  "schema": "welp-contract-mapping/0.1.0-draft",
+  "generated_utc": "2026-08-26T18:58:00+00:00",
+  "purpose": "Mapping from each historical WLEP contract to its current WELP-named successor draft. Frozen historical files are immutable; successor drafts carry the WELP prefix and an explicit supersedes block.",
+  "mappings": [
+    {
+      "historical": {
+        "contract_id": "wlep-practical-viability",
+        "version": "0.1.3-draft",
+        "frozen_path": "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/wlep-practical-viability-0.1.3-draft.json",
+        "frozen_sha256": "003ee7f797f78a115c72a3a22d632b79e9ba2eb21c2e50d1d76dd0626faba239",
+        "alternate_frozen_path": "post-apodex-maintenance/pf01-scorer/contracts/wlep-practical-viability-0.1.3-draft.json",
+        "scorer_frozen_path": "post-apodex-maintenance/pf01-scorer/score_pv.py",
+        "scorer_frozen_sha256": "d5dedf5b5bae21e3add97a4675b3ba82b5130eaff0ae14c35abe97532b846424"
+      },
+      "successor": {
+        "contract_id": "welp-practical-viability",
+        "version": "0.1.4-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-practical-viability-0.1.3-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-reliability",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-reliability-0.1.0-draft.json",
+        "scorer_frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/scorers/score_reliability.py",
+        "scorer_frozen_sha256": "07659616c1301a65f3ba8d1cda0e4d80bb38222e4d8d0732b1525fce4a44e034"
+      },
+      "successor": {
+        "contract_id": "welp-reliability",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-reliability-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-context",
+        "version": "0.1.0-draft",
+        "frozen_path": "final-hardening/phase6-context/wlep-context-contract.json",
+        "frozen_sha256": "023b45064923f9bb89f8dd48be61ab5165f534bb0652889ad6d8ed3ae37a2886"
+      },
+      "successor": {
+        "contract_id": "welp-context",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-context-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-optimization",
+        "version": "0.1.0-draft",
+        "frozen_path": "final-hardening/phase8-optimization/wlep-optimization-0.1.0-draft.json",
+        "frozen_sha256": "2e03dae48c872da5068b8035a4b8f6feaadb75e74d09db00fe2b29e9eb55f2f0"
+      },
+      "successor": {
+        "contract_id": "welp-optimization",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-optimization-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-stability",
+        "version": "0.1.0-draft",
+        "frozen_path": "final-hardening/phase9-stability/soak.py"
+      },
+      "successor": {
+        "contract_id": "welp-stability",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-stability-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-final-classification",
+        "version": "0.1.0-draft",
+        "frozen_path": "final-hardening/phase10-classification/classify.py"
+      },
+      "successor": {
+        "contract_id": "welp-final-classification",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-final-classification-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-preflight",
+        "version": "0.1.0-draft",
+        "frozen_path": "post-apodex-maintenance/publication/repo-candidate/contracts/preflight/wlep-preflight-0.1.0-draft.json",
+        "frozen_sha256": "bfb68f4cbb58004d61c1b6274d6caea4b43249c07cc4d90cfac87c64725c89fc"
+      },
+      "successor": {
+        "contract_id": "welp-preflight",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-preflight-0.1.0-draft.json",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-module-coding",
+        "version": "0.1-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-module-coding-0.1-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-coding",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-structured-interfaces",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-structured-interfaces-0.1.0-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-structured-interfaces",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-native-tools",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-native-tools-0.1.0-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-native-tools",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-extraction-rag",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-extraction-rag-0.1.0-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-extraction-rag",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-reasoning",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-reasoning-0.1.0-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-reasoning",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-linux-systems",
+        "version": "0.1.0-draft",
+        "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-linux-systems-0.1.0-draft.json"
+      },
+      "successor": {
+        "contract_id": "welp-linux-systems",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-omp-local-agent",
+        "version": "0.1.0-draft",
+        "frozen_path": "phase5-hardening/omp/fixtures/omp-fix-{01,02,03,04}-*/fixture.json (oracle-validated fixtures)"
+      },
+      "successor": {
+        "contract_id": "welp-omp-local-agent",
+        "version": "0.1.0-draft",
+        "path": "welp-development/welp-to-welp-rename/contracts/welp-modules.json (index)",
+        "methodology_change": "NO"
+      },
+      "migration_type": "naming-only"
+    },
+    {
+      "historical": {
+        "contract_id": "wlep-practical-viability",
+        "version": "0.1.2-draft",
+        "frozen_path": "gate-calibration/contracts/wlep-practical-viability-0.1.2-draft.json",
+        "frozen_sha256": "a7b2af119e1cfdbd260b4aec15651081148db0626bd543c1b18ebf35dbb2b04b",
+        "scorer_frozen_sha256": "79f29b2c95bbf0c63f0a8b0b56851214c0c6a87499617ac0acc3f416b8bd8141",
+        "supersession_note": "Superseded by 0.1.3-draft (WLEP era) on 2026-08-26; the WELP successor 0.1.4-draft supersedes 0.1.3-draft."
+      }
+    }
+  ],
+  "rules": {
+    "frozen_historical_immutable": true,
+    "successor_relationship_recorded": true,
+    "byte_identity_after_metadata_change": "FALSE (per spec: do not pretend hashes are identical after metadata/name changes)",
+    "validators_accept_both_prefixes": true
+  }
+}

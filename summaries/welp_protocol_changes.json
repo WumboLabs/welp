@@ -1,0 +1,47 @@
+{
+  "schema": "welp-protocol-changes/0.1.0-draft",
+  "generated_utc": "2026-08-26T19:00:00+00:00",
+  "purpose": "Records the protocol changes that took effect when WLEP was renamed to WELP. Distinguishes naming-only changes from any methodology change.",
+  "change_log": [
+    {
+      "version": "welp-next-snapshot-2026-08-26-post-rename",
+      "date": "2026-08-26",
+      "parent": "wlep-next-snapshot-2026-08-26-post-apodex",
+      "change_type": "naming-only",
+      "methodology_change": "NO",
+      "naming_changes": [
+        "Active protocol name WLEP -> WELP (acronym).",
+        "Active protocol full name 'WumboLabs Model Evaluation Protocol' -> 'WumboLabs Evaluation Lifecycle Protocol'.",
+        "Active protocol files: WLEP Phase Structure.md -> body content renamed to WELP Phase Structure.md (file rename to WLEP Phase Structure alias file kept).",
+        "Living note: 'WumboLabs Model Evaluation Protocol (WLEP).md' -> new canonical 'WumboLabs Evaluation Lifecycle Protocol (WELP).md' + legacy alias note.",
+        "Future contract IDs: prefix welp- (successor to wlep-).",
+        "Future conformance filename: WELP-CONFORMANCE.md (successor to WLEP-CONFORMANCE.md).",
+        "Future conformance JSON key: welp_conformance.json (successor to wlep_conformance.json).",
+        "Future schema filenames: welp_*.schema.json (successor to wlep_*.schema.json).",
+        "Future toolchain preflight const: welp-preflight (successor to wlep-preflight).",
+        "Future validator path: validate_campaign_welp.py (successor to validate_campaign_v2.py; the frozen file is also kept).",
+        "First WELP snapshot id: welp-next-snapshot-2026-08-26-post-rename (successor to wlep-next-snapshot-2026-08-26-post-apodex)."
+      ],
+      "preserved_changes": [
+        "All historical wlep-next-snapshot-* IDs remain valid.",
+        "All historical wlep- contract filenames and SHA-256s remain valid and immutable.",
+        "All historical wlep_*.schema.json filenames and SHA-256s remain valid and immutable.",
+        "All historical campaign WLEP-CONFORMANCE.md files and apodex/nemotron/lfm/qwen3.8 evidence remain unchanged.",
+        "Historical Lab Record directory names like lab-records/<model>/wlep-<YYYY-MM-DD>/ are filesystem provenance; never renamed.",
+        "The 'OMP profile alias' --profile wlep-apodex in campaign-local OMP evidence is preserved verbatim."
+      ],
+      "thresholds_changed": "NO",
+      "scorers_changed": "NO",
+      "gates_changed": "NO",
+      "phases_changed": "NO",
+      "validators_added": "validate_campaign_welp.py (5 fixtures: legacy WLEP, current WELP, WELP-with-legacy-evidence, unknown-prefix rejection, silently-rewritten-legacy rejection).",
+      "first_welp_snapshot_status": "DRAFT — NOT v1.0",
+      "operator_summary": "Same protocol, different name. Frozen WLEP evidence reproduces unchanged; new WELP campaigns use the WELP snapshot and WELP-named successor contracts/schemas/validators."
+    }
+  ],
+  "operator_decision_required": [
+    "Choose a LICENSE for the public WELP repo (out of scope for the migration agent; human).",
+    "Initialize git in the public WELP repo (out of scope; human).",
+    "Decide whether to commit the HivemindVault rename + new WELP overview note (out of scope; human)."
+  ]
+}

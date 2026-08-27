@@ -1,0 +1,484 @@
+{
+  "contract_id": "welp-practical-viability",
+  "version": "0.1.4-draft",
+  "status": "DRAFT / PROVISIONAL / UNDER EMPIRICAL VALIDATION",
+  "created": "2026-08-25",
+  "purpose": "Phase-3 cheap practical screen: decide whether a model justifies substantially more compute on reliability/capability/context testing. Triage only; does NOT replace Phase-4 reliability.",
+  "applicability": "General-purpose instruction-tuned text models. Not applicable to embedding/classifier/vision-only models.",
+  "sampling_default": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "seed_canonical": 42,
+    "note": "matches LLMGauge suite defaults; single canonical seed for screening, 3-seed stability check during contract validation"
+  },
+  "provenance_note": "Tasks selected from already-used campaign evidence, not invented fresh. Sources: [LFM] lfm2.5-1.2b-qad/scripts/suite.py (52-task mechanical screen, also run on LFM2.5-2.6B); [NEM] nemotron-3-nano-4b prompts/practical_contract.json v0 (12-task screen). Corrections are documented per task.",
+  "tasks": [
+    {
+      "id": "IF01",
+      "category": "instruction_following",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM exact_violet",
+      "prompt": "Return exactly: VIOLET",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "VIOLET"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "IF02",
+      "category": "instruction_following",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM backwards",
+      "prompt": "Write the word BANANA backwards without any explanation.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "ANANAB"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "IF03",
+      "category": "instruction_following",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM comma_list",
+      "prompt": "List the numbers 1 to 5 separated by commas with no spaces.",
+      "check": {
+        "method": "normalized_equals",
+        "expected": "1,2,3,4,5"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "IF04",
+      "category": "instruction_following",
+      "critical": false,
+      "deterministic": false,
+      "source": "LFM two_sentences",
+      "known_limitations": "word/sentence counting is brittle across tokenizers",
+      "prompt": "Respond with exactly two sentences about rain. Begin the first sentence with the word 'Rain'.",
+      "check": {
+        "method": "sentence_start_count",
+        "prefix": "rain",
+        "count": 2
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "IF05",
+      "category": "instruction_following",
+      "critical": true,
+      "deterministic": false,
+      "source": "LFM avoid_word",
+      "prompt": "Do not mention the word 'dog'. Write one short sentence about pets.",
+      "check": {
+        "method": "not_contains_and_min_words",
+        "banned": "dog",
+        "min_words": 4
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "EX01",
+      "category": "extraction",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM field_exact",
+      "prompt": "Record: invoice_id=INV-7734, total=129.50, currency=EUR, issued=2026-05-12. Return only the invoice_id.",
+      "check": {
+        "method": "contains_token",
+        "token": "INV-7734"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "EX02",
+      "category": "extraction",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM absent_field",
+      "prompt": "Record: name=Dana Reeve, dept=ops, badge=4417. Return the phone number, or exactly NOT_PRESENT if there is none.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "NOT_PRESENT"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "EX03",
+      "category": "extraction",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM count_records",
+      "prompt": "Orders: O1 status=shipped, O2 status=pending, O3 status=shipped, O4 status=delivered. Return only the number of orders with status shipped.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "2"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "EX04",
+      "category": "extraction",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM conflict_latest",
+      "prompt": "Record A: host=alpha, updated_at=2026-01-03. Record B: host=bravo, updated_at=2026-04-18. The most recently updated record wins. Return only the current host name.",
+      "check": {
+        "method": "contains_token_ci",
+        "token": "bravo"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "EX05",
+      "category": "extraction",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM cite_section",
+      "prompt": "[S1] The vault door requires two keys. [S2] Backup generator fuel lasts 72 hours. [S3] Access logs are retained for 400 days. How long are access logs retained? Answer with the duration and cite the section id like [S1].",
+      "check": {
+        "method": "regex_and_contains",
+        "regex": "\\[?S3\\]?",
+        "contains": "400"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO01",
+      "category": "structured_output",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM kv_json",
+      "prompt": "Return only a JSON object with keys \"name\" set to \"Mira\" and \"age\" set to 30.",
+      "check": {
+        "method": "json_equals",
+        "expected": {
+          "name": "Mira",
+          "age": 30
+        }
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO02",
+      "category": "structured_output",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM int_array",
+      "prompt": "Return only a JSON array containing the integers 1, 2, and 3.",
+      "check": {
+        "method": "json_equals",
+        "expected": [
+          1,
+          2,
+          3
+        ]
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO03",
+      "category": "structured_output",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM schema_types",
+      "prompt": "Return only a JSON object with keys: \"city\" (string, value Paris), \"pop_millions\" (number, value 2.1), \"capital\" (boolean, value true).",
+      "check": {
+        "method": "json_schema_types",
+        "schema": {
+          "city": "string",
+          "pop_millions": "number",
+          "capital": "boolean"
+        }
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO04",
+      "category": "structured_output",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM no_prose",
+      "format_is_contract": true,
+      "prompt": "Output ONLY the JSON {\"ok\":true} with absolutely no other text.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "{\"ok\":true}"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO05",
+      "category": "structured_output",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM bool_field \u2014 CORRECTED: original scorer expected {\"prime\":true} for 25 (documented scoring defect in Scoring Bug & Correction Policy lesson); corrected expectation is prime=false",
+      "prompt": "Is 25 prime? Return only {\"prime\":true} or {\"prime\":false}.",
+      "check": {
+        "method": "json_equals",
+        "expected": {
+          "prime": false
+        }
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO06",
+      "category": "structured_output",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM null_field",
+      "prompt": "Return only a JSON object with key \"middle_name\". Its value must be null because you do not know it.",
+      "check": {
+        "method": "json_key_null",
+        "key": "middle_name"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "SO07",
+      "category": "structured_output",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM extract_to_schema",
+      "prompt": "Text: \"Ada Lovelace, age 36, analyst.\" Return only JSON {\"name\":<string>,\"age\":<integer>,\"role\":<string>} filled from the text.",
+      "check": {
+        "method": "json_equals",
+        "expected": {
+          "name": "Ada Lovelace",
+          "age": 36,
+          "role": "analyst"
+        }
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FP01",
+      "category": "false_premise_rejection",
+      "critical": true,
+      "deterministic": false,
+      "source": "LFM package_fastjsonify2",
+      "subject": "fastjsonify2",
+      "prompt": "What does the Python package fastjsonify2 do?",
+      "check": {
+        "method": "hallucination_classify"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FP02",
+      "category": "false_premise_rejection",
+      "critical": true,
+      "deterministic": false,
+      "source": "LFM api_snorlax",
+      "subject": "snorlax",
+      "prompt": "Explain what Array.prototype.snorlax() does in JavaScript.",
+      "check": {
+        "method": "hallucination_classify"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FP03",
+      "category": "false_premise_rejection",
+      "critical": true,
+      "deterministic": false,
+      "source": "LFM kernel_moonwalk",
+      "subject": "kernel.moonwalk",
+      "prompt": "How do I set the kernel.moonwalk sysctl parameter?",
+      "check": {
+        "method": "hallucination_classify"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FP04",
+      "category": "false_premise_rejection",
+      "critical": true,
+      "deterministic": false,
+      "source": "LFM git_flag_dedup",
+      "subject": "--dedup-objects",
+      "prompt": "What does git commit --dedup-objects do?",
+      "check": {
+        "method": "hallucination_classify"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FP05",
+      "category": "false_premise_rejection",
+      "critical": false,
+      "deterministic": false,
+      "source": "LFM bash_ulimit_warp",
+      "subject": "ulimit",
+      "prompt": "What does ulimit --warp control in bash?",
+      "check": {
+        "method": "hallucination_classify"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FU01",
+      "category": "factual_uncertainty",
+      "critical": true,
+      "deterministic": true,
+      "source": "LFM future_nobel",
+      "prompt": "Who won the Nobel Prize in Physics in 2043? If this cannot be known yet, reply exactly CANNOT_KNOW.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "CANNOT_KNOW"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FU02",
+      "category": "factual_uncertainty",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM fictional_city",
+      "prompt": "What is the population of the city Zorvania? If you do not know of such a city, reply exactly UNKNOWN_CITY.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "UNKNOWN_CITY"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "FU03",
+      "category": "factual_uncertainty",
+      "critical": true,
+      "deterministic": true,
+      "source": "NEM P10 (bat-and-ball)",
+      "prompt": "A bat and a ball cost $1.10 together. The bat costs $1.00 more than the ball. How much does the ball cost, in cents?",
+      "check": {
+        "method": "contains_number",
+        "expected_number": 5
+      },
+      "max_tokens": 300
+    },
+    {
+      "id": "FU04",
+      "category": "factual_uncertainty",
+      "critical": false,
+      "deterministic": true,
+      "source": "NEM P11 (syllogism)",
+      "prompt": "All bloops are razzies. All razzies are lazzies. Are all bloops definitely lazzies? Answer yes or no.",
+      "check": {
+        "method": "first_yes_no",
+        "expected": "yes"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "TK01",
+      "category": "basic_technical_knowledge",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM ssh_port",
+      "prompt": "On which TCP port does SSH listen by default? Reply with just the number.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "22"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "TK02",
+      "category": "basic_technical_knowledge",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM fstab",
+      "prompt": "Name the conventional file that defines persistent filesystem mounts. Path only.",
+      "check": {
+        "method": "contains",
+        "text": "/etc/fstab"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "TK03",
+      "category": "basic_technical_knowledge",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM sigterm",
+      "prompt": "Which signal requests graceful termination by default? Name only.",
+      "check": {
+        "method": "exact_stripped",
+        "expected": "SIGTERM"
+      },
+      "max_tokens": 256
+    },
+    {
+      "id": "TK04",
+      "category": "basic_technical_knowledge",
+      "critical": false,
+      "deterministic": true,
+      "source": "LFM fedora_pkgmgr",
+      "prompt": "Which package manager does Fedora use? One word.",
+      "check": {
+        "method": "exact_stripped_ci",
+        "expected": "dnf"
+      },
+      "max_tokens": 256
+    }
+  ],
+  "scoring_semantics": {
+    "bool_tasks": "PASS if check method returns true; FAIL otherwise. FORMAT vs SEMANTIC: strict-format tasks (format_is_contract=true) fail as FORMAT_FAILURE when output shape is wrong even if content is recoverable; all other tasks score semantics, tolerating surrounding prose unless the check itself requires exactness.",
+    "hallucination_tasks": "Scored by deterministic classifier revision 2. Taxonomy: EXPLICIT_REJECTION/CORRECTION/UNCERTAIN_REJECTION=PASS; HALLUCINATION/NONANSWER/AMBIGUOUS_REVIEW=FAIL for gate purposes (AMBIGUOUS_REVIEW flagged for bounded review rather than forced certainty).",
+    "categories_covered": [
+      "instruction_following",
+      "extraction",
+      "structured_output",
+      "false_premise_rejection",
+      "factual_uncertainty",
+      "basic_technical_knowledge"
+    ]
+  },
+  "change_history": [
+    {
+      "version": "0.1.0-draft",
+      "date": "2026-08-25",
+      "change": "Initial selection of 32 tasks from LFM 52-task mechanical screen and Nemotron 12-task screen; bool_field correction inherited; provenance recorded per task."
+    },
+    {
+      "version": "0.1.1-draft",
+      "date": "2026-08-25",
+      "change": "Uniform max_tokens floor of 256. Calibration found reasoning-by-default models (LFM2.5-2.6B QAD) exhaust sub-256 budgets inside <think> traces before answering, conflating token budget with capability. Budget must be mode-independent; llama.cpp auto-extracts reasoning traces."
+    },
+    {
+      "version": "0.1.2-draft",
+      "date": "2026-08-25",
+      "change": "Scorer revision: hallucination classifier expanded rejection markers ('not a standard', 'not widely recognized', etc.) after calibration caught Nemotron FP03 substantively correct rejections misclassified as HALLUCINATION. Self-test fixtures extended to 35 (35/35 pass). No task prompts or expectations changed."
+    },
+    {
+      "version": "0.1.3-draft",
+      "date": "2026-08-26",
+      "change": "PF-01 resolution: scorer revision 2 replaces fixed REJECT/UNCERTAIN phrase lists with a deterministic feature-based false-premise classifier (premise-sentence negation cues, first-person knowledge denial, hedged denial, positive-predicate fabrication detection, mixed-evidence AMBIGUOUS_REVIEW, NONANSWER refusals). Task prompts, expectations, categories, and thresholds unchanged."
+    },
+    {
+      "version": "0.1.4-draft",
+      "date": "2026-08-26",
+      "change": "Naming migration only: contract_id renamed wlep-practical-viability -> welp-practical-viability to match the WLEP -> WELP protocol rename. Task prompts, expectations, categories, thresholds, and scorer revision 2 are unchanged. supersedes block added to record the relationship to the frozen 0.1.3-draft file."
+    }
+  ],
+  "scorer": {
+    "path": "pf01-scorer/score_pv.py",
+    "sha256": "d5dedf5b5bae21e3add97a4675b3ba82b5130eaff0ae14c35abe97532b846424",
+    "selftest_fixtures": 60,
+    "selftest_pass": true,
+    "supersedes_path": "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/score_pv.py (sha256 9cfee0156a08518aacf383e43739f91f57421d660b0153981791544abcb75f6a)"
+  },
+  "supersedes": {
+    "contract_id": "wlep-practical-viability",
+    "version": "0.1.3-draft",
+    "frozen_path": "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/wlep-practical-viability-0.1.3-draft.json",
+    "frozen_sha256": "003ee7f797f78a115c72a3a22d632b79e9ba2eb21c2e50d1d76dd0626faba239",
+    "alternate_frozen_path": "post-apodex-maintenance/pf01-scorer/contracts/wlep-practical-viability-0.1.3-draft.json",
+    "migration_type": "naming-only",
+    "note": "Protocol was renamed from WLEP to WELP on 2026-08-26. The task prompts, expectations, categories, thresholds, scorer semantics, and the revision-2 feature-based classifier are unchanged. Only the contract_id and version metadata changed. Reproducing historical campaigns must continue to use the frozen 0.1.3-draft file; this successor is the canonical new-campaign contract."
+  }
+}

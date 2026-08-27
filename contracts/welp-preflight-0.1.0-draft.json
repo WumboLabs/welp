@@ -1,0 +1,43 @@
+{
+  "artifact": "welp-preflight",
+  "version": "0.1.0-draft",
+  "status": "DRAFT",
+  "created": "2026-08-26",
+  "supersedes": {
+    "artifact": "wlep-preflight",
+    "version": "0.1.0-draft",
+    "frozen_path": "post-apodex-maintenance/publication/repo-candidate/contracts/preflight/wlep-preflight-0.1.0-draft.json",
+    "frozen_sha256": "bfb68f4cbb58004d61c1b6274d6caea4b43249c07cc4d90cfac87c64725c89fc",
+    "migration_type": "naming-only",
+    "note": "Protocol was renamed from WLEP to WELP on 2026-08-26. The sections, selection rule, decision vocabulary, LocalMaxxing auth statuses, and outputs are unchanged. Only the artifact name changed."
+  },
+  "purpose": "Unified campaign-start preflight: hardware, installed toolchain discovery, protocol snapshot identity, model/runtime compatibility, LocalMaxxing publication readiness, safety rules, and durable-output readiness. MUST run before model acquisition or inference.",
+  "sections": [
+    "HARDWARE",
+    "TOOLCHAIN",
+    "PROTOCOL",
+    "MODEL",
+    "PUBLICATION",
+    "SAFETY",
+    "OUTPUT"
+  ],
+  "selection_rule": "DISCOVER FIRST / REUSE WHEN COMPATIBLE / UPDATE OR BUILD ONLY ON PROVEN INCOMPATIBILITY",
+  "decision_vocabulary": [
+    "REUSE_LOCAL",
+    "NEW_RUNTIME_REQUIRED"
+  ],
+  "localmaxxing_auth": {
+    "mandatory_at": "CAMPAIGN START",
+    "statuses": [
+      "READY",
+      "AUTH_BLOCKED",
+      "CLI_INCOMPATIBLE",
+      "NOT_APPLICABLE"
+    ],
+    "never_expose_keys": true
+  },
+  "outputs": {
+    "result": "summaries/toolchain_preflight.json",
+    "inventory": "summaries/toolchain_inventory.json"
+  }
+}
