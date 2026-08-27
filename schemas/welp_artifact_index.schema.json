@@ -2,12 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP artifact index entry",
   "version": "0.1.0-draft",
-  "supersedes": {
-    "schema": "wlep_artifact_index.schema.json",
-    "frozen_path": "final-hardening/schemas/wlep_artifact_index.schema.json",
-    "frozen_sha256": "7cdface2df30417483526fa57822cc098fb74b06e6d3ab78f4db0aa08a741e55",
-    "migration_type": "naming-only"
-  },
   "type": "array",
   "items": {
     "type": "object",

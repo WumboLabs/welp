@@ -1,6 +1,6 @@
 # WELP — WumboLabs Evaluation Lifecycle Protocol
 
-Canonical: **WELP — WumboLabs Evaluation Lifecycle Protocol** (informal pronunciation: "welp"). Former name (pre-2026-08-26): WLEP — WumboLabs Model Evaluation Protocol.
+Canonical: **WELP — WumboLabs Evaluation Lifecycle Protocol** (informal pronunciation: "welp").
 
 > Status: DRAFT. WELP is NOT frozen as v1.0. Thresholds marked draft are under empirical validation.
 
@@ -44,4 +44,4 @@ Model → Provenance → Admission → Performance → Practical Viability
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and WLEP prefixes, 5 fixtures, all PASS.
+- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes, 5 fixtures, all PASS.

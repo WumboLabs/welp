@@ -2,12 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP publication status",
   "version": "0.1.0-draft",
-  "supersedes": {
-    "schema": "wlep_publication_status.schema.json",
-    "frozen_path": "final-hardening/schemas/wlep_publication_status.schema.json",
-    "frozen_sha256": "88ae9c913d3ca12aac320ff183c7a7c213781e2ea9f22537d8f0e216c01a4a7e",
-    "migration_type": "naming-only"
-  },
   "type": "object",
   "required": [
     "github",

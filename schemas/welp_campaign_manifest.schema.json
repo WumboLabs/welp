@@ -2,13 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP campaign manifest",
   "version": "0.1.0-draft",
-  "supersedes": {
-    "schema": "wlep_campaign_manifest.schema.json",
-    "frozen_path": "final-hardening/schemas/wlep_campaign_manifest.schema.json",
-    "frozen_sha256": "37e2ea8b77fba2389f7c9fa3425ecd4e4f378cafa056fb09790e035e5115be74",
-    "migration_type": "naming-only",
-    "note": "Protocol renamed from WLEP to WELP on 2026-08-26. Schema fields are unchanged. The legacy wlep_campaign_manifest.schema.json remains valid for reproducing historical snapshots."
-  },
   "type": "object",
   "required": [
     "campaign_id",
@@ -30,8 +23,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "pattern": "^(welp|wlep)-next-snapshot-[0-9]{4}-[0-9]{2}-[0-9]{2}(-[a-z0-9-]+)?$",
-          "description": "Protocol snapshot identity; welp-* canonical, wlep-* legacy."
+          "pattern": "^welp-next-snapshot-[0-9]{4}-[0-9]{2}-[0-9]{2}(-[a-z0-9-]+)?$",
+          "description": "Protocol snapshot identity."
         }
       }
     },
@@ -74,7 +67,7 @@
     "contracts": {
       "type": "object",
       "patternProperties": {
-        "^(welp|wlep)-[a-z0-9-]+$": {
+        "^welp-[a-z0-9-]+$": {
           "type": "object"
         }
       }

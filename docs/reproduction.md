@@ -26,9 +26,9 @@
 
 ## Compatibility
 
-- Historical WLEP campaigns reproduce unchanged with the frozen WLEP snapshot.
+- Historical campaigns reproduce unchanged with the frozen snapshot.
 - New WELP campaigns use the WELP snapshot + WELP-named successor contracts.
-- Both validators accept both prefixes; either filename (`WELP-CONFORMANCE.md` / `WLEP-CONFORMANCE.md`) is valid.
+- The validator accepts both prefixes; either filename (`WELP-CONFORMANCE.md` / legacy) is valid.
 
 ## What is NOT in scope for the migration
 

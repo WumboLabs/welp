@@ -1,10 +1,8 @@
 # WELP — WumboLabs Evaluation Lifecycle Protocol (repo-candidate)
 
-Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle Protocol** (canonical successor to WLEP).
+Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle Protocol**.
 
 > Status: **DRAFT**. WELP is not frozen as v1.0. Thresholds marked draft are under empirical validation.
-
-> **Naming migration (2026-08-26):** the active protocol was renamed from WLEP to WELP. The current canonical artifacts in this directory use the `welp-` prefix. Historical WLEP artifacts (snapshots, contracts, schemas, validator copies, Lab Records) are preserved unchanged in their original locations and remain valid for reproducing old campaigns. See `summaries/welp_compatibility_policy.json` for the formal compatibility policy.
 
 *"Real Hardware. Real Testing. No Hype."*
 
@@ -13,15 +11,15 @@ Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle
 | Path | Contents |
 |---|---|
 | `protocol/` | protocol notes (phase structure, policies, standards) |
-| `contracts/` | versioned evaluation contracts (welp-practical-viability, welp-reliability, capability modules). Legacy `wlep-` contracts retained for historical reproducibility under `wlep-development/`. |
+| `contracts/` | versioned evaluation contracts (welp-practical-viability, welp-reliability, capability modules). |
 | `scorers/` | deterministic scorers with embedded self-tests |
-| `schemas/` | JSON Schemas — welp_campaign_manifest, welp_artifact_index, welp_publication_status, welp_serving_profile, welp_toolchain_preflight, welp_toolchain_inventory. Legacy `wlep_*.schema.json` retained for historical compatibility. |
+| `schemas/` | JSON Schemas — welp_campaign_manifest, welp_artifact_index, welp_publication_status, welp_serving_profile, welp_toolchain_preflight, welp_toolchain_inventory.  |
 | `hardware-profiles/` | *(see top-level `hardware/`; WELP carries reference runtime identities in `schemas/` + `docs/`)* |
 | `docs/` | methodology documentation |
 | `examples/` | example campaign records |
-| `validators/` | campaign-bundle validator (`validate_campaign_welp.py`, self-test passes) accepting both WELP and WLEP prefixes |
+| `validators/` | campaign-bundle validator (`validate_campaign_welp.py`, self-test passes) |
 | `lab-record-template/` | template for publishing a campaign evidence record |
-| `summaries/` | migration inventory, compatibility policy, contract/schema/validator mappings, executor-independence + integrity reports, rename verdict |
+| `summaries/` | executor-independence + integrity reports |
 
 ## Core rules
 
@@ -31,15 +29,9 @@ Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle
 - Scorers self-test before live gate use.
 - Human-controlled Git operations only.
 
-## Compatibility and history
-
-Historical records created before the rename may identify the protocol as WLEP. Those identifiers are intentionally preserved for reproducibility. Validators in this repo accept both `WLEP-CONFORMANCE.md` (legacy) and `WELP-CONFORMANCE.md` (canonical for new campaigns). Frozen campaign snapshots beginning with `wlep-next-snapshot-*` are immutable.
-
-See `summaries/welp_migration_inventory.json` for the full reference inventory, `summaries/welp_compatibility_policy.json` for the rules, and `summaries/welp_contract_mapping.json` + `summaries/welp_schema_mapping.json` for the contract/schema mappings.
-
 ## First WELP snapshot
 
-The first WELP snapshot is `welp-next-snapshot-2026-08-26-post-rename` (DRAFT — NOT v1.0). Parent: `wlep-next-snapshot-2026-08-26-post-apodex`. Migration type: naming-only. See `snapshot-freeze/manifest.json`.
+The first WELP snapshot is `welp-next-snapshot-2026-08-26-post-rename` (DRAFT — NOT v1.0). See `snapshot-freeze/manifest.json`.
 
 ## License
 

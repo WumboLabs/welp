@@ -2,13 +2,6 @@
   "schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP campaign toolchain preflight result",
   "version": "0.1.0-draft",
-  "supersedes": {
-    "schema": "welp-toolchain-preflight/0.1.0-draft",
-    "frozen_path": "post-apodex-maintenance/publication/repo-candidate/schemas/toolchain_preflight/schema.json",
-    "frozen_sha256": "2f1c4aa17bad15dace838aed3bc91fc0219bd3bb204505489783d7f1cd885cfc",
-    "migration_type": "naming-only",
-    "note": "Title literal wlep -> welp; schema fields and required keys are unchanged."
-  },
   "type": "object",
   "required": [
     "preflight",
@@ -57,7 +50,7 @@
       "properties": {
         "snapshot_id": {
           "type": "string",
-          "pattern": "^(welp|wlep)-next-snapshot-"
+          "pattern": "^welp-next-snapshot-"
         },
         "welp_status": {
           "const": "DRAFT"
