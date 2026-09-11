@@ -38,6 +38,16 @@ New rules:
        MEASURED_NOT_SUBMITTED | NOT_ELIGIBLE | BLOCKED; SUBMITTED requires
        origin (NEW | VERIFIED_EXISTING) + submission_ref; the other statuses
        require reason
+  R07  Website publication disposition (summaries/website-publication.json):
+       REQUIRED (error) in new-format bundles whose campaign snapshot date is
+       >= 2026-09-12; expected (warning) in earlier bundles so frozen evidence
+       remains valid unchanged
+  R08  Website publication disposition content: disposition must be exactly
+       WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED;
+       WEBSITE_BLOCKED / NOT_FOR_PUBLICATION require reason; the other statuses
+       require website_record_slug; canonical_evidence.state must be exactly
+       PUBLISHED | PENDING_HUMAN_GATE; PUBLISHED requires a canonical_evidence
+       URL; PENDING_HUMAN_GATE must not carry a claimed canonical URL
 
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
@@ -51,6 +61,9 @@ ALLOWED_PREFLIGHT = {"wlep-preflight", "welp-preflight"}
 LMX_STATUSES = {"SUBMITTED", "MEASURED_NOT_SUBMITTED", "NOT_ELIGIBLE", "BLOCKED"}
 LMX_DISPOSITION_REQUIRED_FROM = "2026-09-10"  # campaign snapshot dates from this day on
 REPORT_HIERARCHY_FROM = "2026-09-10"  # REPORT.md/WELP-LAB-RECORD.md hierarchy effective from this snapshot date
+WEBSITE_STATUSES = {"WEBSITE_READY", "WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION", "WEBSITE_PUBLISHED"}
+WEBSITE_EVIDENCE_STATES = {"PUBLISHED", "PENDING_HUMAN_GATE"}
+WEBSITE_DISPOSITION_REQUIRED_FROM = "2026-09-12"  # campaign snapshot dates from this day on
 
 
 def check(root: Path):
@@ -201,6 +214,60 @@ def check(root: Path):
                 f"invalid status {lmx_status!r}; expected one of {sorted(LMX_STATUSES)}")
     else:
         bad("R06_localmaxxing_parse", "summaries/localmaxxing.json must contain a JSON object")
+
+    # ---- R07/R08 website publication disposition ----
+    web_file = root / "summaries/website-publication.json"
+    web = None
+    if web_file.is_file():
+        try:
+            web = json.load(open(web_file))
+        except Exception as e:
+            bad("R08_website_publication_parse", str(e))
+    web_required = bool(has_primary and mdate and mdate.group(1) >= WEBSITE_DISPOSITION_REQUIRED_FROM)
+    if web is None:
+        if web_required:
+            bad("R07_website_publication_disposition_required",
+                f"campaign snapshot dated {mdate.group(1)} (>= {WEBSITE_DISPOSITION_REQUIRED_FROM}) "
+                "requires summaries/website-publication.json with the website publication disposition")
+        else:
+            warn("R07_website_publication_disposition_expected",
+                 "summaries/website-publication.json absent; current campaigns record the "
+                 "website publication disposition (disposition, canonical evidence state, record slug)")
+    elif isinstance(web, dict):
+        web_status = web.get("disposition")
+        if web_status in WEBSITE_STATUSES:
+            ok("R08_website_disposition", web_status)
+            if web_status in ("WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION"):
+                if web.get("reason"):
+                    ok("R08_website_reason", str(web["reason"]))
+                else:
+                    bad("R08_website_reason_missing",
+                        f"{web_status} requires the exact reason")
+            elif not web.get("website_record_slug"):
+                bad("R08_website_record_slug_missing",
+                    f"{web_status} requires website_record_slug")
+            evidence = web.get("canonical_evidence")
+            if not isinstance(evidence, dict):
+                bad("R08_website_evidence_state",
+                    "canonical_evidence object with state PUBLISHED | PENDING_HUMAN_GATE required")
+            else:
+                ev_state = evidence.get("state")
+                if ev_state in WEBSITE_EVIDENCE_STATES:
+                    ok("R08_website_evidence_state", ev_state)
+                    if ev_state == "PUBLISHED" and not evidence.get("url"):
+                        bad("R08_website_evidence_url_missing",
+                            "canonical_evidence.state PUBLISHED requires the canonical evidence URL")
+                    if ev_state == "PENDING_HUMAN_GATE" and evidence.get("url"):
+                        bad("R08_website_evidence_url_pending_conflict",
+                            "canonical_evidence.state PENDING_HUMAN_GATE must not claim a canonical URL")
+                else:
+                    bad("R08_website_evidence_state",
+                        f"invalid canonical_evidence.state {ev_state!r}; expected one of {sorted(WEBSITE_EVIDENCE_STATES)}")
+        else:
+            bad("R08_website_disposition",
+                f"invalid disposition {web_status!r}; expected one of {sorted(WEBSITE_STATUSES)}")
+    else:
+        bad("R08_website_publication_parse", "summaries/website-publication.json must contain a JSON object")
 
     # ---- M-section checks (carried over from frozen 0.2.0) ----
     sp = m.get("serving_profile", {})
@@ -581,7 +648,7 @@ def _welp_using_legacy_evidence(td):
     return g
 
 
-def _new_format_localmaxxing_bundle(td, name, snapshot_date, lmx_summary):
+def _new_format_localmaxxing_bundle(td, name, snapshot_date, lmx_summary, web_summary=None):
     """Shared builder: new-format bundle with a post-integration snapshot date."""
     g = Path(td) / name
     g.mkdir(parents=True)
@@ -612,6 +679,8 @@ def _new_format_localmaxxing_bundle(td, name, snapshot_date, lmx_summary):
         "runtimes": {"llama.cpp-f280b269": {"status": "CACHE_METRIC_FLOOR_PRESENT", "floor": 74}}}))
     if lmx_summary is not None:
         (g / "summaries/localmaxxing.json").write_text(json.dumps(lmx_summary))
+    if web_summary is not None:
+        (g / "summaries/website-publication.json").write_text(json.dumps(web_summary))
     return g
 
 
@@ -636,6 +705,49 @@ def _bad_localmaxxing_invalid_status(td):
         {"status": "NOT_APPLICABLE"})
 
 
+def _good_new_format_with_website(td):
+    """Post-website-integration new-format bundle with a valid WEBSITE_READY disposition."""
+    return _new_format_localmaxxing_bundle(
+        td, "good_new_format_website", "2026-09-12",
+        {"status": "SUBMITTED", "origin": "NEW", "submission_ref": "cmtexample0000000000000",
+         "actual_prompt_tokens": 330},
+        {"schema": "wumbolabs-labs-publication/1", "campaign": "example-campaign",
+         "disposition": "WEBSITE_READY",
+         "model": {"display_name": "Example Model"},
+         "artifact": {"tested": "example GGUF", "precision": "Q8_0"},
+         "runtime": {"engine": "llama.cpp"},
+         "hardware": {"gpu": "Example GPU"},
+         "welp": {"outcome": "PASS — EXAMPLE", "classification": "READY_WITH_GUARDRAILS"},
+         "context": {"envelope_complete": True},
+         "quality": {"reliability_summary": "20/20 bounded"},
+         "localmaxxing": {"status": "SUBMITTED", "submission_ref": "cmtexample0000000000000"},
+         "canonical_evidence": {"state": "PENDING_HUMAN_GATE", "url": None,
+                                "proposed_repo": "eval-example-model"},
+         "website_record_slug": "example-model",
+         "public_summary": "Bounded example summary."})
+
+
+def _bad_new_format_missing_website(td):
+    """Post-website-integration new-format bundle without the disposition: R07 error."""
+    return _new_format_localmaxxing_bundle(
+        td, "bad_new_format_missing_website", "2026-09-12",
+        {"status": "SUBMITTED", "origin": "NEW", "submission_ref": "cmtexample0000000000000",
+         "actual_prompt_tokens": 330},
+        None)
+
+
+def _bad_website_invalid_disposition(td):
+    """Invalid website disposition value: R08 error."""
+    return _new_format_localmaxxing_bundle(
+        td, "bad_website_invalid_disposition", "2026-09-12",
+        {"status": "SUBMITTED", "origin": "NEW", "submission_ref": "cmtexample0000000000000",
+         "actual_prompt_tokens": 330},
+        {"schema": "wumbolabs-labs-publication/1", "campaign": "example-campaign",
+         "disposition": "PUBLISHED",
+         "canonical_evidence": {"state": "PENDING_HUMAN_GATE"},
+         "website_record_slug": "example-model"})
+
+
 def selftest():
     with tempfile.TemporaryDirectory() as td:
         rg_legacy = check(_good_legacy_wlep(td))
@@ -650,19 +762,25 @@ def selftest():
         rg_lmx = check(_good_new_format_with_localmaxxing(td))
         rb_lmx_missing = check(_bad_new_format_missing_localmaxxing(td))
         rb_lmx_status = check(_bad_localmaxxing_invalid_status(td))
+        rg_web = check(_good_new_format_with_website(td))
+        rb_web_missing = check(_bad_new_format_missing_website(td))
+        rb_web_status = check(_bad_website_invalid_disposition(td))
         fails = []
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
                          ("welp_with_legacy_evidence_rejected", rg_mixed),
                          ("new_hierarchy_rejected", rg_new),
                          ("new_hierarchy_without_lab_record_rejected", rg_new_nolr),
                          ("new_format_localmaxxing_rejected", rg_lmx),
+                         ("new_format_website_rejected", rg_web),
                          ("historical_pre_hierarchy_pair_rejected", rg_hist_pair)]:
             if not r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         for label, r in [("unknown_prefix_accepted", rb_unknown), ("improperly_rewritten_legacy_accepted", rb_rewritten),
                          ("ambiguous_report_pair_accepted", rb_ambig),
                          ("missing_localmaxxing_accepted", rb_lmx_missing),
-                         ("invalid_localmaxxing_status_accepted", rb_lmx_status)]:
+                         ("invalid_localmaxxing_status_accepted", rb_lmx_status),
+                         ("missing_website_accepted", rb_web_missing),
+                         ("invalid_website_disposition_accepted", rb_web_status)]:
             if r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
@@ -679,16 +797,25 @@ def selftest():
             fails.append("missing_localmaxxing_missing_R05_error")
         if not any(f[0] == "error" and f[1] == "R06_localmaxxing_status" for f in rb_lmx_status["findings"]):
             fails.append("invalid_localmaxxing_status_missing_R06_error")
+        if not any(f[0] == "warning" and f[1] == "R07_website_publication_disposition_expected" for f in rg_lmx["findings"]):
+            fails.append("pre_website_integration_new_format_missing_R07_warning")
+        if not any(f[0] == "error" and f[1] == "R07_website_publication_disposition_required" for f in rb_web_missing["findings"]):
+            fails.append("missing_website_missing_R07_error")
+        if not any(f[0] == "error" and f[1] == "R08_website_disposition" for f in rb_web_status["findings"]):
+            fails.append("invalid_website_disposition_missing_R08_error")
         print(json.dumps({
-            "fixture_sets": 12,
+            "fixture_sets": 15,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],
             "accepted_new_hierarchy": rg_new["valid"],
             "accepted_new_format_localmaxxing": rg_lmx["valid"],
+            "accepted_new_format_website": rg_web["valid"],
             "accepted_historical_pre_hierarchy_pair": rg_hist_pair["valid"],
             "rejected_new_format_missing_localmaxxing": not rb_lmx_missing["valid"],
             "rejected_invalid_localmaxxing_status": not rb_lmx_status["valid"],
+            "rejected_new_format_missing_website": not rb_web_missing["valid"],
+            "rejected_invalid_website_disposition": not rb_web_status["valid"],
             "rejected_unknown_prefix": not rb_unknown["valid"],
             "improperly_rewritten_legacy_passed": rb_rewritten["valid"],
             "rejected_ambiguous_report_pair": not rb_ambig["valid"],

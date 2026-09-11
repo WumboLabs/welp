@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WELP website publication export",
+  "version": "0.1.0-draft",
+  "description": "Public-safe derivative export (summaries/website-publication.json) that dispositions website publication for a WELP campaign and carries the fields the WumboLabs website registry/sync consumes. The website is derivative; REPORT.md and the campaign evidence remain canonical. Public-safe only: no credentials, local absolute paths, raw prompt logs, telemetry dumps, or internal identifiers.",
+  "type": "object",
+  "required": [
+    "schema",
+    "campaign",
+    "disposition",
+    "model",
+    "artifact",
+    "runtime",
+    "hardware",
+    "welp",
+    "context",
+    "quality",
+    "localmaxxing",
+    "canonical_evidence",
+    "public_summary"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wumbolabs-labs-publication/1"
+    },
+    "campaign": {
+      "type": "string",
+      "description": "Campaign slug of the authoritative local WELP campaign."
+    },
+    "publication_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "disposition": {
+      "enum": ["WEBSITE_READY", "WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION", "WEBSITE_PUBLISHED"],
+      "description": "Exactly one website-publication disposition. WEBSITE_READY: campaign closed with sufficient public-safe material. WEBSITE_BLOCKED: intended for publication but blocked (missing public evidence, unresolved publication concern, or website integration blocker); reason required. NOT_FOR_PUBLICATION: intentionally excluded; reason required. WEBSITE_PUBLISHED: public evidence and website record are published and verified."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Required for WEBSITE_BLOCKED and NOT_FOR_PUBLICATION."
+    },
+    "model": {
+      "type": "object",
+      "required": ["display_name"],
+      "properties": {
+        "display_name": { "type": "string" },
+        "producer": { "type": "string" },
+        "official_id": { "type": "string" },
+        "official_revision": { "type": "string" },
+        "license": { "type": "string" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["tested", "precision"],
+      "properties": {
+        "tested": { "type": "string" },
+        "precision": { "type": "string" },
+        "sha256": { "type": "string" },
+        "source": { "type": "string" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["engine"],
+      "properties": {
+        "engine": { "type": "string" },
+        "version": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "required": ["gpu"],
+      "properties": {
+        "machine": { "type": "string" },
+        "gpu": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "welp": {
+      "type": "object",
+      "required": ["outcome", "classification"],
+      "properties": {
+        "outcome": { "type": "string" },
+        "classification": { "type": "string" },
+        "artifact_classification": { "type": "string" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["envelope_complete"],
+      "properties": {
+        "practical_default_tokens": { "type": "integer" },
+        "guarded_tokens": { "type": "integer" },
+        "native_maximum_tokens": { "type": "integer" },
+        "envelope_complete": { "type": "boolean" },
+        "native_maximum_disposition": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "surface_note": { "type": "string" },
+        "short_ttft_s": { "type": "number" },
+        "short_decode_tps": { "type": "number" },
+        "moderate_input_tokens": { "type": "integer" },
+        "moderate_ttft_s": { "type": "number" },
+        "moderate_prefill_tps": { "type": "number" },
+        "moderate_decode_tps": { "type": "number" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["reliability_summary"],
+      "properties": {
+        "constrained_result": { "type": "string" },
+        "capability_highlights": { "type": "array", "items": { "type": "string" } },
+        "key_guardrails": { "type": "array", "items": { "type": "string" } },
+        "reliability_summary": { "type": "string" }
+      }
+    },
+    "localmaxxing": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["SUBMITTED", "MEASURED_NOT_SUBMITTED", "NOT_ELIGIBLE", "BLOCKED"]
+        },
+        "canonical_context_tokens": { "type": "integer" },
+        "tok_s_out": { "type": "number" },
+        "ttft_ms": { "type": "number" },
+        "submission_ref": { "type": "string" },
+        "verified_run": { "type": ["boolean", "null"] },
+        "note": { "type": "string" }
+      }
+    },
+    "canonical_evidence": {
+      "type": "object",
+      "required": ["state"],
+      "properties": {
+        "state": {
+          "enum": ["PUBLISHED", "PENDING_HUMAN_GATE"],
+          "description": "PENDING_HUMAN_GATE when the canonical public eval repository does not exist yet or the follow-up evidence has not been pushed. Never invent a URL for a repository that does not exist."
+        },
+        "url": { "type": ["string", "null"] },
+        "proposed_repo": { "type": ["string", "null"] },
+        "note": { "type": "string" }
+      }
+    },
+    "website_record_slug": {
+      "type": ["string", "null"],
+      "description": "Website Labs record slug this export drives. null only for NOT_FOR_PUBLICATION."
+    },
+    "record_description": {
+      "type": "string",
+      "description": "One-to-three-sentence bounded display summary used for the website record description and index headline; no marketing language."
+    },
+    "public_summary": {
+      "type": "string",
+      "description": "Bounded human-readable summary; no marketing language."
+    }
+  }
+}

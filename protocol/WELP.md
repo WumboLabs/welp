@@ -106,6 +106,56 @@ Rules:
   benchmarked canonical profile, actual prompt tokens, result summary,
   submission origin/reference, and the exact reason when not submitted.
 
+## Website publication disposition
+
+Every full WELP model campaign must disposition website publication explicitly
+once the campaign closes; it must never silently omit website-publication
+state. The WumboLabs website is a human-readable DERIVATIVE of accepted public
+evidence, never a second independent source of model facts. Where website
+content conflicts with campaign evidence, `REPORT.md` (and the retained raw
+evidence behind it) governs and the website is stale/defective.
+
+Canonical statuses (exactly these values):
+
+| Status | Meaning |
+|---|---|
+| `WEBSITE_READY` | The campaign is closed and has sufficient public-safe material to publish. |
+| `WEBSITE_BLOCKED` | Intended for publication but blocked by missing public evidence, an unresolved privacy/publication concern, or a website integration blocker. Exact reason required. |
+| `NOT_FOR_PUBLICATION` | Intentionally excluded from the website. Exact reason required. |
+| `WEBSITE_PUBLISHED` | Public evidence and the website record are published and verified. |
+
+Machine-readable export: `summaries/website-publication.json`, schema
+`../schemas/welp_website_publication.schema.json` (`wumbolabs-labs-publication/1`).
+The export carries only public-safe derivative fields (identity, tested
+artifact, runtime/hardware, WELP outcome/classification, context profile and
+dispositions, headline performance, quality/guardrails/reliability,
+LocalMaxxing summary, canonical-evidence state, website record slug, bounded
+public summary). It must not contain credentials, local absolute paths,
+private usernames, raw prompt logs, telemetry dumps, or internal debug state.
+
+Rules:
+
+- When canonical public evidence is not yet published, the export records
+  `canonical_evidence.state = PENDING_HUMAN_GATE` (with a proposed repository
+  identity where applicable) rather than inventing a canonical URL. A website
+  record generated from a pending export must state that evidence publication
+  is pending; it must not claim canonical public evidence exists.
+- Publishing the public evidence repository, committing, pushing, and
+  deploying the website remain human-gated external actions; generating the
+  export and local derivative records does not authorize any of them.
+- The website consumes the export through its publication registry and
+  deterministic sync workflow. Website record pages and generated index
+  surfaces are derived from the registry/exports, not independently
+  hand-maintained.
+- `REPORT.md` and `WELP-LAB-RECORD.md` expose the disposition and the
+  canonical-evidence state; the [completion
+  checklist](../docs/reproduction.md#operator-checklist) includes the export.
+
+The campaign validator enforces the disposition for new-format campaigns
+whose protocol snapshot date is 2026-09-12 or later (`R07`/`R08`); earlier
+bundles receive a warning only and remain valid unchanged. See
+`../docs/validator.md`.
+
 ## Report artifact hierarchy
 
 Every campaign bundle has one obvious authoritative scientific report and
@@ -167,10 +217,11 @@ failure; see `../docs/validator.md`.
 - `welp_campaign_manifest.schema.json`
 - `welp_artifact_index.schema.json`
 - `welp_publication_status.schema.json`
+- `welp_website_publication.schema.json`
 - `welp_serving_profile.schema.json`
 - `welp_toolchain_preflight.schema.json`
 - `welp_toolchain_inventory.schema.json`
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 12 fixtures, all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on.
+- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 15 fixtures, all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on, and the website publication disposition (`summaries/website-publication.json`) for new-format campaigns with snapshot dates from 2026-09-12 on.
