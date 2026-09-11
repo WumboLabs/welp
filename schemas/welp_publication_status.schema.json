@@ -42,6 +42,38 @@
         "superseded_local_ids": {
           "type": "array"
         },
+        "disposition": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "SUBMITTED",
+                "MEASURED_NOT_SUBMITTED",
+                "NOT_ELIGIBLE",
+                "BLOCKED"
+              ]
+            },
+            "origin": {
+              "enum": [
+                "NEW",
+                "VERIFIED_EXISTING",
+                "none"
+              ]
+            },
+            "submission_ref": {
+              "type": "string"
+            },
+            "actual_prompt_tokens": {
+              "type": "integer"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
         "report_id": {
           "type": [
             "string",

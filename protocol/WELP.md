@@ -52,6 +52,60 @@ and [report table](../lab-record-template/README.md#model-card-context-coverage)
 Freeze this methodology's revision/hash for new work; do not rewrite historical
 reports or frozen contracts to imply broader coverage.
 
+## LocalMaxxing completion disposition
+
+Every model campaign must evaluate LocalMaxxing eligibility once the canonical
+practical profile is selected, and record exactly one completion disposition.
+A campaign must never silently omit LocalMaxxing; a generic "no external
+benchmark submission" rule does not suppress this step. External actions other
+than LocalMaxxing benchmark submission keep their separate human gates.
+
+Canonical statuses (exactly these values):
+
+| Status | Meaning |
+|---|---|
+| `SUBMITTED` | A LocalMaxxing-compatible benchmark of the canonical practical stack exists and is recorded on the service. `origin` states `NEW` or `VERIFIED_EXISTING`; the submission id/reference is recorded. |
+| `MEASURED_NOT_SUBMITTED` | A valid local benchmark completed but external submission did not occur. Exact reason required. |
+| `NOT_ELIGIBLE` | The canonical practical stack cannot be faithfully represented by the current LocalMaxxing benchmark/submission schema or supported engine surface. Technically demonstrated with an evidence path. Never substitute an alternate engine merely to obtain a score. |
+| `BLOCKED` | The stack is intended and eligible, but benchmark or submission could not complete due to an integration, authentication, service, or reproducibility blocker. Exact blocker required. |
+
+`NOT_APPLICABLE` / `NOT_AUTHORIZED` are deprecated as completion dispositions
+for otherwise eligible model campaigns; `NOT_ELIGIBLE` is reserved for
+demonstrated representation limits. The campaign-start preflight auth state
+(`READY | AUTH_BLOCKED | CLI_INCOMPATIBLE | NOT_APPLICABLE`) is a separate
+readiness record; authentication failure at submission time yields `BLOCKED`,
+not `NOT_ELIGIBLE`. Model science may be PASS while this disposition is
+`MEASURED_NOT_SUBMITTED` or `BLOCKED`; the unresolved status stays visible.
+
+Rules:
+
+- LocalMaxxing benchmarks the CANONICAL PRACTICAL PROFILE: model artifact,
+  quant/precision, engine/runtime version, configured context, KV dtype,
+  speculation/MTP when canonical, serving geometry, hardware profile, and
+  relevant power configuration. Do not submit an experimental context
+  boundary, a convenient alternate engine, or a one-off profile as though it
+  represented the canonical stack.
+- Configured context capacity and actual prompt tokens are always reported
+  separately. Actual prompt tokens must be demonstrated (measured endpoint
+  usage or the tokenized prompt bytes); a nominal
+  `--prompt-tokens`-style value alone is not evidence unless the current
+  tool demonstrably creates a prompt of that length.
+- The benchmark follows the CURRENT official LocalMaxxing method: its
+  canonical prompts where defined, its warmup/repetition policy, and its
+  verification fields. Never fabricate verification fields
+  (`verifiedRun` evidence such as prompt/output samples, engine timings, or
+  spec/MTP acceptance stats); record unavailable values accurately.
+- Before any new submission, search local run stores and any
+  service-exposed history for an exact existing record (artifact, quant,
+  engine, key geometry, hardware, context). An exact match is
+  `SUBMITTED` with `origin: VERIFIED_EXISTING`; never create a duplicate.
+  A materially different record does not satisfy the disposition.
+- Machine-readable summary: `summaries/localmaxxing.json`; validated by
+  `validators/validate_campaign_welp.py` for new campaigns (see
+  `../docs/validator.md`). `REPORT.md` exposes eligibility, status, the
+  benchmarked canonical profile, actual prompt tokens, result summary,
+  submission origin/reference, and the exact reason when not submitted.
+
 ## Report artifact hierarchy
 
 Every campaign bundle has one obvious authoritative scientific report and
@@ -92,8 +146,9 @@ Rules:
   come from the current execution; do not relabel quarantined bytes when
   preservation contracts require byte identity.
 
-The validator enforces this hierarchy for new-format bundles (a `REPORT.md` is
-present) and accepts historical `report.md` bundles without retroactive
+The validator enforces this hierarchy for hierarchy-era campaigns (protocol
+snapshot dated 2026-09-10 or later) and accepts frozen pre-hierarchy bundles —
+including legacy `REPORT.md` + `report.md` coexistence — without retroactive
 failure; see `../docs/validator.md`.
 
 ## Canonical contracts (current)
@@ -118,4 +173,4 @@ failure; see `../docs/validator.md`.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 8 fixtures, all PASS.
+- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 12 fixtures, all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on.

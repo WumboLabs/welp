@@ -8,12 +8,15 @@ The canonical new-campaign validator.
 - Report artifacts, per the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy):
   - New-format bundles: `REPORT.md` (primary scientific report) + `WELP-LAB-RECORD.md` (expected companion; absence is a warning).
   - Historical bundles (no `REPORT.md`): `report.md` remains required, with a legacy-naming warning.
-  - `REPORT.md` + `report.md` coexisting in one bundle is an error (ambiguous case-different pair).
+  - `REPORT.md` + `report.md` coexistence is an error (`R02_ambiguous_report_pair`) in
+    hierarchy-era bundles (protocol snapshot date >= 2026-09-10); frozen pre-hierarchy
+    bundles keep both files and remain valid with an `R02_historical_report_pair` warning.
 - `protocol-findings.md`
 - `summaries/campaign_manifest.json`
 - `summaries/toolchain_preflight.json`
 - `toolchain/runtime_capabilities.json` (recommended)
 - One `results/INVALIDATED-*.reason.json` for each invalidated job (recommended)
+- `summaries/localmaxxing.json` (new-format campaigns with snapshot date >= 2026-09-10; expected earlier)
 
 ## Required manifest fields
 
@@ -37,16 +40,29 @@ The canonical new-campaign validator.
 - **N01** snapshot id pattern mismatch.
 - **N02** preflight const invalid.
 - **N03** current-looking snapshot_id whose evidence still references only frozen historical contracts.
-- **R02** `REPORT.md` + `report.md` coexistence (ambiguous case-different report pair).
+- **R02** `REPORT.md` + `report.md` coexistence: error (`R02_ambiguous_report_pair`) for
+  hierarchy-era campaigns (protocol snapshot date >= 2026-09-10); warning
+  (`R02_historical_report_pair`) for frozen pre-hierarchy campaigns, which remain valid unchanged.
 - **R03** (warning) new-format bundle without the expected `WELP-LAB-RECORD.md` companion.
-- **R04** (warning) historical `report.md` naming; new campaigns use `REPORT.md` + `WELP-LAB-RECORD.md`.
+- **R04** (warning) historical report.md naming; new campaigns use REPORT.md + WELP-LAB-RECORD.md.
+- **R05** LocalMaxxing completion disposition: `summaries/localmaxxing.json` REQUIRED (error) in
+  new-format bundles whose campaign snapshot date is >= 2026-09-10; expected (warning) in earlier
+  bundles. Historical campaigns without the file remain valid.
+  **R06** LocalMaxxing disposition content: invalid/deprecated status value, `SUBMITTED` without
+  `origin`/`submission_ref`, or `MEASURED_NOT_SUBMITTED`/`NOT_ELIGIBLE`/`BLOCKED` without `reason`.
 - M01–M11 carried over from `validate_campaign_v2.py` 0.2.0-draft.
+
+## LocalMaxxing disposition (`summaries/localmaxxing.json`)
+
+- `summaries/localmaxxing.json` fields: `status` — exactly `SUBMITTED | MEASURED_NOT_SUBMITTED | NOT_ELIGIBLE | BLOCKED`; `SUBMITTED` requires `origin` (`NEW | VERIFIED_EXISTING`) and `submission_ref`; every other status requires `reason`. Recommended companions: canonical profile identity, configured context, actual prompt tokens, result summary, evidence paths.
+
+
 
 ## Usage
 
 ```bash
 python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
-python3 validate_campaign_welp.py selftest           # run embedded 8-fixture suite
+python3 validate_campaign_welp.py selftest           # run embedded 12-fixture suite
 ```
 
 ## Frozen historical campaigns

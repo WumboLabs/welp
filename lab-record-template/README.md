@@ -25,7 +25,7 @@ Required sections:
 6. Phase results and gate decisions
 7. Stop reason
 8. Execution counts incl. invalidated runs
-9. LocalMaxxing status
+9. LocalMaxxing status — the standardized disposition below
 10. WELP conformance (`WELP-CONFORMANCE.md` + `summaries/welp_conformance.json`) and protocol findings
 11. Limitations
 12. Artifact index (machine-readable)
@@ -33,6 +33,27 @@ Required sections:
 14. Supported deployment roles (only where evidence permits)
 15. Model-card context coverage table below, including all untested/partial ranges and exact native/official extension maxima
 16. Separate practical-profile/baseline decision and model-card context-completeness gate
+
+## LocalMaxxing disposition
+
+Mandatory for every model campaign, including early stops. Exactly one status;
+values and rules per [WELP](../protocol/WELP.md#localmaxxing-completion-disposition).
+
+| Field | Value |
+|---|---|
+| Eligibility | eligible / not eligible (+ one-line representation finding) |
+| Status | `SUBMITTED` / `MEASURED_NOT_SUBMITTED` / `NOT_ELIGIBLE` / `BLOCKED` |
+| Canonical profile | artifact (hf id/revision/sha256) · quant/precision · engine + runtime version · configured context · KV dtype · speculation/MTP · geometry · hardware |
+| Benchmark prompt | prompt identity/source + ACTUAL prompt tokens (never a nominal value alone) |
+| Result summary | tok/s out (and prefill/TTFT/VRAM where produced), repetitions policy |
+| Submission origin | `NEW` / `VERIFIED_EXISTING` / none |
+| Submission reference | submission id / URL, date |
+| verifiedRun state | as returned by the service (never fabricated) |
+| Reason / blocker | required unless `SUBMITTED` |
+
+Raw payloads, responses, and per-repetition data live under the campaign's
+`localmaxxing/` evidence directory; this section summarizes, never replaces,
+them.
 
 ## Model-card context coverage
 

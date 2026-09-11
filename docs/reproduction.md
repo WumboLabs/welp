@@ -5,7 +5,6 @@
 1. **Preflight (mandatory at campaign START).** Run `welp-preflight` per `summaries/welp_preflight_0.1.0`:
    - HARDWARE: GPU identity, host safety rules, telemetry.
    - TOOLCHAIN: discover installed runtimes, apply DISCOVER-FIRST/REUSE/NEW_RUNTIME_REQUIRED rule.
-   - PROTOCOL: record the frozen snapshot_id and current Context Scaling revision/hash; preserve exact historical snapshot identities when reproducing earlier campaigns.
    - MODEL: producer claims + applicability per [[WELP Phase Structure]].
    - PUBLICATION: LocalMaxxing auth (READY / AUTH_BLOCKED / CLI_INCOMPATIBLE / NOT_APPLICABLE).
    - SAFETY: GPU & Host Safety Rules, stop-on-Xid.
@@ -16,14 +15,15 @@
 5. **Phase 5 module applicability.** Freeze `phase5_applicability.json` before any Phase-5 execution.
 6. **Long-job durability.** Absolute path declared first; existence + row count + SHA-256 verified after exit; only then COMPLETE.
 7. **Context characterization (mandatory coverage accounting).** Freeze the [Context Scaling](../protocol/context-scaling.md) method revision/hash and answer the checklist below before context testing; finalize every row in the [model-card coverage table](../lab-record-template/README.md#model-card-context-coverage), including untested ranges. Capacity admission alone is not validation; practical default selection is not a context stop condition.
-8. **Final classification.** `classify.py` consumes the evidence bundle deterministically. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result.
-9. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
-10. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries — and, when requested, a `<campaign-slug>-review-report.md` human summary under `~/Projects/local-llm/tmp/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
-11. **Publication routing (separate human authorization required).** Per vault Publication Routing:
-    - Obsidian: internal WELP operational handbook.
-    - GitHub: canonical public WELP evidence/protocol source.
-    - LocalMaxxing: community benchmark/report distribution layer.
-    - WumboCore Labs: human-readable WELP Lab Records.
+8. **LocalMaxxing completion disposition (mandatory).** Once the canonical practical profile is selected, evaluate LocalMaxxing eligibility per [WELP](../protocol/WELP.md#localmaxxing-completion-disposition). If eligible: freeze the canonical benchmark command and actual prompt, run the current official LocalMaxxing method, validate the local result, search for an exact existing submission, and submit during campaign completion when submission access works. Record `summaries/localmaxxing.json` with exactly one status (`SUBMITTED` with origin `NEW`/`VERIFIED_EXISTING` and the submission reference, `MEASURED_NOT_SUBMITTED`, `NOT_ELIGIBLE` with the demonstrated representation limit, or `BLOCKED` with the exact blocker), the canonical profile identity, configured context, actual prompt tokens, and the result summary. This step is the explicitly authorized external-submission exception; a generic "no external submission" rule must not suppress it, and it authorizes no other external action.
+9. **Final classification.** `classify.py` consumes the evidence bundle deterministically. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result.
+10. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
+11. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` — and, when requested, a `<campaign-slug>-review-report.md` human summary under `~/Projects/local-llm/tmp/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
+12. **Publication routing (separate human authorization required).** Per vault Publication Routing:
+    * Obsidian: internal WELP operational handbook.
+    * GitHub: canonical public WELP evidence/protocol source.
+    * LocalMaxxing: community benchmark/report distribution layer. Benchmark submission of the eligible canonical profile is part of campaign completion (step 8), not an additional external action; other LocalMaxxing artifacts (reports, X export posting) keep their own gates.
+    * WumboCore Labs: human-readable WELP Lab Records.
 
 ## Model-card context checklist
 
