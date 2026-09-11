@@ -22,6 +22,36 @@ Model → Provenance → Admission → Performance → Practical Viability
   → Optimization → Soak → Final Classification
 ```
 
+## Context characterization gate
+
+[WELP Context Scaling](context-scaling.md) is the detailed current DRAFT
+methodology for future campaigns. Pin the authoritative official card/config
+and extension documentation before testing. Every native and officially
+advertised extended range, including each exact maximum, requires an explicit
+tested or demonstrated limiting disposition.
+
+Configured capacity is not context validation: capacity admission with a small
+prompt is admission only. Full-context claims require actual final
+rendered/tokenized input at near-full usable-budget occupancy (>=97% hard floor,
+>=99% preferred, with reserved generation tokens and justified safety allowance),
+full-window performance, and useful-context evidence at that occupancy.
+
+**PRACTICAL PROFILE SELECTED** and **PRACTICAL BASELINE CHARACTERIZED** are
+separate from **MODEL-CARD CONTEXT ENVELOPE COMPLETE**. A practical default is
+never an automatic stop condition for context characterization. Only completed
+dispositions for all required native/official extension rungs and exact maxima
+permit **CONTEXT CHARACTERIZATION COMPLETE**. `PARTIAL` and `NOT_TESTED` do not;
+properly demonstrated `FIT_LIMIT` and `INTEGRATION_BLOCKED` do, without implying
+model-quality FAIL. A measured `FAILED` gate is a negative completed disposition,
+not `VALIDATED`; see the method for evidence requirements.
+
+Fit-first safety and earlier phase stops remain binding. A bounded campaign may
+stop and report deferred context gaps without claiming context completeness.
+Use the mandatory [coverage checklist](../docs/reproduction.md#model-card-context-checklist)
+and [report table](../lab-record-template/README.md#model-card-context-coverage).
+Freeze this methodology's revision/hash for new work; do not rewrite historical
+reports or frozen contracts to imply broader coverage.
+
 ## Canonical contracts (current)
 
 - `welp-practical-viability` 0.1.4-draft

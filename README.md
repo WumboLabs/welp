@@ -28,6 +28,7 @@ Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle
 - Single-user baselines run `parallel=1`, `fit=off`; automatic parallelism is never relied upon.
 - Scorers self-test before live gate use.
 - Human-controlled Git operations only.
+- [Context Scaling](protocol/context-scaling.md): configured capacity is not full-context validation; practical default selection does not complete the model-card native/official extension envelope.
 
 ## First WELP snapshot
 

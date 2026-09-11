@@ -17,6 +17,43 @@ Required sections:
 12. Artifact index (machine-readable)
 13. Reproduction instructions
 14. Supported deployment roles (only where evidence permits)
+15. Model-card context coverage table below, including all untested/partial ranges and exact native/official extension maxima
+16. Separate practical-profile/baseline decision and model-card context-completeness gate
+
+## Model-card context coverage
+
+Mandatory for every campaign, including an early stop before Context. Follow
+[WELP Context Scaling](../protocol/context-scaling.md); freeze the method
+revision/hash and pinned official card/config/extension sources. Include one row
+per major rung per surface and separate exact-maximum rows. Record a documented
+absence of official extension support rather than inventing an extension row.
+
+| Surface | Card claim (source/revision; native or extension maximum) | Runtime configuration (requested/effective mechanism) | Configured capacity (tokens) | Capacity admitted? | Usable prompt budget (tokens) | Actual occupied tokens (final rendered input) | Occupancy % | Reserved output tokens / safety allowance | Near-full performance run? | Useful-context run? | Seeds / inference requests / target-field-depth observations | Final disposition | Evidence path / notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Native: exact maximum (replace with pinned claim) | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | Record source and outstanding work; no validation implied. |
+
+Duplicate the row for each planned rung/official extension maximum; replace
+planning values with evidence, never invented numbers. Link per-run rows where
+seeds or workloads differ rather than averaging away occupancy or failures.
+Expose all five context-claim quantities: capacity, usable budget, actual
+rendered input tokens, occupancy, and output reserve. Near-full means >=97% of
+usable budget (>=99% preferred) after real template/tokenization; report any
+pre-frozen bounded exception explicitly, not as a standard VALIDATED pass.
+
+Every major admitted rung requires near-full performance: TTFT, prefill
+throughput/proxy, decode throughput, E2E, post-load/minimum-free VRAM, power and
+temperature where safely available, and CUDA/OOM/Xid/runtime errors. Link
+availability limitations and exact measurement boundaries. Useful-context
+evidence must itself be near-full, with measured 2/25/50/75/95 depths and
+placement errors, per-seed results, and distinct request/observation counts.
+
+Dispositions: `VALIDATED`, `FIT_LIMIT`, `INTEGRATION_BLOCKED`, measured `FAILED`,
+`PARTIAL`, or `NOT_TESTED`, under the method's evidence rules. Fit/integration
+limits are completed scientific dispositions, not model-quality FAIL. `PARTIAL`
+or `NOT_TESTED` at any required rung/native/official extension maximum prevents
+**MODEL-CARD CONTEXT ENVELOPE COMPLETE / CONTEXT CHARACTERIZATION COMPLETE**.
+Report **PRACTICAL PROFILE SELECTED / PRACTICAL BASELINE CHARACTERIZED** separately;
+a sensible default does not terminate full-envelope characterization.
 
 ## Filename conventions
 
