@@ -28,6 +28,7 @@ Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle
 - Single-user baselines run `parallel=1`, `fit=off`; automatic parallelism is never relied upon.
 - Scorers self-test before live gate use.
 - Human-controlled Git operations only.
+- [Report artifact hierarchy](protocol/WELP.md#report-artifact-hierarchy): `REPORT.md` is the single authoritative primary scientific report; the Lab Record companion is `WELP-LAB-RECORD.md`; `report.md` is historical-only; superseded prior attempts stay quarantined and never supply current claims.
 - [Context Scaling](protocol/context-scaling.md): configured capacity is not full-context validation; practical default selection does not complete the model-card native/official extension envelope.
 
 ## First WELP snapshot

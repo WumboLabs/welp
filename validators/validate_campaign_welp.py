@@ -10,6 +10,11 @@ Accepts:
   - contract_id values with welp- OR wlep- prefix
   - preflight const welp-preflight OR wlep-preflight
   - snapshot_status WELP status (DRAFT) regardless of identifier generation
+  - Report artifact hierarchy (new-format bundles containing REPORT.md):
+    REPORT.md primary + WELP-LAB-RECORD.md companion expected; REPORT.md +
+    report.md coexistence is REJECTED as an ambiguous case-different pair.
+    Historical bundles without REPORT.md keep the report.md requirement
+    (warning only) so frozen evidence bundles remain valid unchanged.
 
 New rules:
   N01  Protocol snapshot id must match ^(welp|wlep)-next-snapshot-
@@ -18,6 +23,10 @@ New rules:
        bundle still references only frozen historical wlep-* contracts is REJECTED
   N04  WELP campaign using frozen-compatible evidence (e.g. welp-next-snapshot-*
        with wlep_*.schema.json validation paths) is ACCEPTED
+  R01  REPORT.md is the primary scientific report of new-format bundles
+  R02  REPORT.md + report.md coexistence REJECTED (ambiguous case-different pair)
+  R03  WELP-LAB-RECORD.md expected companion in new-format bundles (warning if absent)
+  R04  (warning) historical report.md naming; new campaigns use REPORT.md + WELP-LAB-RECORD.md
 
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
@@ -44,12 +53,38 @@ def check(root: Path):
         warn("dual_conformance_filenames", "both WLEP-CONFORMANCE.md and WELP-CONFORMANCE.md present; preferring WELP")
     if not (has_wlep or has_welp):
         bad("required:conformance", "WLEP-CONFORMANCE.md or WELP-CONFORMANCE.md required")
-    for rel in ["report.md", "protocol-findings.md"]:
-        p = root / rel
-        if p.is_file():
-            ok("required:" + rel)
+    p = root / "protocol-findings.md"
+    if p.is_file():
+        ok("required:protocol-findings.md")
+    else:
+        bad("required:protocol-findings.md", "missing")
+
+    # ---- R-section report artifact hierarchy ----
+    # Exact-case name matching (not Path.is_file) keeps case-insensitive
+    # filesystems from misreading a legacy report.md as a new-format REPORT.md.
+    bundle_names = {q.name for q in root.iterdir()} if root.is_dir() else set()
+    has_primary = "REPORT.md" in bundle_names
+    has_lab_record = "WELP-LAB-RECORD.md" in bundle_names
+    has_legacy_report = "report.md" in bundle_names
+    if has_primary:
+        ok("R01_primary_report", "REPORT.md")
+        if has_legacy_report:
+            bad("R02_ambiguous_report_pair",
+                "REPORT.md and report.md coexist; REPORT.md is the sole primary "
+                "scientific report and the Lab Record must be WELP-LAB-RECORD.md")
+        if has_lab_record:
+            ok("R03_lab_record", "WELP-LAB-RECORD.md")
         else:
-            bad("required:" + rel, "missing")
+            warn("R03_lab_record_expected",
+                 "WELP-LAB-RECORD.md absent; current standard expects the "
+                 "standardized Lab Record companion")
+    elif has_legacy_report:
+        ok("required:report.md")
+        warn("R04_legacy_report_naming",
+             "report.md is the historical convention; new campaigns use "
+             "REPORT.md (primary) + WELP-LAB-RECORD.md (companion)")
+    else:
+        bad("required:report.md", "missing")
 
     # ---- manifest parse ----
     man = root / "summaries/campaign_manifest.json"
@@ -255,6 +290,97 @@ def _good_current_welp(td):
     return g
 
 
+def _good_new_hierarchy(td):
+    """Current artifact hierarchy: REPORT.md primary + WELP-LAB-RECORD.md companion."""
+    g = Path(td) / "good_new_hierarchy"
+    g.mkdir(parents=True)
+    (g / "REPORT.md").write_text(
+        "Artifact role: PRIMARY SCIENTIFIC REPORT\nStatus: CURRENT\nok\n")
+    (g / "WELP-LAB-RECORD.md").write_text(
+        "Artifact role: WELP LAB RECORD\nPrimary scientific report: REPORT.md\n")
+    (g / "WELP-CONFORMANCE.md").write_text("conformant (new artifact hierarchy)\n")
+    (g / "protocol-findings.md").write_text("PF-01\n")
+    (g / "summaries").mkdir(parents=True)
+    (g / "summaries/campaign_manifest.json").write_text(json.dumps({
+        "model": {"sha256": "a" * 64},
+        "protocol_snapshot": {"id": "welp-next-snapshot-2026-08-26-post-rename"},
+        "serving_profile": {"effective": {"slot_count": 1},
+                            "gate_baseline_reasoning_state": "REASONING_OFF",
+                            "reasoning_requested": "REASONING_OFF",
+                            "reasoning_effective": "REASONING_OFF"},
+        "phase2_harness_version": "welp-phase2-harness/0.1.0-draft",
+        "contracts": {"welp-practical-viability": {}, "welp-reliability": {}},
+        "generation_evidence": [{"path": "/workspace/camp/results/phase3_raw.jsonl",
+                                 "status": "COMPLETE", "sha256": "f" * 64, "rows": 90}]}))
+    (g / "summaries/toolchain_preflight.json").write_text(json.dumps({
+        "preflight": "welp-preflight",
+        "protocol": {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "welp_status": "DRAFT"},
+        "publication": {"localmaxxing_auth_status": "READY"}}))
+    (g / "toolchain").mkdir()
+    (g / "toolchain/runtime_capabilities.json").write_text(json.dumps({
+        "runtimes": {"llama.cpp-f280b269": {"status": "CACHE_METRIC_FLOOR_PRESENT", "floor": 74}}}))
+    return g
+
+
+def _ambiguous_report_pair(td):
+    """Ambiguity defect: REPORT.md (primary) and report.md coexist in one bundle."""
+    b = Path(td) / "bad_ambiguous_report_pair"
+    b.mkdir(parents=True)
+    (b / "REPORT.md").write_text("Artifact role: PRIMARY SCIENTIFIC REPORT\nStatus: CURRENT\n")
+    (b / "report.md").write_text("historical companion (ambiguous)\n")
+    (b / "WELP-CONFORMANCE.md").write_text("ok\n")
+    (b / "protocol-findings.md").write_text("ok\n")
+    (b / "summaries").mkdir(parents=True)
+    (b / "summaries/campaign_manifest.json").write_text(json.dumps({
+        "model": {"sha256": "a" * 64},
+        "protocol_snapshot": {"id": "welp-next-snapshot-2026-08-26-post-rename"},
+        "serving_profile": {"effective": {"slot_count": 1},
+                            "gate_baseline_reasoning_state": "REASONING_OFF",
+                            "reasoning_requested": "REASONING_OFF",
+                            "reasoning_effective": "REASONING_OFF"},
+        "phase2_harness_version": "welp-phase2-harness/0.1.0-draft",
+        "contracts": {"welp-practical-viability": {}, "welp-reliability": {}},
+        "generation_evidence": [{"path": "/workspace/camp/results/phase3_raw.jsonl",
+                                 "status": "COMPLETE", "sha256": "0" * 64, "rows": 90}]}))
+    (b / "summaries/toolchain_preflight.json").write_text(json.dumps({
+        "preflight": "welp-preflight",
+        "protocol": {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "welp_status": "DRAFT"},
+        "publication": {"localmaxxing_auth_status": "READY"}}))
+    (b / "toolchain").mkdir()
+    (b / "toolchain/runtime_capabilities.json").write_text(json.dumps({
+        "runtimes": {"llama.cpp-f280b269": {"status": "CACHE_METRIC_FLOOR_PRESENT", "floor": 74}}}))
+    return b
+
+
+def _new_hierarchy_missing_lab_record(td):
+    """New-format bundle without the Lab Record companion: valid, R03 warning."""
+    g = Path(td) / "good_new_hierarchy_no_lab_record"
+    g.mkdir(parents=True)
+    (g / "REPORT.md").write_text("Artifact role: PRIMARY SCIENTIFIC REPORT\nStatus: CURRENT\n")
+    (g / "WELP-CONFORMANCE.md").write_text("ok\n")
+    (g / "protocol-findings.md").write_text("ok\n")
+    (g / "summaries").mkdir(parents=True)
+    (g / "summaries/campaign_manifest.json").write_text(json.dumps({
+        "model": {"sha256": "a" * 64},
+        "protocol_snapshot": {"id": "welp-next-snapshot-2026-08-26-post-rename"},
+        "serving_profile": {"effective": {"slot_count": 1},
+                            "gate_baseline_reasoning_state": "REASONING_OFF",
+                            "reasoning_requested": "REASONING_OFF",
+                            "reasoning_effective": "REASONING_OFF"},
+        "phase2_harness_version": "welp-phase2-harness/0.1.0-draft",
+        "contracts": {"welp-practical-viability": {}, "welp-reliability": {}},
+        "generation_evidence": [{"path": "/workspace/camp/results/phase3_raw.jsonl",
+                                 "status": "COMPLETE", "sha256": "1" * 64, "rows": 90}]}))
+    (g / "summaries/toolchain_preflight.json").write_text(json.dumps({
+        "preflight": "welp-preflight",
+        "protocol": {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "welp_status": "DRAFT"},
+        "publication": {"localmaxxing_auth_status": "READY"}}))
+    (g / "toolchain").mkdir()
+    (g / "toolchain/runtime_capabilities.json").write_text(json.dumps({
+        "runtimes": {"llama.cpp-f280b269": {"status": "CACHE_METRIC_FLOOR_PRESENT", "floor": 74}}}))
+    return g
+
+
 def _invalid_unknown_prefix(td):
     b = Path(td) / "bad_unknown_prefix"
     b.mkdir(parents=True)
@@ -359,21 +485,36 @@ def selftest():
         rg_mixed = check(_welp_using_legacy_evidence(td))
         rb_unknown = check(_invalid_unknown_prefix(td))
         rb_rewritten = check(_improperly_rewritten_legacy(td))
+        rg_new = check(_good_new_hierarchy(td))
+        rb_ambig = check(_ambiguous_report_pair(td))
+        rg_new_nolr = check(_new_hierarchy_missing_lab_record(td))
         fails = []
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
-                         ("welp_with_legacy_evidence_rejected", rg_mixed)]:
+                         ("welp_with_legacy_evidence_rejected", rg_mixed),
+                         ("new_hierarchy_rejected", rg_new),
+                         ("new_hierarchy_without_lab_record_rejected", rg_new_nolr)]:
             if not r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
-        for label, r in [("unknown_prefix_accepted", rb_unknown), ("improperly_rewritten_legacy_accepted", rb_rewritten)]:
+        for label, r in [("unknown_prefix_accepted", rb_unknown), ("improperly_rewritten_legacy_accepted", rb_rewritten),
+                         ("ambiguous_report_pair_accepted", rb_ambig)]:
             if r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
+        if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
+            fails.append("ambiguous_pair_missing_R02_error")
+        if not any(f[0] == "warning" and f[1] == "R03_lab_record_expected" for f in rg_new_nolr["findings"]):
+            fails.append("new_hierarchy_without_lab_record_missing_R03_warning")
+        if not any(f[0] == "warning" and f[1] == "R04_legacy_report_naming" for f in rg_welp["findings"]):
+            fails.append("legacy_report_missing_R04_warning")
         print(json.dumps({
-            "fixture_sets": 5,
+            "fixture_sets": 8,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],
+            "accepted_new_hierarchy": rg_new["valid"],
             "rejected_unknown_prefix": not rb_unknown["valid"],
             "improperly_rewritten_legacy_passed": rb_rewritten["valid"],
+            "rejected_ambiguous_report_pair": not rb_ambig["valid"],
+            "new_hierarchy_without_lab_record_valid_with_warning": rg_new_nolr["valid"],
             "failures": fails,
             "pass": not fails,
         }, indent=2))

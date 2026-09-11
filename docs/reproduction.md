@@ -18,7 +18,7 @@
 7. **Context characterization (mandatory coverage accounting).** Freeze the [Context Scaling](../protocol/context-scaling.md) method revision/hash and answer the checklist below before context testing; finalize every row in the [model-card coverage table](../lab-record-template/README.md#model-card-context-coverage), including untested ranges. Capacity admission alone is not validation; practical default selection is not a context stop condition.
 8. **Final classification.** `classify.py` consumes the evidence bundle deterministically. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result.
 9. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
-10. **Standard Completion Package.** Produce `report.md`, `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries. Include context coverage and outstanding work even after an early stop.
+10. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries — and, when requested, a `<campaign-slug>-review-report.md` human summary under `~/Projects/local-llm/tmp/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
 11. **Publication routing (separate human authorization required).** Per vault Publication Routing:
     - Obsidian: internal WELP operational handbook.
     - GitHub: canonical public WELP evidence/protocol source.
@@ -40,6 +40,18 @@ explicit dispositions before reporting:
 8. Which rows have useful-context validation at that near-full occupancy? Verify measured 2/25/50/75/95 depths (<=0.50 percentage-point error, <=0.25 preferred), highest-runnable native/extended seed requirements, and separate request/observation counts.
 9. What remains untested or partial? Record every gap, demonstrated fit/integration limit, evidence path, and deferral reason; never silently omit an advertised range.
 10. Is model-card context coverage complete? Only all completed required rung/maxima dispositions permit CONTEXT CHARACTERIZATION COMPLETE. PRACTICAL PROFILE SELECTED or PRACTICAL BASELINE CHARACTERIZED may precede this gate.
+
+## Report artifact checklist
+
+Before completion, verify:
+
+1. Exactly one CURRENT primary `REPORT.md`?
+2. Lab Record named `WELP-LAB-RECORD.md` (not `report.md`)?
+3. No ambiguous `report.md` companion present?
+4. Does every companion point to the current `REPORT.md`?
+5. If a prior attempt was superseded: quarantined under an unmistakable `-prior-attempt-quarantined/` path, excluded from current claims, with quarantine path, reason, and any data reuse recorded in `REPORT.md`?
+6. Are current/superseded statuses explicit in every report's role header?
+7. Are request/arm fingerprints internally consistent where applicable?
 
 ## Compatibility
 

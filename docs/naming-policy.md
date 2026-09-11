@@ -13,6 +13,16 @@ All new and current-facing artifacts use `WELP` / `welp`:
 
 Do not introduce noncanonical protocol identifiers in current-facing material.
 
+## Report artifact filenames
+
+Campaign report artifacts have fixed role names (full hierarchy and precedence
+rules: [Report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy)):
+
+- `REPORT.md` — the primary scientific report; exactly one per current campaign bundle.
+- `WELP-LAB-RECORD.md` — the standardized Lab Record companion; summarize/index `REPORT.md`, never compete with it.
+- `<campaign-slug>-review-report.md` — optional human review summary; a noncanonical convenience document.
+- `report.md` — historical: accepted in frozen bundles, prohibited as a future Lab Record name, and never coexisting with `REPORT.md`.
+
 ## Frozen provenance
 
 Do not rewrite frozen provenance identifiers. Exact historical snapshot IDs, contract IDs, conformance filenames, campaign directory names, and hash-bound evidence stay as recorded.

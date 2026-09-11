@@ -2,10 +2,13 @@
 
 The canonical new-campaign validator.
 
-## Required files (any of these work)
+## Required files
 
 - `WELP-CONFORMANCE.md` (canonical for new campaigns)
-- `report.md`
+- Report artifacts, per the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy):
+  - New-format bundles: `REPORT.md` (primary scientific report) + `WELP-LAB-RECORD.md` (expected companion; absence is a warning).
+  - Historical bundles (no `REPORT.md`): `report.md` remains required, with a legacy-naming warning.
+  - `REPORT.md` + `report.md` coexisting in one bundle is an error (ambiguous case-different pair).
 - `protocol-findings.md`
 - `summaries/campaign_manifest.json`
 - `summaries/toolchain_preflight.json`
@@ -34,13 +37,16 @@ The canonical new-campaign validator.
 - **N01** snapshot id pattern mismatch.
 - **N02** preflight const invalid.
 - **N03** current-looking snapshot_id whose evidence still references only frozen historical contracts.
+- **R02** `REPORT.md` + `report.md` coexistence (ambiguous case-different report pair).
+- **R03** (warning) new-format bundle without the expected `WELP-LAB-RECORD.md` companion.
+- **R04** (warning) historical `report.md` naming; new campaigns use `REPORT.md` + `WELP-LAB-RECORD.md`.
 - M01–M11 carried over from `validate_campaign_v2.py` 0.2.0-draft.
 
 ## Usage
 
 ```bash
 python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
-python3 validate_campaign_welp.py selftest           # run embedded 5-fixture suite
+python3 validate_campaign_welp.py selftest           # run embedded 8-fixture suite
 ```
 
 ## Frozen historical campaigns

@@ -2,8 +2,9 @@
 
 ```
 lab-records/<model-slug>/welp-<YYYY-MM-DD>/
-├── README.md            # human entry point (= report.md summary)
-├── report.md            # full Standard Completion Package report
+├── REPORT.md            # PRIMARY SCIENTIFIC REPORT (authoritative source of truth)
+├── WELP-LAB-RECORD.md   # standardized WELP Lab Record (structured companion; this template)
+├── README.md            # human entry point (links REPORT.md + WELP-LAB-RECORD.md)
 ├── WELP-CONFORMANCE.md  # human-readable conformance record (canonical for WELP campaigns)
 ├── manifest.json        # welp_campaign_manifest.schema.json instance
 ├── SHA256SUMS           # artifact index hashes
@@ -19,6 +20,13 @@ lab-records/<model-slug>/welp-<YYYY-MM-DD>/
 ```
 
 No model binaries ever. Public/private eligibility per artifact_index entries.
+
+Historical bundles may instead contain a single `report.md` (the former full
+Standard Completion Package report). That is frozen evidence of the earlier
+convention: leave it byte-identical, and never combine `report.md` with
+`REPORT.md` in a current bundle. A superseded prior execution lives only under
+an unmistakable sibling path (preferred suffix `-prior-attempt-quarantined/`).
+See the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy).
 
 ## Frozen campaign directories
 

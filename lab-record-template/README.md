@@ -1,6 +1,20 @@
 # Lab Record Template (WELP)
 
+> Artifact role: WELP LAB RECORD (template)
+> Campaign: `<campaign slug>`
+> Status: CURRENT COMPANION
+> Primary scientific report: `REPORT.md`
+
 A published campaign record references external raw evidence; it never embeds model binaries.
+
+## Filename and role
+
+Instantiate this template as **`WELP-LAB-RECORD.md`** in the campaign bundle
+(not `report.md`). This record is a structured companion to the primary
+scientific report `REPORT.md`: it summarizes/indexes the same campaign and does
+NOT replace it. `REPORT.md` is authoritative; if the two disagree, `REPORT.md`
+governs and the discrepancy is reconciled from retained raw evidence. See the
+[report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy).
 
 Required sections:
 1. Model identity (repo/revision/file/sha256)
@@ -59,10 +73,14 @@ a sensible default does not terminate full-envelope characterization.
 
 | Convention | When to use |
 |---|---|
+| `REPORT.md` | New WELP campaigns: the primary scientific report (exactly one per current bundle; authoritative). |
+| `WELP-LAB-RECORD.md` | New WELP campaigns: this template, instantiated as the standardized companion record. |
+| `<campaign-slug>-review-report.md` | When requested: optional human review summary under `~/Projects/local-llm/tmp/` (noncanonical; links to `REPORT.md` + `WELP-LAB-RECORD.md`). |
 | `WELP-CONFORMANCE.md` | New WELP campaigns (canonical). |
 | `summaries/welp_conformance.json` | New WELP campaigns (canonical). |
 | `lab-records/<model-slug>/welp-<YYYY-MM-DD>/` | New WELP campaigns. |
 | `manifest.json` validated against `welp_campaign_manifest.schema.json` | New WELP campaigns. |
+| `report.md` | Historical bundles only. Do not use in new campaigns; never alongside `REPORT.md`. |
 
 Do not rename frozen campaign directories or frozen evidence filenames. Exact historical paths are provenance.
 

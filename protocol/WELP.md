@@ -52,6 +52,50 @@ and [report table](../lab-record-template/README.md#model-card-context-coverage)
 Freeze this methodology's revision/hash for new work; do not rewrite historical
 reports or frozen contracts to imply broader coverage.
 
+## Report artifact hierarchy
+
+Every campaign bundle has one obvious authoritative scientific report and
+clearly subordinate companions. The hierarchy is readable from filenames alone.
+
+| Artifact | Role | Authority |
+|---|---|---|
+| `REPORT.md` | PRIMARY SCIENTIFIC REPORT: outcome, scientific interpretation, measurements, negative findings, classifications, context dispositions, limitations, next human gate | authoritative source of truth for the campaign |
+| `WELP-LAB-RECORD.md` | standardized structured WELP Lab Record | companion/index of the SAME campaign; not another experiment, another run, or an independent report |
+| `<campaign-slug>-review-report.md` | human review summary (conventionally under `~/Projects/local-llm/tmp/`) | noncanonical convenience summary; must prominently link `REPORT.md` and `WELP-LAB-RECORD.md` |
+| `<campaign>-prior-attempt-quarantined/` | superseded prior execution preserved intact | superseded forensic evidence; never current evidence |
+
+Rules:
+
+- Exactly one current primary `REPORT.md` per active campaign bundle. If any
+  companion conflicts with it, `REPORT.md` governs, and the discrepancy is a
+  documentation defect: reconcile from retained raw evidence, not from whichever
+  value is more convenient, then correct or explicitly report the defect.
+- Do not create `report.md` in future campaigns. `REPORT.md` and `report.md`
+  must never coexist as differently-cased names for two different document
+  roles. `report.md` remains legitimate only as frozen historical evidence.
+- Each current campaign-facing report opens with a lightweight role header, for
+  example: `Artifact role:`, `Campaign:`, `Status: CURRENT | CURRENT COMPANION`,
+  plus a pointer to the primary report (`Primary scientific report: REPORT.md`
+  in companions). Keep it minimal; clarity, not bureaucracy.
+- Where the values exist, reports may carry a short human-readable run
+  fingerprint — campaign slug, execution date, scientific request count,
+  server/runtime arm count, outcome/decision label — so current, superseded,
+  and summarized artifacts are distinguishable at a glance. Omit counts where
+  those concepts do not apply. This is a readability aid, not a cryptographic
+  identity.
+- A prior substantial execution that must be superseded is preserved intact
+  under an unmistakable sibling path (preferred suffix:
+  `-prior-attempt-quarantined`), never silently deleted, overwritten, merged
+  into the current run, or treated as current evidence. The current `REPORT.md`
+  records: that a prior attempt exists, its quarantine path, why it was
+  superseded, and whether any data from it is used. Current scientific claims
+  come from the current execution; do not relabel quarantined bytes when
+  preservation contracts require byte identity.
+
+The validator enforces this hierarchy for new-format bundles (a `REPORT.md` is
+present) and accepts historical `report.md` bundles without retroactive
+failure; see `../docs/validator.md`.
+
 ## Canonical contracts (current)
 
 - `welp-practical-viability` 0.1.4-draft
@@ -74,4 +118,4 @@ reports or frozen contracts to imply broader coverage.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes, 5 fixtures, all PASS.
+- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 8 fixtures, all PASS.
