@@ -150,6 +150,19 @@ Rules:
 - `REPORT.md` and `WELP-LAB-RECORD.md` expose the disposition and the
   canonical-evidence state; the [completion
   checklist](../docs/reproduction.md#operator-checklist) includes the export.
+- Publication identity (added 2026-09-12): before publication a campaign must
+  answer — What is the `model_id`? What is the `profile_id`? Is this profile
+  already published? If yes, this event appends to the existing canonical
+  profile repository; if no, exactly one new canonical profile repository is
+  created for it. What is the `event_id`? The export records these in the
+  optional `identity` object (`schemas/welp_website_publication.schema.json`,
+  0.2.0-draft, additive/backward-compatible); each canonical eval repository
+  carries a `profile.json` descriptor
+  (`schemas/welp_eval_profile.schema.json`, `wumbolabs-eval-profile/1`).
+  The default is NOT one repository per campaign and NOT one repository for
+  every profile of a model. Profile boundaries follow material scientific
+  surfaces (artifact/quant family, runtime family, deployment topology),
+  not campaign or test boundaries.
 
 The campaign validator enforces the disposition for new-format campaigns
 whose protocol snapshot date is 2026-09-12 or later (`R07`/`R08`); earlier

@@ -47,7 +47,12 @@ New rules:
        WEBSITE_BLOCKED / NOT_FOR_PUBLICATION require reason; the other statuses
        require website_record_slug; canonical_evidence.state must be exactly
        PUBLISHED | PENDING_HUMAN_GATE; PUBLISHED requires a canonical_evidence
-       URL; PENDING_HUMAN_GATE must not carry a claimed canonical URL
+       URL; PENDING_HUMAN_GATE must not carry a claimed canonical URL; when the
+       optional identity object is present it must carry non-empty model_id,
+       profile_id, event_id, event_type, a YYYY-MM-DD event_date when given,
+       a non-empty evidence_scope string array when given, and a valid
+       profile_status when given (identity is optional so frozen exports
+       remain valid unchanged)
 
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
@@ -64,6 +69,7 @@ REPORT_HIERARCHY_FROM = "2026-09-10"  # REPORT.md/WELP-LAB-RECORD.md hierarchy e
 WEBSITE_STATUSES = {"WEBSITE_READY", "WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION", "WEBSITE_PUBLISHED"}
 WEBSITE_EVIDENCE_STATES = {"PUBLISHED", "PENDING_HUMAN_GATE"}
 WEBSITE_DISPOSITION_REQUIRED_FROM = "2026-09-12"  # campaign snapshot dates from this day on
+PROFILE_STATUSES = {"current", "current-alternate", "historical", "superseded", "specialized"}
 
 
 def check(root: Path):
@@ -263,6 +269,33 @@ def check(root: Path):
                 else:
                     bad("R08_website_evidence_state",
                         f"invalid canonical_evidence.state {ev_state!r}; expected one of {sorted(WEBSITE_EVIDENCE_STATES)}")
+            # ---- R08 identity (optional, additive 2026-09-12) ----
+            identity = web.get("identity")
+            if identity is not None:
+                if isinstance(identity, dict):
+                    missing_ident = [k for k in ("model_id", "profile_id", "event_id", "event_type")
+                                     if not str(identity.get(k) or "").strip()]
+                    if missing_ident:
+                        bad("R08_website_identity_incomplete",
+                            f"identity present but missing non-empty {', '.join(missing_ident)}")
+                    else:
+                        ok("R08_website_identity",
+                           f"{identity.get('model_id')} / {identity.get('profile_id')} / {identity.get('event_id')}")
+                    idate = identity.get("event_date")
+                    if idate is not None and not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", str(idate)):
+                        bad("R08_website_identity_event_date",
+                            f"identity.event_date must be YYYY-MM-DD, got {idate!r}")
+                    iscope = identity.get("evidence_scope")
+                    if iscope is not None and (not isinstance(iscope, list) or not iscope
+                                               or not all(isinstance(s, str) and s.strip() for s in iscope)):
+                        bad("R08_website_identity_scope",
+                            "identity.evidence_scope must be a non-empty array of surface strings when present")
+                    istatus = identity.get("profile_status")
+                    if istatus is not None and istatus not in PROFILE_STATUSES:
+                        bad("R08_website_identity_profile_status",
+                            f"invalid identity.profile_status {istatus!r}; expected one of {sorted(PROFILE_STATUSES)}")
+                else:
+                    bad("R08_website_identity_parse", "identity must be a JSON object when present")
         else:
             bad("R08_website_disposition",
                 f"invalid disposition {web_status!r}; expected one of {sorted(WEBSITE_STATUSES)}")

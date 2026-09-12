@@ -59,6 +59,11 @@ The canonical new-campaign validator.
   `WEBSITE_BLOCKED`/`NOT_FOR_PUBLICATION` require `reason`; the other statuses require
   `website_record_slug`; `canonical_evidence.state` — exactly `PUBLISHED | PENDING_HUMAN_GATE`;
   `PUBLISHED` requires the canonical evidence URL; `PENDING_HUMAN_GATE` must not claim one.
+  The optional `identity` object (added 2026-09-12) must carry non-empty `model_id`,
+  `profile_id`, `event_id`, `event_type`; `event_date` must be `YYYY-MM-DD` when given;
+  `evidence_scope` must be a non-empty string array when given; `profile_status` must be
+  `current | current-alternate | historical | superseded | specialized` when given. Identity
+  is optional so frozen exports remain valid unchanged.
   See [WELP website publication disposition](../protocol/WELP.md#website-publication-disposition)
   and `../schemas/welp_website_publication.schema.json`.
 - M01–M11 carried over from `validate_campaign_v2.py` 0.2.0-draft.
@@ -72,6 +77,13 @@ The canonical new-campaign validator.
 - Schema: `../schemas/welp_website_publication.schema.json` (`wumbolabs-labs-publication/1`). Public-safe derivative fields only.
 - `disposition` — exactly `WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`; blocked/excluded statuses require `reason`; ready/published statuses require `website_record_slug`.
 - `canonical_evidence.state` — exactly `PUBLISHED | PENDING_HUMAN_GATE`; `PUBLISHED` requires `url`; `PENDING_HUMAN_GATE` must not claim a canonical URL (a `proposed_repo` name is recorded instead).
+- `identity` (optional, additive 2026-09-12): stable publication identity — `model_id`,
+  `profile_id`, `event_id`, `event_type` (required within the object), plus `event_date`,
+  `profile_repo`, `profile_status`, `evidence_scope`. Contracts: one `model_id` = one canonical
+  Labs page; one `profile_id` = one canonical public eval repository; one `event_id` = one dated
+  Records entry; one profile may contain many events; one model may contain many profiles.
+  Exports without `identity` remain valid (the website registry supplies identity website-side
+  for pre-existing publications).
 
 
 

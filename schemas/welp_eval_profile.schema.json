@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WumboLabs eval profile descriptor",
+  "version": "0.1.0-draft",
+  "description": "Profile identity descriptor (profile.json) for a WumboLabs canonical public evaluation repository. Establishes WHICH tested deployment/scientific surface the repository is canonical for; it never duplicates scientific reports. Contract: one profile_id maps to exactly one canonical public eval repository; one profile may contain many events of the same material tested surface. Added 2026-09-12 by the model/profile/event publication-identity milestone.",
+  "type": "object",
+  "required": [
+    "schema",
+    "model_id",
+    "model_display_name",
+    "profile_id",
+    "profile_display_name",
+    "runtime_family",
+    "artifact",
+    "artifact_precision",
+    "repository",
+    "first_event",
+    "current_status"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wumbolabs-eval-profile/1"
+    },
+    "model_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$",
+      "description": "Stable model identity; maps to exactly one canonical Labs page (e.g. qwen38-27b)."
+    },
+    "model_display_name": {
+      "type": "string",
+      "description": "Human-readable model name (e.g. Qwen3.8-27B)."
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$",
+      "description": "Materially distinct tested deployment/scientific surface this repository is canonical for. Must match the model_id prefix convention and the repository identity."
+    },
+    "profile_display_name": {
+      "type": "string",
+      "description": "Human-readable profile name (e.g. ExLlamaV3 H1 (SC_2.20bpw_H3_V3))."
+    },
+    "runtime_family": {
+      "type": "string",
+      "description": "Runtime engine family (e.g. llama.cpp, ExLlamaV3, vLLM)."
+    },
+    "runtime_version": {
+      "type": "string",
+      "description": "Pinned runtime version/commit identity where established."
+    },
+    "artifact": {
+      "type": "string",
+      "description": "Tested model artifact identity (file/quant family, source revision where established)."
+    },
+    "artifact_precision": {
+      "type": "string",
+      "description": "Weight/KV precision of the tested artifact."
+    },
+    "deployment_topology": {
+      "type": "string",
+      "description": "Material serving topology of the profile (residency, speculation/MTP surface, history mode, batch/width), where applicable."
+    },
+    "hardware_scope": {
+      "type": "string",
+      "description": "Hardware scope of the evidence (e.g. WumboJetsII, RTX 5070 12GB)."
+    },
+    "repository": {
+      "type": "string",
+      "description": "The canonical public eval repository this descriptor lives in (owner/name)."
+    },
+    "first_event": {
+      "type": "string",
+      "description": "event_id of the first published event on this profile."
+    },
+    "current_status": {
+      "enum": ["current", "current-alternate", "historical", "superseded", "specialized"],
+      "description": "Role of this profile among the model's tested profiles. CURRENT = canonical/recommended tested surface; CURRENT_ALTERNATE = validated alternate; HISTORICAL = earlier tested surface retained as evidence; SUPERSEDED = replaced by a materially different accepted profile; SPECIALIZED = niche tested surface."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional bounded clarification (e.g. provenance of a split repository)."
+    }
+  }
+}

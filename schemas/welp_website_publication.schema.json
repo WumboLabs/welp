@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP website publication export",
-  "version": "0.1.0-draft",
-  "description": "Public-safe derivative export (summaries/website-publication.json) that dispositions website publication for a WELP campaign and carries the fields the WumboLabs website registry/sync consumes. The website is derivative; REPORT.md and the campaign evidence remain canonical. Public-safe only: no credentials, local absolute paths, raw prompt logs, telemetry dumps, or internal identifiers.",
+  "version": "0.2.0-draft",
+  "description": "Public-safe derivative export (summaries/website-publication.json) that dispositions website publication for a WELP campaign and carries the fields the WumboLabs website registry/sync consumes. The website is derivative; REPORT.md and the campaign evidence remain canonical. Public-safe only: no credentials, local absolute paths, raw prompt logs, telemetry dumps, or internal identifiers. 0.2.0-draft (2026-09-12) adds the optional identity object (model/profile/event publication identity) and the optional evidence_scope field; it is a purely additive change — exports valid under 0.1.0-draft remain valid and accepted, and exports without identity remain accepted (the website registry supplies identity website-side for pre-existing publications).",
   "type": "object",
   "required": [
     "schema",
@@ -153,6 +153,51 @@
     "website_record_slug": {
       "type": ["string", "null"],
       "description": "Website Labs record slug this export drives. null only for NOT_FOR_PUBLICATION."
+    },
+    "identity": {
+      "type": "object",
+      "description": "Stable publication identity (added 0.2.0-draft, optional for backward compatibility). Contract: one model_id = one canonical Labs page; one profile_id = one canonical public eval repository; one event_id = one dated Records entry/evidence event. Must match the website registry entry for the same publication.",
+      "required": ["model_id", "profile_id", "event_id", "event_type"],
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$",
+          "description": "Stable model identity; maps to exactly one canonical Labs page (e.g. qwen38-27b)."
+        },
+        "profile_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$",
+          "description": "Materially distinct tested deployment/scientific surface; maps to exactly one canonical public eval repository (e.g. qwen38-27b-exl3-h1)."
+        },
+        "event_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Individual scientific/publication event; globally unique; maps to one dated Records entry (e.g. context-envelope-completion-2026-09-12)."
+        },
+        "event_type": {
+          "type": "string",
+          "description": "Open vocabulary, e.g. initial-evaluation | welp-recharacterization | profile-canonical-promotion | context-envelope-completion."
+        },
+        "event_date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Date of the evidence event itself."
+        },
+        "profile_repo": {
+          "type": "string",
+          "description": "Canonical public eval repository for profile_id (e.g. WumboLabs/eval-qwen3.8-27b-exl3-h1)."
+        },
+        "profile_status": {
+          "enum": ["current", "current-alternate", "historical", "superseded", "specialized"],
+          "description": "Role of this profile among the model's tested profiles at publication time."
+        },
+        "evidence_scope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Surfaces this event establishes or updates (e.g. model-classification, reliability, capabilities, context, performance, serving-profile, localmaxxing, protocol-development). A later context-only event must NOT claim scopes it does not evidence; per-surface currency derives from this declaration."
+        }
+      }
     },
     "record_description": {
       "type": "string",
