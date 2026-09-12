@@ -97,7 +97,7 @@ a sensible default does not terminate full-envelope characterization.
 |---|---|
 | `REPORT.md` | New WELP campaigns: the primary scientific report (exactly one per current bundle; authoritative). |
 | `WELP-LAB-RECORD.md` | New WELP campaigns: this template, instantiated as the standardized companion record. |
-| `<campaign-slug>-review-report.md` | When requested: optional human review summary under `~/Projects/local-llm/tmp/` (noncanonical; links to `REPORT.md` + `WELP-LAB-RECORD.md`). |
+| `<campaign-slug>-review-report.md` | When requested: optional human review summary under the campaign bundle `<campaign>/reviews/` (noncanonical; links to `REPORT.md` + `WELP-LAB-RECORD.md`). |
 | `WELP-CONFORMANCE.md` | New WELP campaigns (canonical). |
 | `summaries/welp_conformance.json` | New WELP campaigns (canonical). |
 | `lab-records/<model-slug>/welp-<YYYY-MM-DD>/` | New WELP campaigns. |
