@@ -759,6 +759,8 @@ def _good_new_format_with_website(td):
          "localmaxxing": {"status": "SUBMITTED", "submission_ref": "cmtexample0000000000000"},
          "canonical_evidence": {"state": "PENDING_HUMAN_GATE", "url": None,
                                 "proposed_repo": "WumboLabs/evaluations"},
+         "identity": {"model_id": "example-model", "profile_id": "example-model-q8",
+                      "event_id": "example-evaluation", "event_type": "initial-evaluation"},
          "website_record_slug": "example-model",
          "public_summary": "Bounded example summary."})
 

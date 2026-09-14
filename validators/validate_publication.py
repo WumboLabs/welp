@@ -22,7 +22,7 @@ def evidence_errors(document):
     evidence = document.get("canonical_evidence", {})
     if not isinstance(evidence, dict):
         return ["canonical_evidence must be an object"]
-    current = evidence.get("repo") == REPO or "path" in evidence
+    current = evidence.get("repo") == REPO or evidence.get("proposed_repo") == REPO or "path" in evidence
     state = evidence.get("state")
     if state not in ("PUBLISHED", "PENDING_HUMAN_GATE"):
         errors.append("invalid canonical evidence state")
@@ -113,6 +113,12 @@ def selftest():
     pending = copy.deepcopy(current)
     pending["canonical_evidence"]["state"] = "PENDING_HUMAN_GATE"
     cases.append(("pending published citation", pending, False))
+    pending_current = {"canonical_evidence": {"state": "PENDING_HUMAN_GATE", "proposed_repo": REPO}, "identity": current["identity"]}
+    cases.append(("pending current identity", pending_current, True))
+    pending_missing = copy.deepcopy(pending_current)
+    del pending_missing["identity"]
+    cases.append(("pending current missing identity", pending_missing, False))
+    cases.append(("historical pending without identity", {"canonical_evidence": {"state": "PENDING_HUMAN_GATE", "proposed_repo": "WumboLabs/eval-example"}}, True))
     results = [{"case": name, "pass": (not evidence_errors(item)) == valid} for name, item, valid in cases]
     print(json.dumps({"pass": all(x["pass"] for x in results), "cases": results}, indent=2))
     return 0 if all(x["pass"] for x in results) else 1

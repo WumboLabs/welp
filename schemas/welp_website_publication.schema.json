@@ -241,7 +241,15 @@
   "allOf": [
     {
       "if": {
-        "properties": { "canonical_evidence": { "required": ["path"] } },
+        "properties": {
+          "canonical_evidence": {
+            "anyOf": [
+              { "required": ["path"] },
+              { "required": ["repo"], "properties": { "repo": { "const": "WumboLabs/evaluations" } } },
+              { "required": ["proposed_repo"], "properties": { "proposed_repo": { "const": "WumboLabs/evaluations" } } }
+            ]
+          }
+        },
         "required": ["canonical_evidence"]
       },
       "then": { "required": ["identity"] }
