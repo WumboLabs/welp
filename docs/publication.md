@@ -103,7 +103,12 @@ validator additionally checks registry-wide uniqueness and referential integrity
 
 Share the website model URL for ordinary discussion, the central model/profile index
 for evidence navigation, and a central **full-commit blob URL** for an exact claim.
-A `main` branch URL is discovery, never an immutable scientific citation. Historical
-legacy links remain useful provenance and must continue resolving after archival.
-Archive notices point to the corresponding central model/profile and website page;
-archiving is allowed only after their replacement is pushed and live-verified.
+A `main` branch URL is discovery, never an immutable scientific citation. The legacy
+`eval-*` repositories were deleted on 2026-09-14 after verified consolidation; their
+repo/commit/path identities remain valid historical provenance, their full Git
+histories are preserved as verified bundles in the WumboServer offline archive, and
+their URLs are retired identifiers that no longer resolve. Record `legacy_repository`
+names, commits, paths, and hashes as provenance; never present a legacy URL as live
+navigation or a current evidence source. During consolidation, archive notices pointed
+to the corresponding central model/profile and website page, and archiving was allowed
+only after the replacement was pushed and live-verified.
