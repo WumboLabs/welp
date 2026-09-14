@@ -58,8 +58,9 @@ The canonical new-campaign validator.
   `WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`;
   `WEBSITE_BLOCKED`/`NOT_FOR_PUBLICATION` require `reason`; the other statuses require
   `website_record_slug`; `canonical_evidence.state` — exactly `PUBLISHED | PENDING_HUMAN_GATE`;
-  `PUBLISHED` requires the canonical evidence URL; `PENDING_HUMAN_GATE` must not claim one.
-  The optional `identity` object (added 2026-09-12) must carry non-empty `model_id`,
+  current `PUBLISHED` evidence requires central repo/full-commit/path; legacy evidence
+  retains its URL. Pending evidence claims neither. The `identity` object is required
+  for current central publication and optional for historical exports; it must carry non-empty `model_id`,
   `profile_id`, `event_id`, `event_type`; `event_date` must be `YYYY-MM-DD` when given;
   `evidence_scope` must be a non-empty string array when given; `profile_status` must be
   `current | current-alternate | historical | superseded | specialized` when given. Identity
@@ -76,14 +77,19 @@ The canonical new-campaign validator.
 
 - Schema: `../schemas/welp_website_publication.schema.json` (`wumbolabs-labs-publication/1`). Public-safe derivative fields only.
 - `disposition` — exactly `WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`; blocked/excluded statuses require `reason`; ready/published statuses require `website_record_slug`.
-- `canonical_evidence.state` — exactly `PUBLISHED | PENDING_HUMAN_GATE`; `PUBLISHED` requires `url`; `PENDING_HUMAN_GATE` must not claim a canonical URL (a `proposed_repo` name is recorded instead).
-- `identity` (optional, additive 2026-09-12): stable publication identity — `model_id`,
-  `profile_id`, `event_id`, `event_type` (required within the object), plus `event_date`,
-  `profile_repo`, `profile_status`, `evidence_scope`. Contracts: one `model_id` = one canonical
-  Labs page; one `profile_id` = one canonical public eval repository; one `event_id` = one dated
-  Records entry; one profile may contain many events; one model may contain many profiles.
-  Exports without `identity` remain valid (the website registry supplies identity website-side
-  for pre-existing publications).
+- `canonical_evidence.state` — exactly `PUBLISHED | PENDING_HUMAN_GATE`.
+  Current published evidence requires `repo: WumboLabs/evaluations`, full
+  40-character `commit`, and safe relative `path`; an optional URL must match that
+  tuple exactly. Pending evidence cannot claim a published URL/commit/path.
+  Historical URL-only and legacy repo/commit exports retain their original meaning.
+- Current exports require `identity`: `model_id`, `profile_id`, `event_id`,
+  `event_type`, with optional date, status, and evidence scope. Profiles identify
+  tested scientific surfaces, not repositories. Legacy exports may omit identity;
+  legacy `profile_repo` remains historical, never a central path.
+- `validators/validate_publication.py` checks current citations, profile paths,
+  and shared-event relationships; `selftest` exercises rejection boundaries and
+  historical acceptance. Central registry validation checks global uniqueness
+  and cross-model/profile/event references. See [publication workflow](publication.md).
 
 
 
@@ -92,6 +98,8 @@ The canonical new-campaign validator.
 ```bash
 python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
 python3 validate_campaign_welp.py selftest           # run embedded 15-fixture suite
+python3 validators/validate_publication.py selftest
+python3 validators/validate_publication.py EXPORT PROFILE
 ```
 
 ## Frozen historical campaigns

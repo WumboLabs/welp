@@ -136,33 +136,31 @@ private usernames, raw prompt logs, telemetry dumps, or internal debug state.
 Rules:
 
 - When canonical public evidence is not yet published, the export records
-  `canonical_evidence.state = PENDING_HUMAN_GATE` (with a proposed repository
-  identity where applicable) rather than inventing a canonical URL. A website
+  `canonical_evidence.state = PENDING_HUMAN_GATE` (targeting the existing
+  `WumboLabs/evaluations` repository) rather than inventing a canonical URL. A website
   record generated from a pending export must state that evidence publication
   is pending; it must not claim canonical public evidence exists.
 - Publishing the public evidence repository, committing, pushing, and
   deploying the website remain human-gated external actions; generating the
   export and local derivative records does not authorize any of them.
-- The website consumes the export through its publication registry and
-  deterministic sync workflow. Website record pages and generated index
-  surfaces are derived from the registry/exports, not independently
-  hand-maintained.
+- The website consumes a full-commit, SHA-256-pinned central registry and
+  immutable event exports through deterministic sync. Its local registry,
+  record pages, and generated indexes are derivatives, not separate sources.
 - `REPORT.md` and `WELP-LAB-RECORD.md` expose the disposition and the
   canonical-evidence state; the [completion
   checklist](../docs/reproduction.md#operator-checklist) includes the export.
-- Publication identity (added 2026-09-12): before publication a campaign must
-  answer — What is the `model_id`? What is the `profile_id`? Is this profile
-  already published? If yes, this event appends to the existing canonical
-  profile repository; if no, exactly one new canonical profile repository is
-  created for it. What is the `event_id`? The export records these in the
-  optional `identity` object (`schemas/welp_website_publication.schema.json`,
-  0.2.0-draft, additive/backward-compatible); each canonical eval repository
-  carries a `profile.json` descriptor
-  (`schemas/welp_eval_profile.schema.json`, `wumbolabs-eval-profile/1`).
-  The default is NOT one repository per campaign and NOT one repository for
-  every profile of a model. Profile boundaries follow material scientific
-  surfaces (artifact/quant family, runtime family, deployment topology),
-  not campaign or test boundaries.
+- Publication identity: assign stable `model_id`, `profile_id`, and `event_id`
+  before publication. Append an event under `models/<model_id>/events/<event_id>/`
+  in **WumboLabs/evaluations**; register a new profile there only when the tested
+  artifact/runtime/deployment surface materially differs. Never create an
+  `eval-*` repository. Current profile descriptors use `wumbolabs-eval-profile/2`;
+  legacy `/1` descriptors and export `identity.profile_repo` remain historical.
+- A published current citation is `{repo, commit, path}` with the full 40-character
+  commit SHA and a safe relative artifact path. Shared comparisons live once under
+  `shared-events/<shared_event_id>/`, explicitly linked to their models/profiles;
+  they have no fabricated owner model. Display attribution does not change science.
+- Follow [the publication operating contract](../docs/publication.md) for the
+  four-layer architecture, validation, public-safety review, sharing, and cutover.
 
 The campaign validator enforces the disposition for new-format campaigns
 whose protocol snapshot date is 2026-09-12 or later (`R07`/`R08`); earlier
@@ -231,6 +229,7 @@ failure; see `../docs/validator.md`.
 - `welp_artifact_index.schema.json`
 - `welp_publication_status.schema.json`
 - `welp_website_publication.schema.json`
+- `welp_eval_profile.schema.json`
 - `welp_serving_profile.schema.json`
 - `welp_toolchain_preflight.schema.json`
 - `welp_toolchain_inventory.schema.json`
@@ -238,3 +237,5 @@ failure; see `../docs/validator.md`.
 ## Canonical validator (current)
 
 - `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 15 fixtures, all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on, and the website publication disposition (`summaries/website-publication.json`) for new-format campaigns with snapshot dates from 2026-09-12 on.
+- `validators/validate_publication.py` — current immutable citations, scientific IDs,
+  shared relationships, and profile-path consistency; legacy URL exports remain accepted.

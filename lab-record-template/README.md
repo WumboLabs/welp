@@ -33,7 +33,7 @@ Required sections:
 14. Supported deployment roles (only where evidence permits)
 15. Model-card context coverage table below, including all untested/partial ranges and exact native/official extension maxima
 16. Separate practical-profile/baseline decision and model-card context-completeness gate
-17. Website publication disposition — the `summaries/website-publication.json` disposition (`WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`), the canonical-evidence state (`PUBLISHED` with URL, or `PENDING_HUMAN_GATE` with proposed repository), and the website record slug. See [WELP](../protocol/WELP.md#website-publication-disposition).
+17. Website publication disposition — `summaries/website-publication.json` disposition (`WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`), stable model/profile/event IDs, canonical-evidence state (`PUBLISHED` with `WumboLabs/evaluations` + full commit SHA + relative artifact path, or `PENDING_HUMAN_GATE` without a published citation), and website record slug. Follow the [publication operating contract](../docs/publication.md); never create a profile repository.
 
 ## LocalMaxxing disposition
 

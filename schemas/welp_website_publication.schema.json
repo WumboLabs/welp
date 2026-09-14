@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP website publication export",
-  "version": "0.2.0-draft",
-  "description": "Public-safe derivative export (summaries/website-publication.json) that dispositions website publication for a WELP campaign and carries the fields the WumboLabs website registry/sync consumes. The website is derivative; REPORT.md and the campaign evidence remain canonical. Public-safe only: no credentials, local absolute paths, raw prompt logs, telemetry dumps, or internal identifiers. 0.2.0-draft (2026-09-12) adds the optional identity object (model/profile/event publication identity) and the optional evidence_scope field; it is a purely additive change — exports valid under 0.1.0-draft remain valid and accepted, and exports without identity remain accepted (the website registry supplies identity website-side for pre-existing publications).",
+  "version": "0.3.0-draft",
+  "description": "Public-safe website publication export. Current public evidence lives in WumboLabs/evaluations and is cited by repo, full commit SHA, and path. Model/profile/event IDs are scientific identity; repository boundaries are not. Legacy exports and identity.profile_repo retain their historical meaning. Scientific methodology and the wire schema identifier are unchanged.",
   "type": "object",
   "required": [
     "schema",
@@ -104,17 +104,17 @@
       "type": "object",
       "properties": {
         "surface_note": { "type": "string" },
-        "short_ttft_s": { "type": "number" },
-        "short_decode_tps": { "type": "number" },
-        "moderate_input_tokens": { "type": "integer" },
-        "moderate_ttft_s": { "type": "number" },
-        "moderate_prefill_tps": { "type": "number" },
-        "moderate_decode_tps": { "type": "number" }
+        "short_ttft_s": { "type": ["number", "null"] },
+        "short_decode_tps": { "type": ["number", "null"] },
+        "moderate_input_tokens": { "type": ["integer", "null"] },
+        "moderate_ttft_s": { "type": ["number", "null"] },
+        "moderate_prefill_tps": { "type": ["number", "null"] },
+        "moderate_decode_tps": { "type": ["number", "null"] }
       }
     },
     "quality": {
       "type": "object",
-      "required": ["reliability_summary"],
+      "description": "Only evidence established by this event. A context-only event need not repeat inherited reliability claims; null performance measurements mean unmeasured, not zero.",
       "properties": {
         "constrained_result": { "type": "string" },
         "capability_highlights": { "type": "array", "items": { "type": "string" } },
@@ -143,12 +143,31 @@
       "properties": {
         "state": {
           "enum": ["PUBLISHED", "PENDING_HUMAN_GATE"],
-          "description": "PENDING_HUMAN_GATE when the canonical public eval repository does not exist yet or the follow-up evidence has not been pushed. Never invent a URL for a repository that does not exist."
+          "description": "PENDING_HUMAN_GATE until accepted public event evidence has been pushed. Never invent a published citation."
         },
         "url": { "type": ["string", "null"] },
         "proposed_repo": { "type": ["string", "null"] },
+        "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$" },
         "note": { "type": "string" }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["path"] },
+          "then": {
+            "required": ["repo", "commit", "path"],
+            "properties": { "repo": { "const": "WumboLabs/evaluations" }, "state": { "const": "PUBLISHED" } }
+          }
+        },
+        {
+          "if": {
+            "required": ["repo", "state"],
+            "properties": { "repo": { "const": "WumboLabs/evaluations" }, "state": { "const": "PUBLISHED" } }
+          },
+          "then": { "required": ["commit", "path"] }
+        }
+      ]
     },
     "website_record_slug": {
       "type": ["string", "null"],
@@ -156,7 +175,7 @@
     },
     "identity": {
       "type": "object",
-      "description": "Stable publication identity (added 0.2.0-draft, optional for backward compatibility). Contract: one model_id = one canonical Labs page; one profile_id = one canonical public eval repository; one event_id = one dated Records entry/evidence event. Must match the website registry entry for the same publication.",
+      "description": "Stable scientific publication identity. One model_id identifies a model page; one profile_id identifies a materially distinct tested surface; one event_id identifies an immutable event. No new profile repository is required. Optional only for legacy exports.",
       "required": ["model_id", "profile_id", "event_id", "event_type"],
       "properties": {
         "model_id": {
@@ -167,7 +186,7 @@
         "profile_id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9.-]*$",
-          "description": "Materially distinct tested deployment/scientific surface; maps to exactly one canonical public eval repository (e.g. qwen38-27b-exl3-h1)."
+          "description": "Materially distinct tested artifact/runtime/deployment surface, independent of Git repository boundaries."
         },
         "event_id": {
           "type": "string",
@@ -185,7 +204,8 @@
         },
         "profile_repo": {
           "type": "string",
-          "description": "Canonical public eval repository for profile_id (e.g. WumboLabs/eval-qwen3.8-27b-exl3-h1)."
+          "deprecated": true,
+          "description": "Legacy publication topology only. Accepted unchanged for historical exports; never reinterpret this as a central repository path."
         },
         "profile_status": {
           "enum": ["current", "current-alternate", "historical", "superseded", "specialized"],
@@ -196,8 +216,18 @@
           "items": { "type": "string" },
           "minItems": 1,
           "description": "Surfaces this event establishes or updates (e.g. model-classification, reliability, capabilities, context, performance, serving-profile, localmaxxing, protocol-development). A later context-only event must NOT claim scopes it does not evidence; per-surface currency derives from this declaration."
+        },
+        "shared_event_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "related_model_ids": {
+          "type": "array", "minItems": 2, "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" }
+        },
+        "related_profile_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" }
         }
-      }
+      },
+      "dependentRequired": { "shared_event_id": ["related_model_ids"], "related_model_ids": ["shared_event_id"] }
     },
     "record_description": {
       "type": "string",
@@ -207,5 +237,14 @@
       "type": "string",
       "description": "Bounded human-readable summary; no marketing language."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "canonical_evidence": { "required": ["path"] } },
+        "required": ["canonical_evidence"]
+      },
+      "then": { "required": ["identity"] }
+    }
+  ]
 }

@@ -58,6 +58,7 @@ Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
 import json, os, re, sys, tempfile
 from pathlib import Path
+from validate_publication import evidence_errors
 
 HASH = re.compile(r"^[a-f0-9]{64}$")
 AUTH_STATUSES = {"READY", "AUTH_BLOCKED", "CLI_INCOMPATIBLE", "NOT_APPLICABLE"}
@@ -260,15 +261,17 @@ def check(root: Path):
                 ev_state = evidence.get("state")
                 if ev_state in WEBSITE_EVIDENCE_STATES:
                     ok("R08_website_evidence_state", ev_state)
-                    if ev_state == "PUBLISHED" and not evidence.get("url"):
+                    if ev_state == "PUBLISHED" and not evidence.get("url") and evidence.get("repo") != "WumboLabs/evaluations":
                         bad("R08_website_evidence_url_missing",
-                            "canonical_evidence.state PUBLISHED requires the canonical evidence URL")
+                            "legacy PUBLISHED evidence requires its canonical evidence URL")
                     if ev_state == "PENDING_HUMAN_GATE" and evidence.get("url"):
                         bad("R08_website_evidence_url_pending_conflict",
                             "canonical_evidence.state PENDING_HUMAN_GATE must not claim a canonical URL")
                 else:
                     bad("R08_website_evidence_state",
                         f"invalid canonical_evidence.state {ev_state!r}; expected one of {sorted(WEBSITE_EVIDENCE_STATES)}")
+                for detail in evidence_errors(web):
+                    bad("R08_website_publication_contract", detail)
             # ---- R08 identity (optional, additive 2026-09-12) ----
             identity = web.get("identity")
             if identity is not None:
@@ -755,7 +758,7 @@ def _good_new_format_with_website(td):
          "quality": {"reliability_summary": "20/20 bounded"},
          "localmaxxing": {"status": "SUBMITTED", "submission_ref": "cmtexample0000000000000"},
          "canonical_evidence": {"state": "PENDING_HUMAN_GATE", "url": None,
-                                "proposed_repo": "eval-example-model"},
+                                "proposed_repo": "WumboLabs/evaluations"},
          "website_record_slug": "example-model",
          "public_summary": "Bounded example summary."})
 

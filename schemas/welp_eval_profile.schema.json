@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WumboLabs eval profile descriptor",
-  "version": "0.1.0-draft",
-  "description": "Profile identity descriptor (profile.json) for a WumboLabs canonical public evaluation repository. Establishes WHICH tested deployment/scientific surface the repository is canonical for; it never duplicates scientific reports. Contract: one profile_id maps to exactly one canonical public eval repository; one profile may contain many events of the same material tested surface. Added 2026-09-12 by the model/profile/event publication-identity milestone.",
+  "version": "0.2.0-draft",
+  "description": "Stable scientific profile identity, independent of repository boundaries. Version 2 descriptors live beneath models/<model_id>/profiles/<profile_id> in WumboLabs/evaluations. Version 1 descriptors remain historical evidence.",
   "type": "object",
   "required": [
     "schema",
@@ -12,15 +12,13 @@
     "profile_display_name",
     "runtime_family",
     "artifact",
-    "artifact_precision",
     "repository",
-    "first_event",
     "current_status"
   ],
   "properties": {
     "schema": {
       "type": "string",
-      "const": "wumbolabs-eval-profile/1"
+      "enum": ["wumbolabs-eval-profile/1", "wumbolabs-eval-profile/2"]
     },
     "model_id": {
       "type": "string",
@@ -34,7 +32,7 @@
     "profile_id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9.-]*$",
-      "description": "Materially distinct tested deployment/scientific surface this repository is canonical for. Must match the model_id prefix convention and the repository identity."
+      "description": "Materially distinct tested deployment/scientific surface; not a repository identity."
     },
     "profile_display_name": {
       "type": "string",
@@ -66,19 +64,36 @@
     },
     "repository": {
       "type": "string",
-      "description": "The canonical public eval repository this descriptor lives in (owner/name)."
+      "description": "Current descriptors use WumboLabs/evaluations; historical descriptors retain their original owner/name."
     },
     "first_event": {
       "type": "string",
       "description": "event_id of the first published event on this profile."
     },
     "current_status": {
-      "enum": ["current", "current-alternate", "historical", "superseded", "specialized"],
-      "description": "Role of this profile among the model's tested profiles. CURRENT = canonical/recommended tested surface; CURRENT_ALTERNATE = validated alternate; HISTORICAL = earlier tested surface retained as evidence; SUPERSEDED = replaced by a materially different accepted profile; SPECIALIZED = niche tested surface."
+      "enum": ["current", "current-alternate", "historical", "superseded", "specialized", "benchmark-only", "specialized-test", "practical-use"],
+      "description": "Published profile role. Historical classification vocabulary is retained rather than scientifically reclassified during migration."
     },
     "notes": {
       "type": "string",
       "description": "Optional bounded clarification (e.g. provenance of a split repository)."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"schema": {"const": "wumbolabs-eval-profile/1"}}},
+      "then": {"required": ["first_event"]}
+    },
+    {
+      "if": {"properties": {"schema": {"const": "wumbolabs-eval-profile/2"}}},
+      "then": {
+        "required": ["profile_path", "event_ids"],
+        "properties": {
+          "repository": {"const": "WumboLabs/evaluations"},
+          "profile_path": {"type": "string", "pattern": "^models/[a-z0-9][a-z0-9.-]*/profiles/[a-z0-9][a-z0-9.-]*$"},
+          "event_ids": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"}, "uniqueItems": true}
+        }
+      }
+    }
+  ]
 }

@@ -19,11 +19,14 @@
 9. **Final classification.** `classify.py` consumes the evidence bundle deterministically. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result.
 10. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
 11. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` and the public-safe website-publication export `summaries/website-publication.json` with its explicit disposition — and, when requested, a `<campaign-slug>-review-report.md` human summary under the campaign bundle `<campaign>/reviews/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
-12. **Publication routing (separate human authorization required).** Per vault Publication Routing:
-    * Obsidian: internal WELP operational handbook.
-    * GitHub: canonical public WELP evidence/protocol source.
-    * LocalMaxxing: community benchmark/report distribution layer. Benchmark submission of the eligible canonical profile is part of campaign completion (step 8), not an additional external action; other LocalMaxxing artifacts (reports, X export posting) keep their own gates.
-    * WumboCore Labs: human-readable WELP Lab Records. The website is a derivative of accepted public evidence, never canonical; `summaries/website-publication.json` records the explicit website publication disposition ([website publication disposition](../protocol/WELP.md#website-publication-disposition)), and website registry/sync consumption plus any Git push or deployment remain separate human gates.
+12. **Publication routing (separate human authorization required).** Follow the
+    [four-layer publication contract](publication.md): local `research/model-evaluations/`
+    holds working/raw science; `WumboLabs/evaluations` holds public scientific
+    evidence; `wumbolabs.dev/evaluations/` is human discovery/share; the NAS archive
+    holds large model artifacts. Obsidian remains the internal operational handbook.
+    LocalMaxxing disposition rules in step 8 are unchanged. Current exports identify
+    model/profile/event and immutable central repo/full-commit/path. Never create a
+    new `eval-*` repository. Pushes and website deployment remain explicit human gates.
 
 ## Model-card context checklist
 
