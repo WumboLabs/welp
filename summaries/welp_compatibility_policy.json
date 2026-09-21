@@ -1,0 +1,19 @@
+{
+  "policy_id": "welp-compatibility-policy",
+  "version": "1.1.0-draft",
+  "updated": "2026-09-19",
+  "purpose": "Formal compatibility policy referenced by protocol/WELP.md. Supplied during the 2026-09-19 methodology revision (the file was previously referenced but missing; summaries/ was empty).",
+  "rules": [
+    "Frozen historical snapshots, contracts, fixtures, scorers, and campaign bundles are immutable. Reproducing a historical campaign uses the frozen artifacts recorded in that snapshot.",
+    "New campaigns run under the current DRAFT snapshot. The 2026-09-19 methodology revision introduces outcome semantics (welp-outcomes 0.1.0-draft), the generation-budget policy (welp-generation-budget 0.1.0-draft), reliability scorer v2 + gate_v2 (welp-reliability 0.2.0-draft), and in-repo classification (welp-final-classification 0.2.0-draft).",
+    "Historical campaign results are never relabeled under the new outcome vocabulary. Scorer-only rescoring of retained raw outputs is new supplementary evidence, explicitly linked to the original event; it never rewrites result JSON, reports, or published verdicts.",
+    "A supplemental completion (e.g. a bounded retest under the revised methodology) is a NEW event linked to the original campaign/evidence, following the append-only precedent.",
+    "Validators accept frozen historical artifacts (legacy prefixes, legacy report naming, pre-revision manifests) without retroactive failure; methodology-revision rules R09-R14 bind only campaigns whose snapshot date is >= 2026-09-19.",
+    "No cross-methodology score equivalence is claimed between v1 boolean outcomes and CP-1 outcome triples; cross-readings are documented as mappings, never as rewrites."
+  ],
+  "snapshot_lineage": [
+    {"snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex", "status": "frozen historical (pre-rename)"},
+    {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "status": "frozen historical (naming-only)", "methodology_changed": "NO"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "current DRAFT", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"}
+  ]
+}

@@ -438,6 +438,12 @@
       "basic_technical_knowledge"
     ]
   },
+  "errata": [
+    {
+      "date": "2026-09-19",
+      "note": "Task-count erratum: the 0.1.0-draft change history says 'Initial selection of 32 tasks', but the canonical contract shipped 30 tasks (IF5/EX5/SO7/FP5/FU4/TK4). The 32 figure was the pre-freeze selection pool; no task was removed after freezing. Filename erratum: this file's name says 0.1.3-draft while the internal version is 0.1.4-draft (documented in snapshot-freeze/manifest.json); renaming remains deferred to the next natural contract revision. Budget-policy alignment: PV inherits the generation-budget policy via the 0.1.1-draft uniform max_tokens floor; full per-task answer_budget fields are planned follow-up (welp-generation-budget 0.1.0-draft, phase_applicability)."
+    }
+  ],
   "change_history": [
     {
       "version": "0.1.0-draft",

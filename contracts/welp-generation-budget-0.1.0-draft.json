@@ -1,0 +1,68 @@
+{
+  "contract_id": "welp-generation-budget",
+  "version": "0.1.0-draft",
+  "status": "DRAFT / PROTOCOL DEVELOPMENT",
+  "created": "2026-09-19",
+  "supersedes": {
+    "contract_id": null,
+    "note": "New contract introduced by the 2026-09-19 methodology revision (audit bundle welp-vnext-audit-2026-09-19, CP-2 + CP-4 reserve standardization). Pre-revision budgets were per-task total caps over reasoning+answer with no rationale, no guaranteed answer reserve, and no portable reasoning-control story."
+  },
+  "purpose": "First-class generation-budget policy for every generation-bearing WELP phase. Makes the configuration part of the result: each task/phase freezes its answer budget, generation ceiling, reasoning mode, reasoning control (requested vs effective), and the rationale; measured budget consumption is reported per instance under welp-outcomes 0.1.0-draft.",
+  "applies_from_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision",
+  "principles": [
+    "The configuration is part of the result: unreasoned caps are prohibited.",
+    "A task's answer budget is a TASK-OWNED FROZEN PROPERTY derived from the expected answer, not from the runtime or the model.",
+    "There is NO universal answer-budget multiplier law. A tokenized-reference multiplier (for example >=3x reference + formatting margin) may be used as a construction HEURISTIC when the fixture states it, but each fixture/task class must justify its budget from expected answer form, formatting requirements, acceptable semantic alternatives, a class-specific minimum floor, and expected complexity.",
+    "Reasoning mode is a declared material surface (gate_baseline_reasoning_state), frozen before execution; a post-hoc mode change is a NEW labeled configuration, never a rescue.",
+    "Only reasoning controls PROVEN effective on the pinned runtime may be load-bearing. If a requested per-request control is ignored, that is recorded as MEASURED (reasoning_requested vs reasoning_effective differ) and the requested value is never treated as effective.",
+    "Where the runtime has no enforceable reasoning/answer separation, phases run declared total-cap lanes; semantic and operational behavior is then separated by LANE, not by runtime-enforced split."
+  ],
+  "task_budget_record": {
+    "required": ["answer_budget", "generation_ceiling", "reasoning_state", "rationale"],
+    "optional": ["reasoning_allowance", "reasoning_control_requested", "reasoning_control_effective"],
+    "answer_budget": "Frozen per-task token budget sized to produce the complete expected answer including formatting margin. Justified in `rationale`. Not a semantic quantity: consuming it fully is budget evidence, not a semantic verdict.",
+    "generation_ceiling": "The frozen hard cap applied to the request (the total cap over all channels). Must be >= answer_budget. For single-lane tasks generation_ceiling may equal the legacy frozen cap to preserve comparability; the cap rationale then MUST be stated.",
+    "reasoning_state": "Declared reasoning surface for the task/phase: REASONING_ON | REASONING_OFF | CHECKPOINT_THINKING | NOT_APPLICABLE (or a narrower declared value where the profile demands).",
+    "reasoning_allowance": "Optional frozen reasoning-side allowance when the runtime can enforce one. Recorded requested-vs-effective. Never load-bearing unless proven effective on the pinned runtime.",
+    "rationale": "Per task or per task class: expected answer form, formatting requirements, acceptable semantic alternatives, class-specific minimum floor, expected complexity, and any construction heuristic used (stated as heuristic, not law)."
+  },
+  "lanes": {
+    "semantic_non_starving_lane": "A lane whose ceiling is sized so that a model completing normal answers is not budget-starved (answer_budget plus justified reasoning headroom). Semantic capability claims (including USEFUL_CONTEXT_MAX_SEMANTIC) may only be made from a PREDECLARED non-starving lane that actually produced a completed, scorable answer.",
+    "operational_budget_lane": "The frozen operational profile lane (declared serving configuration, frozen caps). Operational behavior (completion/truncation/budget discipline) is measured here and feeds BUDGET_DISCIPLINE, never semantic labels.",
+    "application_rule": "Do not automatically double every phase. Reliability-class phases and the useful-context gate MAY use the two-lane design when justified in the phase contract; single-lane phases declare which lane they are and report outcome triples regardless."
+  },
+  "finish_accounting": {
+    "rule": "finish_reason is mandatory wherever the runtime exposes it (welp-outcomes 0.1.0-draft). A phase may not report COMPLETE rows with missing/unknown finish reasons when the runtime exposes them.",
+    "validator": "Enforced for methodology-revision-era bundles by validators/validate_campaign_welp.py (R09)."
+  },
+  "context_output_reserve": {
+    "standardized_reserve_tokens": 512,
+    "derivation": {
+      "rule": "reserve = max(512, 2 x answer_budget of the useful-context gate tasks).",
+      "audit_origin": "512-class rule suggested by audit bundle welp-vnext-audit-2026-09-19 section 10 and validated here against actual gate requirements.",
+      "validation": "The canonical useful-context gate task answer budget is 256 tokens (fixture family A: four short factual items plus a terminal marker, measured canonical answers 40-128 completion tokens across retained campaigns). 2 x 256 = 512, so the binding value is the 512 floor. 512 covers every measured canonical gate answer with >=4x headroom while keeping occupancy >=99% achievable at every current rung.",
+      "status": "MEASURED (retained campaign answer lengths 40-128 tokens) + DERIVED (multiplier rule); campaign-by-campaign 512-vs-640 variance is prohibited from this snapshot on. Exceptions require a pre-frozen, justified reserve exception recorded per the context method."
+    }
+  },
+  "cache_policy": {
+    "scientific_arms": "Prompt cache DISABLED and verified uncached for scientific performance/usefulness arms, unless the phase explicitly studies cached serving (then the phase contract says so).",
+    "verification": "Uncached state is verified, not assumed: disjoint-prompt CACHE_METRIC probe and/or cached-token telemetry where the runtime exposes it.",
+    "cached_measurements": "Cached production behavior MAY be measured separately and MUST be labeled CACHED; it never replaces uncached canonical performance.",
+    "telemetry": "The harness surfaces cached-token telemetry where the runtime provides it (usage.prompt_tokens_details.cached_tokens or equivalent).",
+    "manifest": "New-era campaign manifests carry a cache_policy object (validator R13)."
+  },
+  "phase_applicability": {
+    "budgeted_from_this_snapshot": [
+      "welp-reliability 0.2.0-draft (20-task screen; per-task answer budgets + two-lane design)",
+      "welp-quality-screen canonical fixture (per-task answer budgets)",
+      "useful-context gate fixture family A (answer_budget 256; reserve 512)",
+      "capability probes (reasoning/coding/tools/structured; per-task budgets and lanes)"
+    ],
+    "inherited_pending_realignment": [
+      {
+        "phase": "welp-practical-viability 0.1.4-draft",
+        "status": "Budget policy inherited via the 0.1.1-draft change note (uniform 256-token floor, mode-independence rationale). Full per-task answer_budget fields are planned follow-up; PV is triage-only and does not decide classification alone. See the errata block in the PV contract."
+      }
+    ]
+  }
+}

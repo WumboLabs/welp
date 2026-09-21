@@ -106,6 +106,69 @@ Rules:
   benchmarked canonical profile, actual prompt tokens, result summary,
   submission origin/reference, and the exact reason when not submitted.
 
+Terminal closeout (lifecycle ordering):
+
+For an eligible final accepted profile the lifecycle order is:
+MEASURE → HUMAN ACCEPT → check for an exact existing LocalMaxxing result →
+SUBMIT if no exact valid duplicate exists → VERIFY the real service record →
+ARCHIVE artifacts. Artifact archival occurs only AFTER the LocalMaxxing
+terminal disposition is established for eligible final profiles.
+
+`MEASURED_NOT_SUBMITTED` is a TEMPORARY state. It is valid only while
+scientific work is still active: profile selection may still change,
+optimization remains pending, the human acceptance gate is still open, or a
+bounded re-test/supplement remains in flight. At terminal closeout, an
+eligible final profile must NOT silently remain `MEASURED_NOT_SUBMITTED`; a
+terminal non-submission requires an explicit recorded reason:
+
+- `NOT_ELIGIBLE` — demonstrated representation limit (status `NOT_ELIGIBLE`).
+- `DUPLICATE_EXISTING` — an exact valid result already exists on the service:
+  record `SUBMITTED` with `origin: VERIFIED_EXISTING` and verify that existing
+  service record; never create a duplicate.
+- `SERVICE_BLOCKED` — service/authentication/availability blocker: record
+  `BLOCKED` with the exact blocker evidence.
+- `HUMAN_DEFERRED` — the responsible human gate explicitly deferred the
+  submission; record the deferral decision and date.
+
+Never fabricate `verifiedRun`, `submission_ref`, or service identity, and
+never claim verification without real service evidence. If the canonical
+scientific profile or result changes after an earlier measurement, re-check
+eligibility and exact identity before submitting or reusing any earlier
+record.
+
+Two-stage campaign lifecycle (science turn / closeout turn):
+
+Normal model work runs in two stages with exactly one human acceptance gate
+between them:
+
+- **Stage A — science:** test, validate, produce the final scientific
+  report/recommendation, and stop once for human scientific acceptance. No
+  external actions beyond the campaign boundary.
+- **Stage B — closeout:** after explicit human acceptance, complete the whole
+  terminal lifecycle in one authorized pass: finalize the canonical profile;
+  LocalMaxxing duplicate check; submit the eligible final result; verify the
+  real service state; commit/push methodology if needed; publish central
+  evidence; attribute/pin canonical commits; update/publish the website
+  derivative; archive and verify the model artifact; close testing debt and
+  the campaign record.
+
+A closeout handoff MAY explicitly authorize the bounded Git
+staging/commit/push, publication, deployment, and archival actions for that
+exact closeout. When it does, those routine actions are executed, not
+re-gated: an agent must not stop again mid-closeout merely because staging,
+a commit, a push, registry attribution with real commit SHAs, website
+deployment, or final artifact archival/removal is required. Human SCIENTIFIC
+acceptance remains the Stage A → Stage B transition and is never bypassed;
+blanket authorization outside a human-approved closeout is never inferred.
+
+At authorized terminal closeout, none of `MEASURED_NOT_SUBMITTED`,
+`WEBSITE_READY`, `PENDING_HUMAN_GATE`, or local-retained artifacts may stand
+as quiet end states for an eligible final profile. Valid terminal
+non-completion requires a REAL blocker — authentication unavailable, service
+failure, merge conflict, validator failure, publication-provider failure,
+artifact verification failure, or explicit human deferral — recorded with
+evidence.
+
 ## Website publication disposition
 
 Every full WELP model campaign must disposition website publication explicitly
@@ -139,10 +202,16 @@ Rules:
   `canonical_evidence.state = PENDING_HUMAN_GATE` (targeting the existing
   `WumboLabs/evaluations` repository) rather than inventing a canonical URL. A website
   record generated from a pending export must state that evidence publication
-  is pending; it must not claim canonical public evidence exists.
+  is pending; it must not claim canonical public evidence exists. `PENDING_HUMAN_GATE`
+  and `WEBSITE_READY` are intermediate, non-terminal states: once the human has
+  accepted the science and authorized the closeout's publication actions, the
+  disposition must be driven to `WEBSITE_PUBLISHED` (or a real blocker recorded),
+  not left standing as a quiet end state.
 - Publishing the public evidence repository, committing, pushing, and
   deploying the website remain human-gated external actions; generating the
-  export and local derivative records does not authorize any of them.
+  export and local derivative records does not authorize any of them. An
+  explicit human closeout authorization for the specific campaign satisfies
+  those gates for its bounded scope; absent one, they stay closed.
 - The website consumes a full-commit, SHA-256-pinned central registry and
   immutable event exports through deterministic sync. Its local registry,
   record pages, and generated indexes are derivatives, not separate sources.
@@ -212,14 +281,95 @@ snapshot dated 2026-09-10 or later) and accepts frozen pre-hierarchy bundles —
 including legacy `REPORT.md` + `report.md` coexistence — without retroactive
 failure; see `../docs/validator.md`.
 
+## Task outcome semantics (methodology revision, 2026-09-19)
+
+Every generation-bearing task emits the canonical CP-1 outcome record
+(`contracts/welp-outcomes-0.1.0-draft.json`): `semantic`
+(`PASS | FAIL | NOT_EVALUABLE`), `completion`
+(`COMPLETE | FAIL_LENGTH | EMPTY_ANSWER | INVALID_STOP`), `budget`
+(`WITHIN | EXHAUSTED_IN_REASONING | EXHAUSTED_IN_ANSWER | UNKNOWN`), plus
+verbatim `finish_reason` wherever the runtime exposes it and the
+reasoning/answer token split where measurable.
+
+- Semantic correctness is judged from the usable final-answer channel only.
+  Incomplete output does **not** automatically imply semantic FAIL; a
+  conclusion that cannot be supported is `NOT_EVALUABLE` — mandatory for
+  empty answers and answerless truncation. Reasoning traces may support
+  attribution but never substitute for the completed final answer and never
+  justify semantic PASS.
+- Completion failure (`truncation` = `FAIL_LENGTH`) is an operational
+  failure: deployment-relevant, always reported, never a semantic judgment.
+- Hidden or unsupported reasoning-token accounting is `UNKNOWN`, never
+  guessed.
+- Historical campaigns keep their recorded boolean outcomes; scorer-only
+  rescoring of retained raw outputs under this vocabulary is new
+  supplementary evidence, never a relabel.
+
+## Generation budget policy (methodology revision, 2026-09-19)
+
+The configuration is part of the result
+(`contracts/welp-generation-budget-0.1.0-draft.json`):
+
+- Every generation-bearing task freezes `answer_budget`, its generation
+  ceiling(s), declared reasoning state, requested vs effective reasoning
+  control, and a written rationale. There is **no universal answer-budget
+  multiplier law**; a tokenized-reference multiplier may be used as a
+  construction heuristic when the fixture states it, justified from expected
+  answer form, formatting requirements, acceptable alternatives, a
+  class-specific floor, and expected complexity.
+- Only reasoning controls **proven effective on the pinned runtime** may be
+  load-bearing. A requested-but-ignored control is recorded MEASURED
+  (`reasoning_requested` ≠ `reasoning_effective`), never treated as
+  effective. Where separation is unenforceable, phases run declared
+  total-cap **lanes**.
+- Lanes: a predeclared **semantic/non-starving lane** (semantic capability
+  claims, completion-conditioned) and the frozen **operational-budget lane**
+  (completion/truncation/budget discipline; guardrails, never semantic
+  labels). Phases do not automatically double; reliability-class phases and
+  the useful-context gate use two lanes when justified.
+- Standardized context output reserve: **512 tokens**, derived as
+  `max(512, 2 × answer_budget of the useful-context gate tasks)` with the
+  gate answer budget 256; campaign-by-campaign 512-vs-640 variance is
+  prohibited from this snapshot on.
+- Cache policy: scientific performance arms run **disabled/verified
+  uncached**; cached serving may be measured separately, labeled `CACHED`,
+  and never replaces uncached canonical performance. Harness surfaces
+  cached-token telemetry where the runtime provides it.
+
+## Runtime admission levels (methodology revision, 2026-09-19)
+
+"Loaded successfully" is not admission. `harness/admission.py` codifies:
+
+- **BASIC** admission: stock architecture, stock runtime, conventional
+  artifact — current practice (coherent generation, template correct, no
+  hidden offload, deterministic re-runs, zero CUDA/OOM/Xid).
+- **ENHANCED_SEMANTIC** admission additionally required when ANY of: custom
+  quant type, custom fork/runtime, activation transform, custom kernel,
+  new/unusual architecture, speculative/MTP component, materially unusual
+  template, multimodal projector in the tested profile. Adds the known-answer
+  battery: factual probe, reasoning smoke, strict structured output,
+  absent-information grounding (exact minimum frozen in the harness module;
+  full admission redesign is planned P2 follow-up). Custom-runtime campaigns
+  must not regress to "it loaded, therefore admitted".
+
+## Failure attribution (methodology revision, 2026-09-19)
+
+Every classification-relevant FAIL carries a cause attribution where evidence
+allows: `model | runtime | hardware | scorer-artifact | protocol-limitation |
+unknown` (primary + evidence). Attribution does not erase or soften the
+measured result. Claim classes remain exactly: `MEASURED, DERIVED, INFERENCE,
+HYPOTHESIS, EXTERNAL_REPORTED, UNKNOWN`.
+
 ## Canonical contracts (current)
 
+- `welp-outcomes` 0.1.0-draft (task outcome semantics; new)
+- `welp-generation-budget` 0.1.0-draft (budget policy, reserve, cache; new)
 - `welp-practical-viability` 0.1.4-draft
-- `welp-reliability` 0.1.0-draft
-- `welp-context` 0.1.0-draft
+- `welp-reliability` 0.2.0-draft (scorer v2 + re-derived 20×2 gate; supersedes 0.1.0-draft for new campaigns)
+- `welp-context` 0.1.0-draft (superseded for full-context claims by `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
-- `welp-final-classification` 0.1.0-draft
+- `welp-final-classification` 0.2.0-draft (in-repo classification logic; supersedes 0.1.0-draft for new campaigns)
 - `welp-preflight` 0.1.0-draft
 - Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`, `welp-omp-local-agent`.
 
@@ -233,9 +383,16 @@ failure; see `../docs/validator.md`.
 - `welp_serving_profile.schema.json`
 - `welp_toolchain_preflight.schema.json`
 - `welp_toolchain_inventory.schema.json`
+- `welp_task_outcome.schema.json` (CP-1 task-instance outcome record; new)
+
+## Canonical harness, scorers, and fixtures (current)
+
+- `harness/` — canonical, versioned phase implementations (`welp-phase-harness/1.0.0-draft`): outcomes vocabulary + derivation (`welp_outcomes.py`), admission levels (`admission.py`), quality screen scoring (`quality.py`), reliability scoring/aggregation/gates (`reliability.py`), capability-probe scoring (`capabilities.py`), useful-context outcomes + reserve (`context.py`), final classification (`classification.py`). Campaign wrappers may call canonical behavior; they must not fork scoring semantics.
+- `scorers/score_reliability.py` (`welp-reliability-scorer/2`, embedded self-tests) and `scorers/rescore_acceptance.py` (frozen-output acceptance corpus, read-only).
+- `fixtures/reliability/welp-reliability-sample-20-v2.json`, `fixtures/useful_context/family-a.json`, `fixtures/quality/welp-quality-screen-12-v1.json` — frozen before outputs, hash-identified in campaign manifests.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, 15 fixtures, all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on, and the website publication disposition (`summaries/website-publication.json`) for new-format campaigns with snapshot dates from 2026-09-12 on.
+- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, self-test fixtures all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on, and the website publication disposition (`summaries/website-publication.json`) for new-format campaigns with snapshot dates from 2026-09-12 on. For methodology-revision-era campaigns (snapshot dates from 2026-09-19 on) it additionally enforces R09–R14: finish/outcome accounting, fixture/scorer hash identity, campaign outcome + budget policy records, reliability scorer v2 self-test, context depth-set/placement evidence, and cache-policy records; frozen historical bundles continue validating unchanged.
 - `validators/validate_publication.py` — current immutable citations, scientific IDs,
   shared relationships, and profile-path consistency; legacy URL exports remain accepted.

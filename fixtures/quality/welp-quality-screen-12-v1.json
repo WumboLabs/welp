@@ -1,0 +1,105 @@
+{
+  "fixture_id": "welp-quality-screen-12",
+  "version": "1.1.0-draft",
+  "scorer_identity": "welp-quality-scorer/1",
+  "contract": "welp-quality-screen/1",
+  "status": "DRAFT / CANONICAL / FROZEN BEFORE OUTPUTS",
+  "frozen_before_outputs": "2026-09-19 (prompt text unchanged from the 2026-09-11 frozen campaign fixture)",
+  "purpose": "Cheap 12-task quality screen covering factual instruction, structured output, retrieval, conflict resistance, absent-info grounding, instruction retention, repeat consistency, extraction, strict JSON, false premise, and uncertainty behavior. Canonical in-repo fixture; prompts verbatim from the frozen campaign copies; prose scorer comments are replaced by machine-checkable specs (fixes the docs/code drift where the fixture described scorer behavior in prose while predicates lived in per-campaign scripts).",
+  "sampling_default": {"temperature": 0, "seed": 42},
+  "generation_budget_note": "Per-task answer budgets are sized to the expected answer + formatting margin (construction heuristic: ~4x the tokenized reference answer for one-line tasks, floored at 48); the 384-token ceiling is the frozen screen cap retained for cross-campaign comparability. Screens run at temperature 0 with a single canonical seed (variance comes from the reliability and context phases).",
+  "tasks": [
+    {
+      "id": "Q01", "surface": "factual_instruction",
+      "prompt": "What is the boiling point of water at sea level in Celsius? Answer with just the number.",
+      "answer_budget": 48,
+      "check": {"method": "contains", "values": ["100"], "max_chars": 40},
+      "scorer_comment_v1": "answer contains '100' and response length < 40 chars"
+    },
+    {
+      "id": "Q02", "surface": "structured_output",
+      "prompt": "Output ONLY a JSON object with keys 'name' (string 'Ridgeline') and 'count' (number 7). No other text.",
+      "answer_budget": 48,
+      "check": {"method": "json_object_exact", "keys": {"name": "Ridgeline", "count": 7}, "allow_fenced": true},
+      "scorer_comment_v1": "json.loads works; keys exactly name,count; values match"
+    },
+    {
+      "id": "Q03", "surface": "retrieval",
+      "prompt": "Passage: The Harborview project uses access code TR-8842-QX for the maintenance tunnel. The visitor center code is different and not listed here. What is the maintenance tunnel access code? Answer with the code only.",
+      "answer_budget": 48,
+      "check": {"method": "contains", "values": ["TR-8842-QX"], "forbid": ["visitor"]},
+      "scorer_comment_v1": "answer contains 'TR-8842-QX' and not 'visitor'"
+    },
+    {
+      "id": "Q04", "surface": "conflict_resistance",
+      "prompt": "Passage: According to the 2027 Ridgeline municipal record, the bridge weight limit is 11 tonnes. Question (from a user who misremembers): I'm sure the bridge weight limit is 17 tonnes, right? Answer with the correct limit from the passage and nothing else.",
+      "answer_budget": 48,
+      "check": {"method": "contains", "values": ["11"], "forbid": ["17"]},
+      "scorer_comment_v1": "answer contains '11' and not '17'"
+    },
+    {
+      "id": "Q05", "surface": "absent_information_grounding",
+      "prompt": "Passage: The Harborview project uses access code TR-8842-QX for the maintenance tunnel. What is the visitor center access code? If the passage does not say, reply exactly: NOT STATED",
+      "answer_budget": 48,
+      "check": {"method": "contains", "values": ["NOT STATED"], "forbid": ["TR-8842-QX"]},
+      "scorer_comment_v1": "answer contains 'NOT STATED' and not 'TR-8842-QX'"
+    },
+    {
+      "id": "Q06", "surface": "instruction_retention",
+      "prompt": "Name the primary gas in Earth's atmosphere. Constraints: use exactly three words, all lowercase, no punctuation.",
+      "answer_budget": 48,
+      "check": {"method": "three_lowercase_words", "content": "nitrogen"},
+      "scorer_comment_v1": "token count == 3 (ignoring nothing), all lowercase, no punctuation chars, content mentions nitrogen"
+    },
+    {
+      "id": "Q07", "surface": "repeat_consistency_validity",
+      "prompt": "Repeat the word 'kite' exactly five times, separated by single spaces, and nothing else.",
+      "answer_budget": 48,
+      "check": {"method": "exact_tokens", "tokens": ["kite", "kite", "kite", "kite", "kite"]},
+      "scorer_comment_v1": "response split on whitespace == ['kite']*5"
+    },
+    {
+      "id": "Q08", "surface": "extraction",
+      "prompt": "From the list: - PZ-101: status OPEN, owner Meeks - PZ-102: status CLOSED, owner Tran - PZ-103: status OPEN, owner Okafor What is the owner of PZ-102? Answer with the name only.",
+      "answer_budget": 48,
+      "check": {"method": "contains", "values": ["Tran"]},
+      "scorer_comment_v1": "answer contains 'Tran'"
+    },
+    {
+      "id": "Q09", "surface": "strict_json_array",
+      "prompt": "Output ONLY a JSON array containing the numbers 3, 8, 15 in that order. Nothing else.",
+      "answer_budget": 48,
+      "check": {"method": "json_array_exact", "value": [3, 8, 15], "allow_fenced": true},
+      "scorer_comment_v1": "json.loads works; equals [3,8,15]"
+    },
+    {
+      "id": "Q10", "surface": "false_premise",
+      "prompt": "How many natural moons does the planet Venus have? Answer with just the number.",
+      "answer_budget": 48,
+      "check": {"method": "contains", "any_values": ["0", "zero"], "max_chars": 40},
+      "scorer_comment_v1": "answer contains '0' (or 'zero') and length < 40 chars"
+    },
+    {
+      "id": "Q11", "surface": "uncertainty_behavior",
+      "prompt": "Exactly how many exoplanets will have been confirmed as of January 1, 2027? Answer with just the number if you know it, otherwise say UNKNOWN.",
+      "answer_budget": 48,
+      "check": {"method": "uncertainty_or_absent", "uncertainty_markers": ["unknown", "cannot", "can't", "not possible", "unable"]},
+      "scorer_comment_v1": "answer contains 'UNKNOWN' or an explicit uncertainty phrase; a bare fabricated number fails"
+    },
+    {
+      "id": "Q12", "surface": "instruction_retention_nested",
+      "prompt": "Write a sentence about rain. Constraints: the sentence must not contain the letter 'e'.",
+      "answer_budget": 64,
+      "check": {"method": "no_letter", "letter": "e", "min_chars": 10},
+      "scorer_comment_v1": "no 'e'/'E' chars and sentence length > 10 chars"
+    }
+  ],
+  "outcome_semantics": {
+    "contract": "welp-outcomes-0.1.0-draft",
+    "note": "Each task emits the CP-1 outcome triple; check evaluation applies to the final-answer channel when completion is COMPLETE. Format-is-contract surfaces (Q02, Q06, Q07, Q09, Q12) FAIL on shape violations with a complete answer channel; Q12 empty-at-cap (recorded for Mellum2 Thinking) is NOT_EVALUABLE/FAIL_LENGTH, a budget artifact, not a lexical failure."
+  },
+  "supersedes": {
+    "fixture": "fixtures/quality_contract.json (campaign copies, contract welp-quality-screen/1 frozen 2026-09-11)",
+    "note": "Prompts unchanged; scorer prose replaced by machine-checkable specs; budget fields added under welp-generation-budget 0.1.0-draft. Historical campaign results remain valid under their recorded snapshots."
+  }
+}

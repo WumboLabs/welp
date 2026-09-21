@@ -54,8 +54,28 @@ New rules:
        profile_status when given (identity is optional so frozen exports
        remain valid unchanged)
 
+Methodology-revision rules (enforced for campaign snapshot dates >= 2026-09-19
+only; frozen historical bundles remain valid unchanged):
+  R09  CP-1 outcome/finish accounting: manifest carries outcome_semantics
+       {contract: welp-outcomes-0.1.0-draft, task_outcome_triples: true} and
+       phase_finish_accounting entries; COMPLETE rows with missing/unknown
+       finish reasons are an error.
+  R10  Fixture/scorer hash identity: manifest fixtures/scorers entries carry
+       64-hex sha256; when the referenced path resolves against the WELP repo
+       root, the recorded hash must match the file bytes.
+  R11  campaign_outcome present and exactly COMPLETE_PASS | COMPLETE_WITH_GAPS
+       | FAILED_EXECUTION | BLOCKED (welp-final-classification 0.2.0-draft).
+  R12  Generation-budget policy record (welp-generation-budget contract) and
+       reliability scorer v2 identity with selftest=PASS.
+  R13  Context validation evidence when the context phase executed: exact
+       required depth set [2,25,50,75,95], placement preflight PASS with
+       max error <= 0.5 pp, and the standardized 512-token reserve.
+  R14  Cache policy record: scientific_arms DISABLED_UNCACHED with a
+       verification marker (cached arms must be declared separately/labeled).
+
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
+import hashlib
 import json, os, re, sys, tempfile
 from pathlib import Path
 from validate_publication import evidence_errors
@@ -71,6 +91,14 @@ WEBSITE_STATUSES = {"WEBSITE_READY", "WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION", "
 WEBSITE_EVIDENCE_STATES = {"PUBLISHED", "PENDING_HUMAN_GATE"}
 WEBSITE_DISPOSITION_REQUIRED_FROM = "2026-09-12"  # campaign snapshot dates from this day on
 PROFILE_STATUSES = {"current", "current-alternate", "historical", "superseded", "specialized"}
+METHODOLOGY_REVISION_FROM = "2026-09-19"  # CP-1..CP-12 outcome/budget semantics from this snapshot date on
+CAMPAIGN_OUTCOMES = {"COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"}
+REQUIRED_CONTEXT_DEPTHS_PCT = [2.0, 25.0, 50.0, 75.0, 95.0]
+STANDARD_RESERVE_TOKENS = 512
+RELIABILITY_SCORER_V2 = "welp-reliability-scorer/2"
+OUTCOMES_CONTRACT = "welp-outcomes-0.1.0-draft"
+BUDGET_CONTRACT = "welp-generation-budget-0.1.0-draft"
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def check(root: Path):
@@ -322,6 +350,117 @@ def check(root: Path):
         ok("M07_phase2_harness_version", str(hv))
     else:
         bad("M07_phase2_harness_version", "missing")
+
+    # ---- Methodology-revision rules R09-R14 (snapshot date >= 2026-09-19) ----
+    revision_era = bool(mdate and mdate.group(1) >= METHODOLOGY_REVISION_FROM)
+    if revision_era:
+        # R09 CP-1 outcome/finish accounting
+        os_ = m.get("outcome_semantics")
+        if isinstance(os_, dict) and os_.get("contract") == OUTCOMES_CONTRACT and os_.get("task_outcome_triples") is True:
+            ok("R09_outcome_semantics", OUTCOMES_CONTRACT)
+        else:
+            bad("R09_outcome_semantics_required",
+                f"manifest.outcome_semantics must declare {{contract: {OUTCOMES_CONTRACT}, task_outcome_triples: true}}")
+        pfa = m.get("phase_finish_accounting")
+        if isinstance(pfa, list) and pfa:
+            for entry in pfa:
+                if not isinstance(entry, dict) or not entry.get("phase"):
+                    bad("R09_finish_accounting_entry", f"malformed entry: {entry!r}")
+                    continue
+                missing = entry.get("complete_missing_finish", 0)
+                if missing:
+                    bad("R09_finish_accounting",
+                        f"phase {entry['phase']}: {missing} COMPLETE rows with missing/unknown finish_reason")
+                else:
+                    ok("R09_finish_accounting", str(entry.get("phase")))
+        else:
+            bad("R09_finish_accounting_required",
+                "manifest.phase_finish_accounting must list per-phase finish accounting")
+
+        # R10 fixture/scorer hash identity
+        for section in ("fixtures", "scorers"):
+            items = m.get(section) or {}
+            if not isinstance(items, dict) or not items:
+                bad(f"R10_{section}_required", f"manifest.{section} must record hash identity")
+                continue
+            for name, meta in items.items():
+                if not isinstance(meta, dict) or not HASH.match(str(meta.get("sha256", ""))):
+                    bad(f"R10_{section}_hash", f"{name}: 64-hex sha256 required")
+                    continue
+                ok(f"R10_{section}_hash", name)
+                path = meta.get("path")
+                if path:
+                    candidate = REPO_ROOT / str(path)
+                    if candidate.is_file():
+                        actual = hashlib.sha256(candidate.read_bytes()).hexdigest()
+                        if actual != meta["sha256"]:
+                            bad(f"R10_{section}_hash_mismatch",
+                                f"{name}: recorded sha256 does not match {path} bytes")
+                        else:
+                            ok(f"R10_{section}_hash_verified", name)
+
+        # R11 campaign execution outcome
+        cout = m.get("campaign_outcome")
+        if cout in CAMPAIGN_OUTCOMES:
+            ok("R11_campaign_outcome", cout)
+        else:
+            bad("R11_campaign_outcome_required",
+                f"campaign_outcome must be one of {sorted(CAMPAIGN_OUTCOMES)}")
+
+        # R12 budget policy + reliability scorer v2 selftest
+        gb = m.get("generation_budget")
+        if isinstance(gb, dict) and gb.get("contract") == BUDGET_CONTRACT:
+            ok("R12_generation_budget", BUDGET_CONTRACT)
+        else:
+            bad("R12_generation_budget_required",
+                f"manifest.generation_budget must declare {{contract: {BUDGET_CONTRACT}}}")
+        scorers = m.get("scorers") or {}
+        rel = scorers.get(RELIABILITY_SCORER_V2) if isinstance(scorers, dict) else None
+        if isinstance(rel, dict) and rel.get("selftest") == "PASS":
+            ok("R12_reliability_scorer_v2_selftest", RELIABILITY_SCORER_V2)
+        else:
+            bad("R12_reliability_scorer_v2_selftest_required",
+                f"scorers['{RELIABILITY_SCORER_V2}'] with selftest=PASS required "
+                "before live reliability use")
+
+        # R13 context validation evidence (only when the context phase executed)
+        phases = m.get("phases_executed") or []
+        ctxv = m.get("context_validation")
+        if "context" in phases or ctxv is not None:
+            if not isinstance(ctxv, dict):
+                bad("R13_context_validation_required",
+                    "context phase executed: manifest.context_validation required")
+            else:
+                depths = ctxv.get("depths_pct")
+                if depths != REQUIRED_CONTEXT_DEPTHS_PCT:
+                    bad("R13_context_depth_set",
+                        f"depths_pct must be exactly {REQUIRED_CONTEXT_DEPTHS_PCT}, got {depths!r}")
+                else:
+                    ok("R13_context_depth_set", "2/25/50/75/95")
+                if ctxv.get("placement_preflight_pass") is True and \
+                        isinstance(ctxv.get("max_placement_error_pp"), (int, float)) \
+                        and ctxv["max_placement_error_pp"] <= 0.5:
+                    ok("R13_context_placement_preflight", str(ctxv["max_placement_error_pp"]))
+                else:
+                    bad("R13_context_placement_preflight",
+                        "placement_preflight_pass=true with max_placement_error_pp <= 0.5 required")
+                if ctxv.get("reserve_tokens") == STANDARD_RESERVE_TOKENS:
+                    ok("R13_context_reserve", str(STANDARD_RESERVE_TOKENS))
+                else:
+                    bad("R13_context_reserve",
+                        f"standardized reserve {STANDARD_RESERVE_TOKENS} required "
+                        "(welp-generation-budget 0.1.0-draft)")
+        else:
+            warn("R13_context_not_executed",
+                 "context phase not in phases_executed; if the campaign stopped early this is expected — record the stop reason")
+
+        # R14 cache policy
+        cp = m.get("cache_policy")
+        if isinstance(cp, dict) and cp.get("scientific_arms") == "DISABLED_UNCACHED" and cp.get("verification"):
+            ok("R14_cache_policy", str(cp.get("verification")))
+        else:
+            bad("R14_cache_policy_required",
+                "cache_policy {scientific_arms: DISABLED_UNCACHED, verification: <probe/telemetry evidence>} required")
 
     # ---- N03 improper-rewrite detection ----
     # A welp-* campaign whose contract IDs are ALL wlep-* (with no welp-* counterpart)
@@ -786,6 +925,137 @@ def _bad_website_invalid_disposition(td):
          "website_record_slug": "example-model"})
 
 
+# ---------------- methodology-revision era fixtures (R09-R14) ----------------
+
+REVISION_SNAPSHOT = "welp-next-snapshot-2026-09-19-methodology-revision"
+
+
+def _sha256_of(relpath):
+    return hashlib.sha256((REPO_ROOT / relpath).read_bytes()).hexdigest()
+
+
+def _revision_manifest(**overrides):
+    m = {
+        "model": {"sha256": "a" * 64},
+        "protocol_snapshot": {"id": REVISION_SNAPSHOT},
+        "serving_profile": {"effective": {"slot_count": 1},
+                            "gate_baseline_reasoning_state": "REASONING_OFF",
+                            "reasoning_requested": "REASONING_OFF",
+                            "reasoning_effective": "REASONING_OFF"},
+        "phase2_harness_version": "welp-phase-harness/1.0.0-draft",
+        "contracts": {"welp-outcomes": {}, "welp-generation-budget": {},
+                      "welp-reliability": {}, "welp-final-classification": {}},
+        "generation_evidence": [{"path": "/workspace/camp/results/reliability_raw_seed42.jsonl",
+                                 "status": "COMPLETE", "sha256": "b" * 64, "rows": 20}],
+        "outcome_semantics": {"contract": OUTCOMES_CONTRACT, "task_outcome_triples": True},
+        "phase_finish_accounting": [
+            {"phase": "reliability", "complete_rows": 38, "complete_missing_finish": 0},
+            {"phase": "useful_context", "complete_rows": 2, "complete_missing_finish": 0},
+        ],
+        "fixtures": {
+            "welp-reliability-sample-20": {
+                "path": "fixtures/reliability/welp-reliability-sample-20-v2.json",
+                "sha256": _sha256_of("fixtures/reliability/welp-reliability-sample-20-v2.json")},
+        },
+        "scorers": {
+            RELIABILITY_SCORER_V2: {
+                "path": "scorers/score_reliability.py",
+                "sha256": _sha256_of("scorers/score_reliability.py"),
+                "selftest": "PASS"},
+        },
+        "campaign_outcome": "COMPLETE_WITH_GAPS",
+        "generation_budget": {"contract": BUDGET_CONTRACT, "lanes_declared": True},
+        "phases_executed": ["performance", "quality", "reliability", "context"],
+        "context_validation": {"depths_pct": REQUIRED_CONTEXT_DEPTHS_PCT,
+                               "placement_preflight_pass": True,
+                               "max_placement_error_pp": 0.16,
+                               "reserve_tokens": STANDARD_RESERVE_TOKENS},
+        "cache_policy": {"scientific_arms": "DISABLED_UNCACHED",
+                         "verification": "CACHE_METRIC_FLOOR_PRESENT; cached_tokens telemetry recorded"},
+    }
+    m.update(overrides)
+    return m
+
+
+def _revision_bundle(td, name, manifest_overrides=None, drop=(), with_web=True):
+    g = Path(td) / name
+    g.mkdir(parents=True)
+    (g / "REPORT.md").write_text("Artifact role: PRIMARY SCIENTIFIC REPORT\nStatus: CURRENT\n")
+    (g / "WELP-LAB-RECORD.md").write_text(
+        "Artifact role: WELP LAB RECORD\nPrimary scientific report: REPORT.md\n")
+    (g / "WELP-CONFORMANCE.md").write_text("ok\n")
+    (g / "protocol-findings.md").write_text("PF-01\n")
+    (g / "summaries").mkdir(parents=True)
+    man = _revision_manifest()
+    for k in drop:
+        man.pop(k, None)
+    if manifest_overrides:
+        man.update(manifest_overrides)
+    (g / "summaries/campaign_manifest.json").write_text(json.dumps(man))
+    (g / "summaries/toolchain_preflight.json").write_text(json.dumps({
+        "preflight": "welp-preflight",
+        "protocol": {"snapshot_id": REVISION_SNAPSHOT, "welp_status": "DRAFT"},
+        "publication": {"localmaxxing_auth_status": "READY"}}))
+    (g / "summaries/localmaxxing.json").write_text(json.dumps(
+        {"status": "SUBMITTED", "origin": "NEW",
+         "submission_ref": "cmtexample0000000000000", "actual_prompt_tokens": 330}))
+    if with_web:
+        (g / "summaries/website-publication.json").write_text(json.dumps(
+            {"schema": "wumbolabs-labs-publication/1", "campaign": "example",
+             "disposition": "WEBSITE_READY",
+             "canonical_evidence": {"state": "PENDING_HUMAN_GATE"},
+             "website_record_slug": "example-model",
+             "identity": {"model_id": "example", "profile_id": "example-q",
+                          "event_id": "example-e", "event_type": "initial-evaluation"}}))
+    return g
+
+
+def _good_methodology_revision_bundle(td):
+    return _revision_bundle(td, "good_methodology_revision")
+
+
+def _bad_revision_missing_outcomes(td):
+    return _revision_bundle(td, "bad_revision_missing_outcomes",
+                            drop=("outcome_semantics", "phase_finish_accounting"))
+
+
+def _bad_revision_finish_accounting(td):
+    return _revision_bundle(td, "bad_revision_finish_accounting",
+                            manifest_overrides={"phase_finish_accounting": [
+                                {"phase": "reliability", "complete_rows": 38,
+                                 "complete_missing_finish": 2}]})
+
+
+def _bad_revision_hash_mismatch(td):
+    return _revision_bundle(td, "bad_revision_hash_mismatch",
+                            manifest_overrides={"fixtures": {
+                                "welp-reliability-sample-20": {
+                                    "path": "fixtures/reliability/welp-reliability-sample-20-v2.json",
+                                    "sha256": "0" * 64}}})
+
+
+def _bad_revision_context_depths(td):
+    return _revision_bundle(td, "bad_revision_context_depths",
+                            manifest_overrides={"context_validation": {
+                                "depths_pct": [2.0, 25.0, 50.0, 75.0],
+                                "placement_preflight_pass": True,
+                                "max_placement_error_pp": 0.16,
+                                "reserve_tokens": 640}})
+
+
+def _bad_revision_cache_policy(td):
+    return _revision_bundle(td, "bad_revision_cache_policy",
+                            manifest_overrides={"cache_policy": {
+                                "scientific_arms": "CACHED_OK"}})
+
+
+def _good_revision_context_deferred(td):
+    """Early-stop campaign that never reached context: R13 warns, stays valid."""
+    return _revision_bundle(td, "good_revision_context_deferred",
+                            manifest_overrides={"phases_executed": ["quality", "reliability"]},
+                            drop=("context_validation",))
+
+
 def selftest():
     with tempfile.TemporaryDirectory() as td:
         rg_legacy = check(_good_legacy_wlep(td))
@@ -803,6 +1073,13 @@ def selftest():
         rg_web = check(_good_new_format_with_website(td))
         rb_web_missing = check(_bad_new_format_missing_website(td))
         rb_web_status = check(_bad_website_invalid_disposition(td))
+        rg_rev = check(_good_methodology_revision_bundle(td))
+        rb_rev_outcomes = check(_bad_revision_missing_outcomes(td))
+        rb_rev_finish = check(_bad_revision_finish_accounting(td))
+        rb_rev_hash = check(_bad_revision_hash_mismatch(td))
+        rb_rev_depths = check(_bad_revision_context_depths(td))
+        rb_rev_cache = check(_bad_revision_cache_policy(td))
+        rg_rev_deferred = check(_good_revision_context_deferred(td))
         fails = []
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
                          ("welp_with_legacy_evidence_rejected", rg_mixed),
@@ -810,7 +1087,9 @@ def selftest():
                          ("new_hierarchy_without_lab_record_rejected", rg_new_nolr),
                          ("new_format_localmaxxing_rejected", rg_lmx),
                          ("new_format_website_rejected", rg_web),
-                         ("historical_pre_hierarchy_pair_rejected", rg_hist_pair)]:
+                         ("historical_pre_hierarchy_pair_rejected", rg_hist_pair),
+                         ("methodology_revision_rejected", rg_rev),
+                         ("revision_context_deferred_rejected", rg_rev_deferred)]:
             if not r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         for label, r in [("unknown_prefix_accepted", rb_unknown), ("improperly_rewritten_legacy_accepted", rb_rewritten),
@@ -818,7 +1097,12 @@ def selftest():
                          ("missing_localmaxxing_accepted", rb_lmx_missing),
                          ("invalid_localmaxxing_status_accepted", rb_lmx_status),
                          ("missing_website_accepted", rb_web_missing),
-                         ("invalid_website_disposition_accepted", rb_web_status)]:
+                         ("invalid_website_disposition_accepted", rb_web_status),
+                         ("revision_missing_outcomes_accepted", rb_rev_outcomes),
+                         ("revision_finish_accounting_accepted", rb_rev_finish),
+                         ("revision_hash_mismatch_accepted", rb_rev_hash),
+                         ("revision_context_depths_accepted", rb_rev_depths),
+                         ("revision_cache_policy_accepted", rb_rev_cache)]:
             if r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
@@ -841,8 +1125,27 @@ def selftest():
             fails.append("missing_website_missing_R07_error")
         if not any(f[0] == "error" and f[1] == "R08_website_disposition" for f in rb_web_status["findings"]):
             fails.append("invalid_website_disposition_missing_R08_error")
+        # Methodology-revision rule assertions
+        for rule in ("R09_outcome_semantics", "R09_finish_accounting", "R10_fixtures_hash",
+                     "R10_fixtures_hash_verified", "R10_scorers_hash_verified",
+                     "R11_campaign_outcome", "R12_generation_budget",
+                     "R12_reliability_scorer_v2_selftest", "R13_context_depth_set",
+                     "R13_context_placement_preflight", "R13_context_reserve", "R14_cache_policy"):
+            if not any(f[1] == rule for f in rg_rev["findings"]):
+                fails.append(f"revision bundle missing {rule} finding")
+        for label, r, rule in [
+            ("missing_outcomes", rb_rev_outcomes, "R09_outcome_semantics_required"),
+            ("finish_accounting", rb_rev_finish, "R09_finish_accounting"),
+            ("hash_mismatch", rb_rev_hash, "R10_fixtures_hash_mismatch"),
+            ("context_depths", rb_rev_depths, "R13_context_depth_set"),
+            ("cache_policy", rb_rev_cache, "R14_cache_policy_required"),
+        ]:
+            if not any(f[0] == "error" and f[1] == rule for f in r["findings"]):
+                fails.append(f"revision_{label}_missing_{rule}_error")
+        if not any(f[0] == "warning" and f[1] == "R13_context_not_executed" for f in rg_rev_deferred["findings"]):
+            fails.append("revision_context_deferred_missing_R13_warning")
         print(json.dumps({
-            "fixture_sets": 15,
+            "fixture_sets": 21,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],
@@ -850,6 +1153,8 @@ def selftest():
             "accepted_new_format_localmaxxing": rg_lmx["valid"],
             "accepted_new_format_website": rg_web["valid"],
             "accepted_historical_pre_hierarchy_pair": rg_hist_pair["valid"],
+            "accepted_methodology_revision": rg_rev["valid"],
+            "accepted_methodology_revision_context_deferred": rg_rev_deferred["valid"],
             "rejected_new_format_missing_localmaxxing": not rb_lmx_missing["valid"],
             "rejected_invalid_localmaxxing_status": not rb_lmx_status["valid"],
             "rejected_new_format_missing_website": not rb_web_missing["valid"],
@@ -858,6 +1163,11 @@ def selftest():
             "improperly_rewritten_legacy_passed": rb_rewritten["valid"],
             "rejected_ambiguous_report_pair": not rb_ambig["valid"],
             "new_hierarchy_without_lab_record_valid_with_warning": rg_new_nolr["valid"],
+            "rejected_revision_missing_outcomes": not rb_rev_outcomes["valid"],
+            "rejected_revision_finish_accounting": not rb_rev_finish["valid"],
+            "rejected_revision_hash_mismatch": not rb_rev_hash["valid"],
+            "rejected_revision_context_depths": not rb_rev_depths["valid"],
+            "rejected_revision_cache_policy": not rb_rev_cache["valid"],
             "failures": fails,
             "pass": not fails,
         }, indent=2))

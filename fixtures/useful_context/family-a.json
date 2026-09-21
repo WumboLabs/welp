@@ -1,0 +1,55 @@
+{
+  "fixture_id": "welp-useful-context-family-a",
+  "version": "1.1.0-draft",
+  "status": "DRAFT / CANONICAL / FROZEN BEFORE OUTPUTS",
+  "frozen_before_outputs": "2026-09-19",
+  "canonical_status": "Family A is THE canonical useful-context fixture family. It is ALWAYS executed, preserving longitudinal cross-model comparability. A supplementary Family B for generalization is planned P2 work; it may supplement but NEVER replace Family A, and models must not be made incomparable by alternating families as their sole fixture.",
+  "supersedes": {
+    "fixture": "per-campaign ctx.py / ctx95_completion.py fixture constants",
+    "note": "This file canonicalizes the five-depth fixture design executed as the append-only 95%-depth completion in the qwen3-14b closeout (2026-09-15): same word pool, insertion mechanism, seeds, and gates, with all five contract depths (2/25/50/75/95) placed in one fixture. The original four-target campaign outputs remain retained historical evidence.",
+    "provenance_chain": "identical constants used across qwen3-14b / qwen3.6-35b-a3b / mellum2 x2 / bonsai-2 campaigns (word pool, codes TR-8842-QX / TR-3319-WD, shipments 412/388/357)"
+  },
+  "generation_budget": {
+    "answer_budget": 256,
+    "reserve_tokens": 512,
+    "rationale": "Five short factual items plus an exact terminal marker: measured canonical answers 40-128 completion tokens across retained campaigns; 256 covers the full structured answer with formatting margin. Reserve = max(512, 2 x 256) = 512 per welp-generation-budget 0.1.0-draft. The reserve is the whole output budget of the rung request; reasoning may consume it, which is why rungs report BUDGET_LIMITED instead of FAILED when retrieval evidence is strong but the answer starves (CP-4)."
+  },
+  "construction": {
+    "word_pool": ["harbor", "gravel", "lantern", "corridor", "baseline", "meridian", "cargo", "furnace", "ridge", "beacon", "summit", "parcel", "jetty", "compass", "ember", "vault", "tide", "quarry", "signal", "atlas"],
+    "filler_rule": "random.Random(seed) choice over the word pool for n_words filler tokens",
+    "inserted_facts": [
+      {"text": "The maintenance tunnel access code is TR-8842-QX.", "depth": 0.02, "target": "TR-8842-QX"},
+      {"text": "Ridgeline shipments in 2027 totaled 412 containers.", "depth": 0.25, "target": "totaled 412"},
+      {"text": "Ridgeline shipments in 2028 totaled 388 containers.", "depth": 0.50, "target": "totaled 388"},
+      {"text": "The loading dock uses access code TR-3319-WD.", "depth": 0.75, "target": "TR-3319-WD", "role": "decoy"},
+      {"text": "Ridgeline shipments in 2029 totaled 357 containers.", "depth": 0.95, "target": "totaled 357"}
+    ],
+    "insertion_mechanism": "words[min(int(frac*len(words)), len(words)-1)] = fact sentence",
+    "question_block": "Using only the notes above, answer all five items concisely.\n1. What is the maintenance tunnel access code?\n2. Which year had more Ridgeline shipments, 2027 or 2028?\n3. What is the visitor center access code? If the notes do not state it, answer exactly NOT STATED.\n4. How many containers did Ridgeline ship in 2029?\n5. End your reply with the exact marker END-OF-REPORT and nothing after it.",
+    "depths_required": [0.02, 0.25, 0.50, 0.75, 0.95],
+    "placement_error": {"preferred_pp": 0.25, "hard_pp": 0.50},
+    "occupancy": {"preferred_pct": 99.0, "hard_pct": 97.0},
+    "measurement": "two-pass live /apply-template + /tokenize on the FINAL rendered stream; placement preflight assertion before inference; five facts inside one combined prompt = one inference request and five observations"
+  },
+  "gates": {
+    "exact_retrieval": "answer contains TR-8842-QX and not the decoy TR-3319-WD",
+    "synthesis": "answer names 2027 and 412 > 388 relationship holds (the answer states 2027)",
+    "decoy_resistance": "answer does not contain TR-3319-WD",
+    "absent_information": "answer contains NOT STATED for the visitor center code",
+    "retrieval_95": "answer contains 357 for the 95%-depth fact",
+    "instruction_compliance": "answer ends with the exact marker END-OF-REPORT"
+  },
+  "outcome_semantics": {
+    "contract": "welp-outcomes-0.1.0-draft",
+    "completion": "derived from verbatim finish_reason; when the runtime does not expose it, from completion_tokens >= reserve (DERIVED)",
+    "rung_dispositions": {
+      "VALIDATED": "all gates PASS with completion COMPLETE at required occupancy and depths",
+      "BUDGET_LIMITED": "retrieval/synthesis evidence strong but completion != COMPLETE under the frozen operational reserve; keeps gate evidence visible; never VALIDATED and never FAILED-by-retrieval",
+      "FAILED": "completed answer violates a frozen gate (a measured negative result)",
+      "USEFUL_CONTEXT_MAX_OPERATIONAL": "highest rung passing all gates with a completed answer within the frozen operational profile",
+      "USEFUL_CONTEXT_MAX_SEMANTIC": "claimable only from a PREDECLARED non-starving lane producing a completed, scorable answer; reasoning-trace facts never promote to semantic PASS"
+    }
+  },
+  "seeds": [42, 314159],
+  "generalization_note": "Identical constants across campaigns create a familiarity risk (models may be trained against this style); the Family B supplementary fixture (P2) addresses generalization. Until then USEFUL_CONTEXT_MAX claims are scoped to Family A."
+}

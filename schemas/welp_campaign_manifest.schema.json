@@ -56,7 +56,84 @@
       "required": [
         "requested",
         "effective"
-      ]
+      ],
+      "properties": {
+        "gate_baseline_reasoning_state": {
+          "enum": ["REASONING_OFF", "ON", "NOT_APPLICABLE"],
+          "description": "Explicit gate reasoning state; required by the validator (M05) before any Phase-3 generation."
+        },
+        "reasoning_requested": {
+          "type": "string",
+          "description": "Reasoning control requested from the runtime (validator M06)."
+        },
+        "reasoning_effective": {
+          "type": "string",
+          "description": "Reasoning control measured effective on the pinned runtime (validator M06); a requested-but-ignored control is recorded here as MEASURED-ineffective, never assumed effective."
+        }
+      }
+    },
+    "outcome_semantics": {
+      "type": "object",
+      "description": "CP-1 record (methodology-revision era, validator R09): declares the outcome contract and per-task triples.",
+      "properties": {
+        "contract": {"type": "string"},
+        "task_outcome_triples": {"type": "boolean"}
+      }
+    },
+    "phase_finish_accounting": {
+      "type": "array",
+      "description": "Per-phase finish_reason accounting (validator R09): COMPLETE rows with missing/unknown finish are an error.",
+      "items": {
+        "type": "object",
+        "required": ["phase"],
+        "properties": {
+          "phase": {"type": "string"},
+          "complete_rows": {"type": "integer", "minimum": 0},
+          "complete_missing_finish": {"type": "integer", "minimum": 0},
+          "truncated_rows": {"type": "integer", "minimum": 0},
+          "empty_answer_rows": {"type": "integer", "minimum": 0},
+          "budget_exhausted_in_reasoning": {"type": "integer", "minimum": 0},
+          "budget_exhausted_in_answer": {"type": "integer", "minimum": 0},
+          "budget_unknown": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "campaign_outcome": {
+      "enum": ["COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"],
+      "description": "Campaign execution outcome (validator R11); independent of the model readiness verdict."
+    },
+    "generation_budget": {
+      "type": "object",
+      "description": "Generation-budget policy record (validator R12).",
+      "properties": {
+        "contract": {"type": "string"},
+        "lanes_declared": {"type": "boolean"}
+      }
+    },
+    "cache_policy": {
+      "type": "object",
+      "description": "Measurement cache policy (validator R14).",
+      "properties": {
+        "scientific_arms": {"type": "string"},
+        "verification": {"type": "string"},
+        "cached_arms_declared": {"type": "boolean"}
+      }
+    },
+    "phases_executed": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "context_validation": {
+      "type": "object",
+      "description": "Useful-context evidence summary (validator R13): required depth set, placement preflight, standardized reserve.",
+      "properties": {
+        "depths_pct": {"type": "array", "items": {"type": "number"}},
+        "placement_preflight_pass": {"type": "boolean"},
+        "max_placement_error_pp": {"type": "number"},
+        "reserve_tokens": {"type": "integer"},
+        "useful_context_max_operational": {"type": ["string", "integer", "null"]},
+        "useful_context_max_semantic": {"type": ["string", "integer", "null"]}
+      }
     },
     "phase5_applicability": {
       "type": [

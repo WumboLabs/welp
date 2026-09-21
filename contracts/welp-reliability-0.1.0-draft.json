@@ -1,7 +1,12 @@
 {
   "contract_id": "welp-reliability",
   "version": "0.1.0-draft",
-  "status": "DRAFT / PROTOCOL DEVELOPMENT",
+  "status": "SUPERSEDED FOR NEW CAMPAIGNS (retained as historical provenance)",
+  "superseded_by": {
+    "contract_id": "welp-reliability",
+    "version": "0.2.0-draft",
+    "note": "Superseded 2026-09-19 by the methodology-revision snapshot: outcome semantics (welp-outcomes 0.1.0-draft), canonical scorer welp-reliability-scorer/2, and the re-derived 20x2 gate_v2. Reproducing historical campaigns continues to use THIS contract and the frozen v1 scorer identity."
+  },
   "created": "2026-08-26",
   "supersedes": {
     "contract_id": "wlep-reliability",

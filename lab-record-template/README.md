@@ -64,9 +64,9 @@ revision/hash and pinned official card/config/extension sources. Include one row
 per major rung per surface and separate exact-maximum rows. Record a documented
 absence of official extension support rather than inventing an extension row.
 
-| Surface | Card claim (source/revision; native or extension maximum) | Runtime configuration (requested/effective mechanism) | Configured capacity (tokens) | Capacity admitted? | Usable prompt budget (tokens) | Actual occupied tokens (final rendered input) | Occupancy % | Reserved output tokens / safety allowance | Near-full performance run? | Useful-context run? | Seeds / inference requests / target-field-depth observations | Final disposition | Evidence path / notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Native: exact maximum (replace with pinned claim) | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | Record source and outstanding work; no validation implied. |
+| Surface | Card claim (source/revision; native or extension maximum) | Runtime configuration (requested/effective mechanism) | Configured capacity (tokens) | Capacity admitted? | Usable prompt budget (tokens) | Actual occupied tokens (final rendered input) | Occupancy % | Reserved output tokens / safety allowance | Near-full performance run? | Useful-context run? | Useful-context outcome lanes (operational / semantic; BUDGET_LIMITED where applicable) | Seeds / inference requests / target-field-depth observations | Final disposition | Evidence path / notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Native: exact maximum (replace with pinned claim) | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | NOT_TESTED | Record source and outstanding work; no validation implied. |
 
 Duplicate the row for each planned rung/official extension maximum; replace
 planning values with evidence, never invented numbers. Link per-run rows where

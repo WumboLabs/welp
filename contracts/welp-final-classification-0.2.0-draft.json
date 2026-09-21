@@ -1,0 +1,88 @@
+{
+  "contract_id": "welp-final-classification",
+  "version": "0.2.0-draft",
+  "status": "DRAFT / PROTOCOL DEVELOPMENT",
+  "created": "2026-09-19",
+  "supersedes": {
+    "contract_id": "welp-final-classification",
+    "version": "0.1.0-draft",
+    "migration_type": "methodology-revision",
+    "note": "Headline readiness vocabulary is UNCHANGED. Changes: the classification logic (inputs, thresholds, binding rules) now lives IN-REPO (harness/classification.py, self-tested) instead of an external frozen classify.py; readiness consumes the CP-1 outcome semantics and the orthogonal dimensions; campaign execution outcome is a separate axis. Historical classifications remain valid under their recorded snapshots."
+  },
+  "purpose": "Final role classification for a WELP campaign: one headline readiness state derived from the applicable structured dimensions, plus a separate campaign execution outcome. Campaign success is NOT a positive model verdict.",
+  "applies_from_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision",
+  "roles": [
+    "coding_specialist",
+    "tool_agent",
+    "omp_agent",
+    "extraction_helper",
+    "router_classifier",
+    "primary_assistant"
+  ],
+  "headline_readiness_states": [
+    "READY",
+    "READY_WITH_GUARDRAILS",
+    "LIMITED_ROLE_ONLY",
+    "NOT_READY",
+    "INTEGRATION_BLOCKED"
+  ],
+  "dimensions": {
+    "SEMANTIC_CAPABILITY": {
+      "source": "reliability semantic lane (completion-conditioned) + quality/PV screens + applicable capability modules",
+      "vocabulary": ["STRONG", "ACCEPTABLE", "WEAK", "UNKNOWN"],
+      "binding": "STRONG: reliability gate ADVANCE with R1-R8 clear. ACCEPTABLE: mean semantic-clean >= 0.40 with all category floors >= floor-1 task. WEAK: below ACCEPTABLE or UNSAFE blocker. UNKNOWN: semantic lane not evaluable (completion rate < 0.5 on the semantic lane) — UNKNOWN never rounds to STRONG."
+    },
+    "BUDGET_DISCIPLINE": {
+      "source": "operational lane completion/truncation rates + budget attribution counts",
+      "vocabulary": ["GOOD", "FAIR", "POOR", "UNKNOWN"],
+      "binding": "GOOD: completion >= 0.90 and truncation <= 0.10. FAIR: completion >= 0.80 and truncation <= 0.25. POOR: below FAIR (persistent inability to complete normal tasks within the declared operational profile). UNKNOWN: lane not measured."
+    },
+    "CONTEXT_USABILITY": {
+      "source": "useful-context lanes (USEFUL_CONTEXT_MAX_SEMANTIC / USEFUL_CONTEXT_MAX_OPERATIONAL) and rung dispositions",
+      "vocabulary": ["VALIDATED", "PARTIAL", "NOT_CHARACTERIZED", "INTEGRATION_BLOCKED"],
+      "binding": "Per protocol/context-scaling.md dispositions; BUDGET_LIMITED rungs count as PARTIAL evidence, never VALIDATED."
+    },
+    "INTEGRATION_QUALITY": {
+      "source": "admission level (BASIC | ENHANCED_SEMANTIC), fit/envelope evidence, soak/stability, harness/version identities",
+      "vocabulary": ["CLEAN", "NOTES", "CONSTRAINTS", "BLOCKED"]
+    }
+  },
+  "campaign_execution_outcome": {
+    "vocabulary": ["COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"],
+    "COMPLETE_PASS": "All planned phases executed with completed dispositions; no deferred gaps.",
+    "COMPLETE_WITH_GAPS": "Campaign executed; explicit recorded gaps (deferred rungs, omitted optional phases, partial dispositions).",
+    "FAILED_EXECUTION": "Execution itself failed (invalidated runs, harness/scorer-artifact defects, host-safety stop) such that conclusions are not supported.",
+    "BLOCKED": "A blocking gate (human decision, missing prerequisite, safety) stopped the campaign before execution could conclude.",
+    "critical_rule": "A campaign may truthfully be COMPLETE_PASS with verdict NOT_READY, or COMPLETE_WITH_GAPS with a positive verdict. The outcome axis measures execution integrity, never model quality."
+  },
+  "headline_readiness_logic": {
+    "inputs": ["SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE", "CONTEXT_USABILITY", "INTEGRATION_QUALITY", "phase gates"],
+    "rules": [
+      "R-C1: INTEGRATION_QUALITY BLOCKED (or campaign BLOCKED on integration) => INTEGRATION_BLOCKED.",
+      "R-C2: FAILED_EXECUTION => no readiness verdict is issued for that attempt; the campaign reports FAILED_EXECUTION and any prior valid verdict stays historical.",
+      "R-C3: SEMANTIC_CAPABILITY WEAK, or UNSAFE blocker, or replicated fabrication => NOT_READY.",
+      "R-C4: SEMANTIC_CAPABILITY UNKNOWN (semantic lane not evaluable) => NOT_READY with the budget/operational attribution recorded — a model that routinely cannot complete normal tasks is not READY regardless of visible fragments.",
+      "R-C5: SEMANTIC_CAPABILITY ACCEPTABLE/STRONG with BUDGET_DISCIPLINE POOR => LIMITED_ROLE_ONLY or READY_WITH_GUARDRAILS at best (never READY): budget failure MUST NOT be relabeled semantic failure, but persistent inability to complete normal tasks within the declared operational profile imposes a readiness downgrade because READY remains deployment-oriented. Choose LIMITED_ROLE_ONLY when completion < 0.80 on BOTH operational seeds; READY_WITH_GUARDRAILS when a declared alternative lane/profile (e.g. non-starving ceiling with an effective reasoning control) demonstrably completes with acceptable semantics.",
+      "R-C6: SEMANTIC_CAPABILITY STRONG + BUDGET_DISCIPLINE GOOD/FAIR + no blocking dimension => READY_WITH_GUARDRAILS by default; READY requires additionally: all applicable capability modules PASS at their canonical budgets, CONTEXT_USABILITY VALIDATED at the practical rung, INTEGRATION_QUALITY CLEAN, and no open guardrail note.",
+      "R-C7: CONTEXT_USABILITY NOT_CHARACTERIZED caps at READY_WITH_GUARDRAILS with an explicit context gap note.",
+      "R-C8: Guardrails are explicit: every downgrade decision names its trigger dimension and evidence path in REPORT.md."
+    ],
+    "prohibitions": [
+      "Budget failure must never be labeled hallucination or semantic failure.",
+      "A model that routinely cannot complete normal operational tasks must never be READY.",
+      "UNKNOWN dimensions never silently round to favorable values."
+    ],
+    "threshold_provenance": "Category numeric thresholds come from welp-reliability 0.2.0-draft gate_v2 (re-derived 2026-09-19 for the 20x2 screen). Classification consumes gate outputs; it introduces no new reliability numbers."
+  },
+  "semantics": {
+    "NOT_REACHED_not_equal_PASS": true,
+    "NOT_APPLICABLE_not_equal_FAIL": true,
+    "producer_claims_reported_separately": true,
+    "campaign_outcome_independent_of_verdict": true
+  },
+  "implementation": {
+    "canonical_logic": "harness/classification.py",
+    "selftest": "python3 harness/classification.py selftest",
+    "contract_only_thresholds_note": "The prose rules above and the code implement the same mapping; the code is authoritative for machine consumption and the contract for human review; the self-test pins their agreement."
+  }
+}

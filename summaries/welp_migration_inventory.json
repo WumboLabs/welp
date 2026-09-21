@@ -1,0 +1,40 @@
+{
+  "inventory_id": "welp-migration-inventory",
+  "version": "1.1.0-draft",
+  "updated": "2026-09-19",
+  "purpose": "Reference inventory of WLEP->WELP migration artifacts and the current canonical surfaces that superseded them. Referenced by protocol/WELP.md; supplied during the 2026-09-19 methodology revision (previously referenced but missing).",
+  "canonical_surfaces": {
+    "protocol": ["protocol/WELP.md", "protocol/context-scaling.md"],
+    "contracts": [
+      "contracts/welp-outcomes-0.1.0-draft.json (new 2026-09-19)",
+      "contracts/welp-generation-budget-0.1.0-draft.json (new 2026-09-19)",
+      "contracts/welp-practical-viability-0.1.3-draft.json (internal version 0.1.4-draft)",
+      "contracts/welp-reliability-0.2.0-draft.json (supersedes 0.1.0-draft for new campaigns)",
+      "contracts/welp-context-0.1.0-draft.json (superseded for full-context claims by context-scaling.md)",
+      "contracts/welp-optimization-0.1.0-draft.json",
+      "contracts/welp-stability-0.1.0-draft.json",
+      "contracts/welp-final-classification-0.2.0-draft.json (supersedes 0.1.0-draft for new campaigns)",
+      "contracts/welp-preflight-0.1.0-draft.json",
+      "contracts/welp-modules.json"
+    ],
+    "harness": ["harness/*.py (welp-phase-harness/1.0.0-draft)"],
+    "scorers": ["scorers/score_reliability.py (welp-reliability-scorer/2)", "scorers/score_reliability_fixtures.json", "scorers/rescore_acceptance.py"],
+    "fixtures": [
+      "fixtures/reliability/welp-reliability-sample-20-v2.json",
+      "fixtures/useful_context/family-a.json",
+      "fixtures/quality/welp-quality-screen-12-v1.json"
+    ],
+    "schemas": ["schemas/*.json (8 campaign/publication schemas + welp_task_outcome.schema.json)"],
+    "validators": ["validators/validate_campaign_welp.py", "validators/validate_publication.py", "validators/check_canonical_welp_naming.py", "validators/validate_public_tree.py"]
+  },
+  "frozen_wlep_sources": {
+    "note": "Immutable pre-rename sources remain at their historical paths outside this repository and are recorded in snapshot-freeze/manifest.json (frozen_parent_artifacts_retained_immutable).",
+    "examples": [
+      "post-apodex-maintenance/publication/repo-candidate/scorers/updated-PV/wlep-practical-viability-0.1.3-draft.json",
+      "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-reliability-0.1.0-draft.json",
+      "final-hardening/phase10-classification/classify.py",
+      "final-hardening/phase6-context/wlep-context-contract.json"
+    ]
+  },
+  "validator_compatibility": "validators/validate_campaign_welp.py accepts wlep-* identifiers, WLEP-CONFORMANCE.md, pre-hierarchy report naming, and pre-revision manifests so frozen evidence bundles remain valid unchanged."
+}

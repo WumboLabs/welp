@@ -1,0 +1,111 @@
+{
+  "snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision",
+  "status": "DRAFT \u2014 NOT v1.0",
+  "welp_public_identity": "WELP \u2014 WumboLabs Evaluation Lifecycle Protocol (repo-candidate)",
+  "created_utc": "2026-09-19T00:00:00+00:00",
+  "migration_type": "methodology-revision",
+  "methodology_changed": "YES",
+  "naming_changed": "NO",
+  "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename",
+  "parent_manifest": "../manifest.json (IMMUTABLE first-snapshot record; not modified)",
+  "parent_note": "The 2026-08-26 post-rename snapshot is the latest canonical snapshot discovered on disk (snapshot-freeze/ contains only its manifest.json); later campaign-specific snapshot references in campaign bundles are per-campaign protocol-snapshot IDs, not methodology snapshots, so the post-rename snapshot is the correct parent.",
+  "basis": "Human-accepted core methodology revision derived from research/methodology/welp-vnext-audit-2026-09-19/ (WELP-vNext-AUDIT.md, WELP-vNext-CHANGE-PROPOSAL.md, WELP-vNext-IMPACT-MATRIX.md; accepted WITH amendments), implementing CP-1, CP-2, CP-3, CP-4, CP-5, CP-6, CP-11, and CP-12 minimum. P2/P3 items deferred as recorded in tmp/WELP-METHODOLOGY-REVISION-IMPLEMENTATION.md.",
+  "changes": {
+    "CP-1": "Task-instance outcome semantics (semantic PASS|FAIL|NOT_EVALUABLE x completion x budget + verbatim finish_reason): contracts/welp-outcomes-0.1.0-draft.json, schemas/welp_task_outcome.schema.json, protocol/WELP.md.",
+    "CP-2": "Generation-budget policy (task-owned answer budgets with rationale, no universal multiplier law, portable-control rule, two-lane design, standardized 512-token context reserve, cache policy): contracts/welp-generation-budget-0.1.0-draft.json, protocol/WELP.md, protocol/context-scaling.md.",
+    "CP-3": "Canonical reliability scorer v2 (welp-reliability-scorer/2) with 78 embedded self-test fixtures and the fixed 20-task fixture v2; frozen-output acceptance corpus (scorers/rescore_acceptance.py) rescored READ-ONLY against retained qwen3-14b / qwen3.6 / mellum2 x2 / bonsai-2 raw outputs with an 8-check attribution oracle: ALL PASS.",
+    "CP-4": "Useful-context outcome lanes (USEFUL_CONTEXT_MAX_OPERATIONAL / _SEMANTIC, BUDGET_LIMITED rung dispositions), verbatim finish capture requirement, standardized reserve: protocol/context-scaling.md C3, fixtures/useful_context/family-a.json, harness/context.py.",
+    "CP-5": "Canonical in-repo harness (welp-phase-harness/1.0.0-draft), scorers, and fixtures; docs/disk drift reconciliation (summaries supplied, PV errata, exact-scoring vacuity finding).",
+    "CP-6": "Reliability gate_v2 re-derived for the actual 20x2 screen inside contracts/welp-reliability-0.2.0-draft.json (binomial resolution math, R1-R8 binding rules, NOT_EVALUABLE handling, adaptive +-1-task seed extension) and implemented identically in harness/reliability.py.",
+    "CP-11": "Classification v2 in-repo (contracts/welp-final-classification-0.2.0-draft.json + harness/classification.py): headline readiness from SEMANTIC_CAPABILITY/BUDGET_DISCIPLINE/CONTEXT_USABILITY/INTEGRATION_QUALITY dimensions, campaign execution outcome axis (COMPLETE_PASS|COMPLETE_WITH_GAPS|FAILED_EXECUTION|BLOCKED), campaign success != positive verdict.",
+    "CP-12-min": "Validator R09-R14 (version-gated to snapshot dates >= 2026-09-19; frozen bundles untouched; selftest 21/21 fixture sets PASS) + schema/validator parity fix (serving_profile reasoning fields added to the manifest schema) + new welp_task_outcome.schema.json."
+  },
+  "frozen_artifact_sha256": {
+    "protocol": {
+      "protocol/WELP.md": "2b34bfb43b22f61ebf53e662b0b6b1b37b5ea5cedcf1d6381407da1e9d4b6966",
+      "protocol/context-scaling.md": "2dd0062e95675be48f96720f958c36a514ee34cadf59d15ff0ad26912e40dd30"
+    },
+    "contracts": {
+      "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+      "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+      "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+      "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+      "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+      "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+      "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+      "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+      "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed",
+      "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+      "contracts/welp-modules.json": "80fbaf767b3f9da6a1db65b40f4ac50227efbbd9380affa4ad5e9fc371ab53ea"
+    },
+    "harness": {
+      "harness/welp_outcomes.py": "4fe8f751654cf3b2f2ce02ce3e58589148c161345f7ac5fe34d7112b8cd0126f",
+      "harness/reliability.py": "702abc9dc92787718d5e082df8a8a6d36c7dba1fb9e5ec39dd8e52640d169a96",
+      "harness/context.py": "370639e1709e9e31081ab058095f8021a58b835d7800703674278e0840efaffb",
+      "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "harness/capabilities.py": "868d449ba0833f9736c62aaff970650d1039b66b41d5c53aa26eb1ec08e0e6b2",
+      "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+      "harness/classification.py": "0f79a94c88250d14d1210e256bd48c79367b1340ebeebea9aa87542a4f0ed310"
+    },
+    "scorers": {
+      "scorers/score_reliability.py": "7d6cbc1b9c3eba888304278b3c529454ebf1184bd9541ef04a7ab7b6dc03a4d0",
+      "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858",
+      "scorers/rescore_acceptance.py": "98487c469b9c52f4d96243b15661c5216b265635be1f0357d91a42bb4315fe77"
+    },
+    "fixtures": {
+      "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+      "fixtures/useful_context/family-a.json": "3e710a1c42c71c3b702a5f7bc699044309a65fe9f43f57437baa87f0ade008c8",
+      "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8"
+    },
+    "schemas": {
+      "schemas/welp_campaign_manifest.schema.json": "94d11014c81aa000640855602815d9ec87dcdfa1fbcfe707091b647cd760bd97",
+      "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+      "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+      "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+      "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+      "schemas/welp_website_publication.schema.json": "9b240984c8b6a2219e8de5caa255bbb216052e42f0b9b7baaa4dc557a5271f35",
+      "schemas/welp_eval_profile.schema.json": "c1a64831ae0e994655b8828db7ff4dd69ed9571c90835634e307dc5683d8bcaa",
+      "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+      "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc"
+    },
+    "validators": {
+      "validators/validate_campaign_welp.py": "7ae0b740950cdcf3aa6ebe577d6f9f73de2f1e5bd80c98e16aa073130701e37e",
+      "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8"
+    },
+    "docs_and_summaries": {
+      "docs/validator.md": "48e1a4a6acf0146c4a381a26ab17692e6590c36dd8e3eb629a30aec310599e8d",
+      "docs/reproduction.md": "0dbfd575a408b12545551c967e4b3010e25645395cd5a91a903edb7e5f43951c",
+      "docs/naming-policy.md": "f1ab25aed7588ffe3b017eb819b73f2902a0dfea8c2830942ef764b38a66820d",
+      "summaries/welp_compatibility_policy.json": "28a8d7b9a12cf2192ae61becdea5ffc4b1120ad606a9f7db198f4cb8afdb975b",
+      "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67",
+      "lab-record-template/README.md": "cf690f0346044ec7b9e5cd8df0ad3aea8043d9f9daeba99d4beb9540717fb6bf",
+      "lab-record-template/LAB-RECORD-LAYOUT.md": "021fd755d2b34b3a48b6eff8bfc7839dd478ff9e8167561492d9e4d58934e87c",
+      "README.md": "7be0953a9fbaa3979bb3d25b7e42fadfb20f484154609d8fdce5aa09415ee7a4"
+    }
+  },
+  "validation_at_freeze": {
+    "scorer_selftest": "PASS (78 fixtures)",
+    "acceptance_rescore_oracle": "PASS (8/8 checks)",
+    "harness_selftests": "PASS (outcomes, reliability gates, context, quality, capabilities, admission, classification)",
+    "validator_selftest": "PASS (21 fixture sets)",
+    "backward_compat": "qwen3-14b / mellum2-thinking / bonsai-2 historical bundles validate exit 0 unchanged",
+    "git_diff_check": "clean (see tmp/WELP-METHODOLOGY-REVISION-IMPLEMENTATION.md)"
+  },
+  "historical_compatibility": "Historical campaigns remain valid under welp-next-snapshot-2026-08-26-post-rename and their frozen contracts; never relabeled. Bonsai 2 remains SCIENCE COMPLETE / PUBLICATION HELD / BOUNDED RETEST REQUIRED under the accepted revised methodology (retest NOT run in this milestone). Model queue remains PAUSED.",
+  "model_testing_resume_gate": "Model testing remains PAUSED. The Bonsai 2 bounded methodology-revision supplement is the next milestone after human review; the next fresh model is not started.",
+  "deferred": {
+    "P2": [
+      "enhanced reasoning performance fields",
+      "second useful-context fixture family B",
+      "full semantic admission redesign",
+      "PV per-task answer_budget alignment"
+    ],
+    "P3": [
+      "3-task coding expansion",
+      "tool expansion",
+      "optimization/soak triggers",
+      "formal hardware-portability module",
+      "formal compression-retention module"
+    ]
+  }
+}

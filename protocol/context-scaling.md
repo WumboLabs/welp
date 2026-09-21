@@ -158,6 +158,38 @@ multi-fact/synthesis, conflict handling, grounding/absent-evidence, and instruct
 retention gates as applicable before inference; preserve finish-reason and
 truncation gating. Incomplete output is not automatically a retrieval failure.
 
+**Outcome semantics (methodology revision, 2026-09-19).** Every useful-context
+request emits the CP-1 outcome record (`welp-outcomes` 0.1.0-draft): the
+behavioral gates report structured results for retrieval, synthesis,
+absent-info handling, and terminal/instruction handling, plus `completion`
+(`COMPLETE | FAIL_LENGTH | EMPTY_ANSWER | INVALID_STOP`) and `budget`. The
+harness MUST parse and record the verbatim `finish_reason` per request; a
+harness that can capture it but writes a constant null is a scorer-artifact
+defect. When a runtime does not expose finish_reason, derive completion from
+measured token accounting (completion_tokens >= reserve => FAIL_LENGTH) and
+label the derivation DERIVED.
+
+**Standardized output reserve.** The context output reserve is **512 tokens**
+(`welp-generation-budget` 0.1.0-draft), derived as
+`max(512, 2 × answer_budget of the useful-context gate tasks)` — the gate
+task answer budget is 256 and measured canonical gate answers are 40–128
+tokens. Campaign-by-campaign 512-vs-640 variance is prohibited from the
+methodology-revision snapshot on; any exception must be pre-frozen, justified,
+and reported per the full-window exception rule.
+
+**Semantic and operational lanes.** A rung whose retrieval/synthesis evidence
+is strong but whose normal operational generation budget prevented a completed
+final answer is reported **`BUDGET_LIMITED`** — not `FAILED` (the rung keeps
+its retrieval evidence visible) and not `VALIDATED`. Lane declarations:
+
+- `USEFUL_CONTEXT_MAX_OPERATIONAL`: highest rung passing all gates with a
+  completed answer **within the frozen operational profile** (frozen reserve,
+  frozen reasoning mode). This is the deployment-facing number.
+- `USEFUL_CONTEXT_MAX_SEMANTIC`: may only be claimed from a **PREDECLARED
+  non-starving lane** that actually produced a completed, scorable answer
+  (all gates PASS, completion COMPLETE). "Correct facts visible in the
+  reasoning trace" never promotes to semantic PASS.
+
 Use combined target depths **2%, 25%, 50%, 75%, and 95%**. Measure against the
 **final rendered/tokenized input**: for each target, record its actual token
 start offset and `100 * offset / actual_rendered_input_tokens`. Freeze the
@@ -166,6 +198,12 @@ and placement errors. All five placements must satisfy:
 
 - Preferred absolute error: **<=0.25 percentage points**.
 - Hard absolute error: **<=0.50 percentage points**.
+
+The five-depth placement set and its preflight evidence are validator-checked
+for methodology-revision-era campaigns (R13): the pre-revision campaign
+practice of four placed targets plus a ~99% instruction block does not satisfy
+the 95%-depth requirement (the qwen3-14b closeout completion of 2026-09-15 is
+the correction precedent; retained evidence stays unchanged).
 
 Render/tokenize the whole prompt, locate targets in that final token stream,
 adjust, then re-render and re-tokenize to verify occupancy and every depth.
@@ -183,6 +221,13 @@ Report inference requests separately from target-field/depth observations:
 five fields inside one combined prompt are **one inference request and five
 observations**, not five requests. Retain invalidated requests in execution
 accounting without counting them as valid coverage.
+
+The canonical fixture family (Family A) and its outcome evaluation live in
+`fixtures/useful_context/family-a.json` and `harness/context.py`
+(`welp-phase-harness/1.0.0-draft`); campaigns must use the canonical fixture
+and scorer rather than per-campaign copies. A supplementary Family B for
+generalization is planned P2 work and MUST NOT replace Family A as the
+canonical longitudinal fixture.
 
 ## C4 — Near-full performance and resources
 

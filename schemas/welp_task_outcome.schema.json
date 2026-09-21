@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WELP task-instance outcome record (CP-1)",
+  "version": "0.1.0-draft",
+  "type": "object",
+  "description": "Canonical per-generation-task outcome record per contracts/welp-outcomes-0.1.0-draft.json. Every generation-bearing phase emits one record per task instance; semantic is judged from the final-answer channel only, and incomplete output never auto-fails semantics.",
+  "required": [
+    "id",
+    "semantic",
+    "completion",
+    "budget",
+    "finish_reason"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Task id within the frozen fixture."
+    },
+    "semantic": {
+      "enum": ["PASS", "FAIL", "NOT_EVALUABLE"],
+      "description": "PASS/FAIL judged only from the usable final-answer channel; NOT_EVALUABLE is mandatory when no conclusion is supportable (empty answer, answerless truncation)."
+    },
+    "completion": {
+      "enum": ["COMPLETE", "FAIL_LENGTH", "EMPTY_ANSWER", "INVALID_STOP"]
+    },
+    "budget": {
+      "enum": ["WITHIN", "EXHAUSTED_IN_REASONING", "EXHAUSTED_IN_ANSWER", "UNKNOWN"],
+      "description": "UNKNOWN is honest when the reasoning/answer split cannot be attributed; guessing is prohibited."
+    },
+    "finish_reason": {
+      "type": ["string", "null"],
+      "description": "Verbatim runtime finish_reason; null only when the runtime does not expose it (completion is then DERIVED from token accounting)."
+    },
+    "completion_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "reasoning_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Only when the runtime exposes the split; never inferred."
+    },
+    "answer_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "expectation_pass": {
+      "type": ["boolean", "null"],
+      "description": "Fixture-expectation result on the judged channel; null when the instance was not evaluable."
+    },
+    "category": {
+      "type": ["string", "null"]
+    },
+    "lane": {
+      "type": ["string", "null"],
+      "description": "operational | semantic — which declared lane produced the instance."
+    },
+    "attribution": {
+      "type": "object",
+      "description": "Failure attribution (model | runtime | hardware | scorer-artifact | protocol-limitation | unknown); never erases the measured result.",
+      "properties": {
+        "primary": {"type": "string"},
+        "evidence": {"type": "string"}
+      }
+    },
+    "scorer": {
+      "type": "string",
+      "description": "Scorer identity, e.g. welp-reliability-scorer/2."
+    }
+  },
+  "additionalProperties": true
+}

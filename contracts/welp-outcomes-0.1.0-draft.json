@@ -1,0 +1,69 @@
+{
+  "contract_id": "welp-outcomes",
+  "version": "0.1.0-draft",
+  "status": "DRAFT / PROTOCOL DEVELOPMENT",
+  "created": "2026-09-19",
+  "supersedes": {
+    "contract_id": null,
+    "note": "New vocabulary contract introduced by the 2026-09-19 methodology revision (audit bundle welp-vnext-audit-2026-09-19, CP-1). No earlier contract defined task-instance outcome semantics; campaign harnesses collapsed semantic correctness, final-answer completion, output-budget behavior, and format compliance into one boolean `pass`."
+  },
+  "purpose": "Canonical task-instance outcome semantics for every generation-bearing WELP task. Separates semantic correctness from final-answer completion and output-budget behavior so that a truncated or starved generation is never mislabeled as a semantic failure, and a substantively wrong answer is never excused as a budget artifact. Consumed by welp-reliability 0.2.0-draft, welp-final-classification 0.2.0-draft, the canonical harness, and the campaign validator.",
+  "applies_from_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision",
+  "task_outcome_record": {
+    "description": "Every generation-bearing task instance emits exactly one value per axis plus finish accounting.",
+    "required": ["semantic", "completion", "budget", "finish_reason"],
+    "optional_when_measurable": ["reasoning_tokens", "answer_tokens"],
+    "semantic": {
+      "vocabulary": ["PASS", "FAIL", "NOT_EVALUABLE"],
+      "PASS": "The usable final-answer channel satisfies the frozen task expectation.",
+      "FAIL": "The usable final-answer channel is present and violates the frozen task expectation (wrong answer, fabricated assertion, missing required behavior).",
+      "NOT_EVALUABLE": "No conclusion about semantic correctness is supported by the evidence: empty/no final-answer channel, or output truncated before a usable final answer exists. Reasoning traces may support ATTRIBUTION but never substitute for the final answer and never justify semantic PASS.",
+      "rules": [
+        "Judged from the final-answer channel only (content channel; for reasoning runtimes the channel that the served template designates as the answer).",
+        "Incomplete output does NOT automatically imply FAIL.",
+        "NOT_EVALUABLE is MANDATORY when a conclusion cannot be supported (empty answer, answerless truncation).",
+        "Format-only violations on strict tasks (format_is_contract) are FAIL, not NOT_EVALUABLE, when a complete answer channel exists: the model completed and answered wrongly-shaped output.",
+        "Denial/quote normalization MUST NOT be so broad that a fabricated assertion hides inside quote-like formatting (see scorer welp-reliability-scorer/2)."
+      ]
+    },
+    "completion": {
+      "vocabulary": ["COMPLETE", "FAIL_LENGTH", "EMPTY_ANSWER", "INVALID_STOP"],
+      "COMPLETE": "finish_reason is stop (or a legitimate terminal state such as tool_calls for a tool task) AND the final-answer channel is non-empty.",
+      "FAIL_LENGTH": "Generation hit the frozen generation ceiling (finish_reason length, or measured completion_tokens >= the frozen ceiling when the runtime does not expose finish_reason).",
+      "EMPTY_ANSWER": "finish_reason is a normal terminal state but the final-answer channel is empty/whitespace while completion_tokens > 0 (content consumed without an answer; audit taxonomy NONSENSICAL_STOP folds into this value).",
+      "INVALID_STOP": "finish_reason is missing, unrecognized, or evidences an abnormal/aborted stop for the task type."
+    },
+    "budget": {
+      "vocabulary": ["WITHIN", "EXHAUSTED_IN_REASONING", "EXHAUSTED_IN_ANSWER", "UNKNOWN"],
+      "WITHIN": "No budget exhaustion observed: finish_reason is a normal terminal state before the frozen ceiling.",
+      "EXHAUSTED_IN_REASONING": "Ceiling reached while the final-answer channel is empty and a reasoning channel/tokens are present: the budget was consumed inside reasoning.",
+      "EXHAUSTED_IN_ANSWER": "Ceiling reached with the final-answer channel non-empty (partial answer), or with no reasoning channel (all consumption is attributable to the answer lane by definition).",
+      "UNKNOWN": "Exhaustion occurred but the reasoning/answer split cannot be attributed from retained evidence (e.g. ceiling reached, both channels empty, no reasoning accounting). UNKNOWN is honest; guessing is prohibited.",
+      "rules": [
+        "Hidden/unsupported reasoning-token accounting is UNKNOWN, never inferred from channel text alone.",
+        "budget is OPERATIONAL evidence, never a semantic label."
+      ]
+    },
+    "finish_reason": {
+      "requirement": "MANDATORY wherever the runtime exposes it; recorded verbatim per task instance.",
+      "when_not_exposed": "If the runtime does not expose finish_reason, record null and derive completion from measured token accounting: completion_tokens >= frozen ceiling => FAIL_LENGTH; empty content => EMPTY_ANSWER; else INVALID_STOP. Every such derivation is labeled DERIVED in the phase summary.",
+      "hardcoded_null_prohibition": "A harness that can capture finish_reason but writes a constant null is a scorer-artifact defect (the pre-revision ctx.py defect); prohibited from the methodology-revision snapshot on."
+    }
+  },
+  "aggregation_semantics": {
+    "semantic_clean_rate": "count(semantic == PASS) / count(semantic != NOT_EVALUABLE) per phase-lane; reported CONDITIONAL on completion and always accompanied by unconditional completion rate.",
+    "completion_rate": "count(completion == COMPLETE) / count(instances).",
+    "truncation_rate": "count(completion == FAIL_LENGTH) / count(instances). The word truncation is never used for a semantic judgment.",
+    "operational_failure": "completion != COMPLETE is an operational failure; it is deployment-relevant and reported as such, but it is not a semantic failure.",
+    "not_evaluable_handling": "NOT_EVALUABLE instances are excluded from semantic-rate denominators (not counted as passes or semantic failures) and are always visible in counts; a phase whose NOT_EVALUABLE share exceeds its completion-rate complement is reported as budget/operational-limited rather than semantically scored."
+  },
+  "failure_attribution": {
+    "purpose": "Every classification-relevant FAIL carries a cause attribution where evidence allows. Attribution does not erase or soften the measured result.",
+    "vocabulary": ["model", "runtime", "hardware", "scorer-artifact", "protocol-limitation", "unknown"],
+    "convention": "Reported in REPORT.md failure findings and in machine-readable phase summaries as attribution: {primary, evidence}. Multiple causes may be listed; primary is the dominant evidenced cause. UNKNOWN when evidence does not support any cause."
+  },
+  "compatibility": {
+    "historical_campaigns": "Frozen campaigns keep their recorded boolean outcomes and are never relabeled by this contract. Scorer-only rescoring of retained raw outputs under this vocabulary is allowed as NEW supplementary evidence linked to the original event.",
+    "legacy_pass_mapping": "For cross-reading only (never for rewriting): legacy pass==true corresponds to semantic PASS with completion COMPLETE; legacy pass==false splits into semantic FAIL, NOT_EVALUABLE (operational), or FAIL (format) according to the new axes."
+  }
+}

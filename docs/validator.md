@@ -68,6 +68,28 @@ The canonical new-campaign validator.
   See [WELP website publication disposition](../protocol/WELP.md#website-publication-disposition)
   and `../schemas/welp_website_publication.schema.json`.
 - M01–M11 carried over from `validate_campaign_v2.py` 0.2.0-draft.
+- **R09–R14 (methodology-revision era, campaign snapshot date >= 2026-09-19 only; frozen
+  historical bundles remain valid unchanged):**
+  - **R09** CP-1 outcome/finish accounting: `outcome_semantics`
+    (`{contract: welp-outcomes-0.1.0-draft, task_outcome_triples: true}`) and
+    `phase_finish_accounting` entries REQUIRED; any COMPLETE rows with
+    missing/unknown finish_reason is an error.
+  - **R10** Fixture/scorer hash identity: `fixtures`/`scorers` manifest entries
+    require 64-hex `sha256`; when the referenced path resolves against the WELP
+    repo root, the recorded hash must match the file bytes
+    (`R10_fixtures_hash_mismatch` / `R10_scorers_hash_mismatch`).
+  - **R11** `campaign_outcome` REQUIRED: exactly `COMPLETE_PASS |
+    COMPLETE_WITH_GAPS | FAILED_EXECUTION | BLOCKED` (execution outcome is
+    independent of the model verdict).
+  - **R12** `generation_budget.contract = welp-generation-budget-0.1.0-draft`
+    REQUIRED, and `scorers['welp-reliability-scorer/2'].selftest = "PASS"`
+    REQUIRED before live reliability use.
+  - **R13** When the context phase executed (`phases_executed`): `context_validation`
+    REQUIRED with the exact depth set `[2, 25, 50, 75, 95]`, placement preflight
+    PASS (`max_placement_error_pp <= 0.5`), and the standardized
+    `reserve_tokens: 512`. Context deferred (early stop) is a warning, not an error.
+  - **R14** `cache_policy` REQUIRED: `scientific_arms: DISABLED_UNCACHED` with a
+    `verification` marker; cached serving arms are declared separately and labeled.
 
 ## LocalMaxxing disposition (`summaries/localmaxxing.json`)
 
@@ -97,7 +119,7 @@ The canonical new-campaign validator.
 
 ```bash
 python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
-python3 validate_campaign_welp.py selftest           # run embedded 15-fixture suite
+python3 validate_campaign_welp.py selftest           # run embedded 21-fixture suite
 python3 validators/validate_publication.py selftest
 python3 validators/validate_publication.py EXPORT PROFILE
 ```
