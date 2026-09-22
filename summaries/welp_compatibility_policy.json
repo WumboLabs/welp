@@ -1,7 +1,7 @@
 {
   "policy_id": "welp-compatibility-policy",
-  "version": "1.1.0-draft",
-  "updated": "2026-09-19",
+  "version": "1.1.1-draft",
+  "updated": "2026-09-22",
   "purpose": "Formal compatibility policy referenced by protocol/WELP.md. Supplied during the 2026-09-19 methodology revision (the file was previously referenced but missing; summaries/ was empty).",
   "rules": [
     "Frozen historical snapshots, contracts, fixtures, scorers, and campaign bundles are immutable. Reproducing a historical campaign uses the frozen artifacts recorded in that snapshot.",
@@ -14,6 +14,8 @@
   "snapshot_lineage": [
     {"snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex", "status": "frozen historical (pre-rename)"},
     {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "status": "frozen historical (naming-only)", "methodology_changed": "NO"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "current DRAFT", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"}
+    {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "methodology in force; later lifecycle deltas supersede this as latest snapshot", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule", "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "current DRAFT", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"}
   ]
 }

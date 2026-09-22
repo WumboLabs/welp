@@ -56,8 +56,10 @@ reproducible derivative, never a second hand-maintained registry.
    `publication_provenance` (campaign identity, source artifact, and content digest);
    migration-only legacy provenance must not be invented for new work. Retain old
    immutable events and append corrections with explicit supersession scope.
-7. With explicit human Git authorization, inspect scoped working/staged diffs and
-   commit the evidence files. A file cannot truthfully contain its own future commit
+7. Under the campaign's standing automatic-closeout authorization (success
+   branch of the WELP execution-state lifecycle) or explicit human Git
+   authorization, inspect scoped working/staged diffs and commit the evidence
+   files. A file cannot truthfully contain its own future commit
    SHA: use this evidence commit in the following registry commit.
 8. Update central `registry.json`: model/profile relationships, event metadata,
    scoped current-state attribution, `website_event_order`, and `canonical_evidence`
@@ -73,7 +75,9 @@ reproducible derivative, never a second hand-maintained registry.
     `data/evaluations-source.json`. Run `python3 scripts/sync_labs.py` twice (second
     run no-op), `--check`, `selftest`, publication-gap checks, `zola build`, and
     `python3 scripts/check_evaluations_site.py`.
-11. Inspect scoped website diffs; commit/push/deploy only with explicit authorization.
+11. Inspect scoped website diffs; commit/push/deploy under the campaign's
+    standing automatic-closeout authorization (success branch) or explicit
+    human authorization.
     Verify the actual live model page, immutable report/profile links, related
     shared-event pages, and preserved compatibility URLs before marking published.
 12. Close the local publication disposition and roadmap entry without altering

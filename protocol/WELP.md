@@ -58,7 +58,8 @@ Every model campaign must evaluate LocalMaxxing eligibility once the canonical
 practical profile is selected, and record exactly one completion disposition.
 A campaign must never silently omit LocalMaxxing; a generic "no external
 benchmark submission" rule does not suppress this step. External actions other
-than LocalMaxxing benchmark submission keep their separate human gates.
+than LocalMaxxing benchmark submission follow the campaign execution-state
+branch below.
 
 Canonical statuses (exactly these values):
 
@@ -109,15 +110,15 @@ Rules:
 Terminal closeout (lifecycle ordering):
 
 For an eligible final accepted profile the lifecycle order is:
-MEASURE → HUMAN ACCEPT → check for an exact existing LocalMaxxing result →
+MEASURE → check for an exact existing LocalMaxxing result →
 SUBMIT if no exact valid duplicate exists → VERIFY the real service record →
-ARCHIVE artifacts. Artifact archival occurs only AFTER the LocalMaxxing
+PUBLICATION → ARCHIVE artifacts. Artifact archival occurs only AFTER the LocalMaxxing
 terminal disposition is established for eligible final profiles.
 
 `MEASURED_NOT_SUBMITTED` is a TEMPORARY state. It is valid only while
 scientific work is still active: profile selection may still change,
-optimization remains pending, the human acceptance gate is still open, or a
-bounded re-test/supplement remains in flight. At terminal closeout, an
+optimization remains pending, the campaign has not reached its terminal
+execution state, or a bounded re-test/supplement remains in flight. At terminal closeout, an
 eligible final profile must NOT silently remain `MEASURED_NOT_SUBMITTED`; a
 terminal non-submission requires an explicit recorded reason:
 
@@ -136,32 +137,48 @@ scientific profile or result changes after an earlier measurement, re-check
 eligibility and exact identity before submitting or reusing any earlier
 record.
 
-Two-stage campaign lifecycle (science turn / closeout turn):
+Campaign execution-state lifecycle (automatic closeout branch):
 
-Normal model work runs in two stages with exactly one human acceptance gate
-between them:
+Campaign EXECUTION STATE is distinct from model CLASSIFICATION. `READY`,
+`READY_WITH_GUARDRAILS`, `LIMITED_ROLE_ONLY`, `NOT_READY`, and
+`INTEGRATION_BLOCKED` describe the model, not the lifecycle. A negative or
+guarded verdict is still a successfully completed campaign when the required
+work executed correctly and the verdict is evidence-backed; for example
+`COMPLETE_PASS / NOT_READY` is a valid terminal outcome.
 
-- **Stage A — science:** test, validate, produce the final scientific
-  report/recommendation, and stop once for human scientific acceptance. No
-  external actions beyond the campaign boundary.
-- **Stage B — closeout:** after explicit human acceptance, complete the whole
-  terminal lifecycle in one authorized pass: finalize the canonical profile;
-  LocalMaxxing duplicate check; submit the eligible final result; verify the
-  real service state; commit/push methodology if needed; publish central
-  evidence; attribute/pin canonical commits; update/publish the website
-  derivative; archive and verify the model artifact; close testing debt and
-  the campaign record.
+**Success branch** — campaign execution is COMPLETE_PASS/PASS, required
+validators are green, evidence is internally consistent, and there is no
+unresolved methodology, runtime, artifact, scope, or external-service
+blocker. Then there is NO human scientific-acceptance gate: the same
+execution continues automatically through normal terminal closeout in one
+pass — finalize the canonical profile; LocalMaxxing duplicate check,
+submission if needed, and real service-state verification; commit/push
+methodology if needed; publish central evidence; attribute/pin canonical
+commits; update/publish the website derivative; archive and verify the
+model artifact; close testing debt and the campaign record. Routine
+closeout actions are executed, not re-gated: an agent must not stop again
+mid-closeout merely because staging, a commit, a push, registry attribution
+with real commit SHAs, website deployment, or final artifact archival/removal
+is required.
 
-A closeout handoff MAY explicitly authorize the bounded Git
-staging/commit/push, publication, deployment, and archival actions for that
-exact closeout. When it does, those routine actions are executed, not
-re-gated: an agent must not stop again mid-closeout merely because staging,
-a commit, a push, registry attribution with real commit SHAs, website
-deployment, or final artifact archival/removal is required. Human SCIENTIFIC
-acceptance remains the Stage A → Stage B transition and is never bypassed;
-blanket authorization outside a human-approved closeout is never inferred.
+**Failure/incomplete branch** — anything else: BLOCKED, FAIL,
+FAILED_EXECUTION, COMPLETE_WITH_GAPS, validator failure, evidence
+inconsistency, unresolved methodology/runtime/artifact issues,
+authentication unavailable, LocalMaxxing service failure, publication or
+deployment failure, archive/hash mismatch, or unexpected scope expansion.
+Then STOP: preserve evidence, finish REPORT.md, state the exact blocker,
+the smallest next action, and the exact report path, and wait for human
+review. Never continue terminal publication/archival through an invalid
+campaign.
 
-At authorized terminal closeout, none of `MEASURED_NOT_SUBMITTED`,
+The success-branch authorization is bounded to the repositories and
+routine operations this closeout requires. It never covers force push,
+destructive reset/clean, deleting unrelated files, overriding failed
+validators, methodology redesign, unrelated refactoring or upgrades,
+fabricating external-service state, or silently resolving merge conflicts;
+any such event converts the campaign to the failure branch.
+
+At terminal closeout, none of `MEASURED_NOT_SUBMITTED`,
 `WEBSITE_READY`, `PENDING_HUMAN_GATE`, or local-retained artifacts may stand
 as quiet end states for an eligible final profile. Valid terminal
 non-completion requires a REAL blocker — authentication unavailable, service
@@ -203,15 +220,16 @@ Rules:
   `WumboLabs/evaluations` repository) rather than inventing a canonical URL. A website
   record generated from a pending export must state that evidence publication
   is pending; it must not claim canonical public evidence exists. `PENDING_HUMAN_GATE`
-  and `WEBSITE_READY` are intermediate, non-terminal states: once the human has
-  accepted the science and authorized the closeout's publication actions, the
-  disposition must be driven to `WEBSITE_PUBLISHED` (or a real blocker recorded),
-  not left standing as a quiet end state.
+  and `WEBSITE_READY` are intermediate, non-terminal states: once the campaign
+  reaches the success branch of the execution-state lifecycle (or the human
+  authorizes closeout), the disposition must be driven to `WEBSITE_PUBLISHED`
+  (or a real blocker recorded), not left standing as a quiet end state.
 - Publishing the public evidence repository, committing, pushing, and
-  deploying the website remain human-gated external actions; generating the
-  export and local derivative records does not authorize any of them. An
-  explicit human closeout authorization for the specific campaign satisfies
-  those gates for its bounded scope; absent one, they stay closed.
+  deploying the website are gated actions: the success branch of the
+  campaign execution-state lifecycle standing-authorizes them for that
+  campaign's bounded scope, as does an explicit human closeout
+  authorization. Absent either, they stay closed; generating the export
+  and local derivative records alone does not authorize any of them.
 - The website consumes a full-commit, SHA-256-pinned central registry and
   immutable event exports through deterministic sync. Its local registry,
   record pages, and generated indexes are derivatives, not separate sources.
@@ -243,7 +261,7 @@ clearly subordinate companions. The hierarchy is readable from filenames alone.
 
 | Artifact | Role | Authority |
 |---|---|---|
-| `REPORT.md` | PRIMARY SCIENTIFIC REPORT: outcome, scientific interpretation, measurements, negative findings, classifications, context dispositions, limitations, next human gate | authoritative source of truth for the campaign |
+| `REPORT.md` | PRIMARY SCIENTIFIC REPORT: outcome, scientific interpretation, measurements, negative findings, classifications, context dispositions, limitations, next gate (human review on the failure/incomplete branch; none on the clean success branch) | authoritative source of truth for the campaign |
 | `WELP-LAB-RECORD.md` | standardized structured WELP Lab Record | companion/index of the SAME campaign; not another experiment, another run, or an independent report |
 | `<campaign-slug>-review-report.md` | human review summary (conventionally under the campaign bundle as `<campaign>/reviews/`) | noncanonical convenience summary; must prominently link `REPORT.md` and `WELP-LAB-RECORD.md` |
 | `<campaign>-prior-attempt-quarantined/` | superseded prior execution preserved intact | superseded forensic evidence; never current evidence |

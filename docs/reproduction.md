@@ -19,14 +19,16 @@
 9. **Final classification.** `classify.py` consumes the evidence bundle deterministically. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result.
 10. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
 11. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` and the public-safe website-publication export `summaries/website-publication.json` with its explicit disposition — and, when requested, a `<campaign-slug>-review-report.md` human summary under the campaign bundle `<campaign>/reviews/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
-12. **Publication routing (separate human authorization required).** Follow the
+12. **Publication routing.** Follow the
     [four-layer publication contract](publication.md): local `research/model-evaluations/`
     holds working/raw science; `WumboLabs/evaluations` holds public scientific
     evidence; `wumbolabs.dev/evaluations/` is human discovery/share; the NAS archive
     holds large model artifacts. Obsidian remains the internal operational handbook.
     LocalMaxxing disposition rules in step 8 are unchanged. Current exports identify
     model/profile/event and immutable central repo/full-commit/path. Never create a
-    new `eval-*` repository. Pushes and website deployment remain explicit human gates.
+    new `eval-*` repository. Pushes and website deployment run under the campaign's
+    standing automatic-closeout authorization (success branch of the WELP
+    execution-state lifecycle) or explicit human authorization.
 
 ## Model-card context checklist
 
@@ -65,6 +67,6 @@ Before completion, verify:
 
 ## Out of scope here
 
-- git init, LICENSE selection, and public push (human)
+- git init, LICENSE selection, and the initial public push (human)
 - New model campaign execution
 - LLMGauge / runtimes / model binaries
