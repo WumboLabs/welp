@@ -1,0 +1,10 @@
+{
+  "contract_id": "welp-final-classification",
+  "version": "0.3.1-draft",
+  "status": "DRAFT / PROSPECTIVE CORRECTION",
+  "applies_from_snapshot": "welp-next-snapshot-2026-09-23-profile-identity-clarification",
+  "supersedes": "welp-final-classification-0.3.0-draft",
+  "correction": "The selected deployment profile ID identifies the artifact, quantization, runtime/build, hardware, configured context, chat template, DEPLOYMENT prompt, sampler and effective reasoning control. It does not contain the generation-budget lane. Semantic and operational lanes are separately recorded measurement configurations of that same deployment profile; each retains its own ceiling, calibration/SLO rationale, task identities and observed costs. The selected classification profile ID must equal the DEPLOYMENT prompt lane's profile ID, and every dimension must use that shared deployment profile ID. Never pool a different artifact, prompt, runtime or effective reasoning state under that ID.",
+  "unchanged": "Five readiness states, 0.2.0 dimension thresholds, campaign execution-state independence and 0.3.0 blocked-execution guard remain in force. Earlier frozen contracts and campaigns remain immutable.",
+  "implementation": "harness/classification.py; validators/validate_campaign_welp.py; selftest commands documented in docs/validator.md"
+}

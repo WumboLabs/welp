@@ -18,8 +18,11 @@
    OPTIMIZED lane. Choose a bounded semantic ceiling from disjoint nonscored
    calibration before scored answers; operational ceilings follow the real role
    SLO, not the semantic ceiling. Record completion, reasoning/answer tokens,
-   time and cost separately by lane. `welp-final-classification-0.3.0-draft`
-   requires one selected profile for every verdict dimension.
+   time and cost separately by lane. `welp-final-classification-0.3.1-draft`
+   requires all verdict dimensions to share the selected DEPLOYMENT profile ID;
+   budget lanes remain separate measurements under that profile, not distinct
+   selected profile IDs. The first 2026-09-23 snapshot retains its frozen
+   0.3.0 wording; the profile-identity clarification is a subsequent snapshot.
 5. **Phase 5 module applicability.** Freeze `phase5_applicability.json` before any Phase-5 execution.
 6. **Long-job durability.** Absolute path declared first; existence + row count + SHA-256 verified after exit; only then COMPLETE.
 7. **Context characterization (mandatory coverage accounting).** Freeze the [Context Scaling](../protocol/context-scaling.md) method revision/hash and answer the checklist below before context testing; finalize every row in the [model-card coverage table](../lab-record-template/README.md#model-card-context-coverage), including untested ranges. Capacity admission alone is not validation; practical default selection is not a context stop condition.

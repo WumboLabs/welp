@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """classification.py — canonical final classification (welp-phase-harness/1).
 
-Implements welp-final-classification 0.3.0-draft prospectively, retaining
-the 0.2.0 dimension gates and R-C1..R-C8. Inputs are structured phase outputs
-(dimensions) and the campaign execution outcome; the headline readiness state
-is derived, never asserted. Campaign success is NOT a positive model verdict.
+Implements welp-final-classification 0.3.1-draft prospectively, retaining
+the 0.2.0 dimension gates and R-C1..R-C8. Semantic and operational budget
+lanes are distinct measurements under one selected deployment profile.
+Inputs are structured phase outputs (dimensions) and the campaign execution
+outcome; readiness is derived, never asserted. Success is not a positive verdict.
 
 Selftest: python3 harness/classification.py selftest
 """
 import sys
 
 MODULE_ID = "welp-harness-classification/1.0.0-draft"
-CONTRACT = "welp-final-classification-0.3.0-draft"
+CONTRACT = "welp-final-classification-0.3.1-draft"
 
 READINESS = ["READY", "READY_WITH_GUARDRAILS", "LIMITED_ROLE_ONLY", "NOT_READY", "INTEGRATION_BLOCKED"]
 CAMPAIGN_OUTCOMES = ["COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"]
@@ -24,13 +25,16 @@ def classify(semantic=None, budget=None, context_usability="NOT_CHARACTERIZED",
              unsafe_blocker=False, replicated_fabrication=False,
              completion_both_seeds_below_80=False,
              alternative_lane_completes=False, applicable_modules_all_pass=True,
-             practical_rung_validated=False, profile_id=None, dimension_profile_ids=None):
+             practical_rung_validated=False, profile_id=None, dimension_profile_ids=None,
+             deployment_profile_id=None):
     """Derive the headline readiness + record. Rules R-C1..R-C8, in order."""
     semantic = semantic or "ACCEPTABLE"
     budget = budget or "FAIR"
     if campaign_outcome not in CAMPAIGN_OUTCOMES:
         raise ValueError(f"bad campaign outcome {campaign_outcome!r}")
     if profile_id is not None:
+        if profile_id != deployment_profile_id:
+            raise ValueError("selected classification profile must match DEPLOYMENT prompt profile")
         if not profile_id or not isinstance(dimension_profile_ids, dict):
             raise ValueError("classification requires dimension profile identities")
         expected = {"SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE",
@@ -173,13 +177,20 @@ def selftest() -> int:
         "SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE",
         "CONTEXT_USABILITY", "INTEGRATION_QUALITY")}
     rec = classify(semantic="STRONG", budget="POOR", campaign_outcome="COMPLETE_PASS",
-                   profile_id="profile-a", dimension_profile_ids=identities)
+                   profile_id="profile-a", deployment_profile_id="profile-a",
+                   dimension_profile_ids=identities)
     if rec["profile_id"] != "profile-a":
         fails.append("profile identity not retained")
     try:
-        classify(profile_id="profile-a", dimension_profile_ids={
-            **identities, "BUDGET_DISCIPLINE": "profile-b"})
+        classify(profile_id="profile-a", deployment_profile_id="profile-a",
+                 dimension_profile_ids={**identities, "BUDGET_DISCIPLINE": "profile-b"})
         fails.append("cross-profile budget contamination accepted")
+    except ValueError:
+        pass
+    try:
+        classify(profile_id="profile-a", deployment_profile_id="profile-b",
+                 dimension_profile_ids=identities)
+        fails.append("non-deployment profile selected")
     except ValueError:
         pass
     print(MODULE_ID, "selftest:", "PASS" if not fails else fails)

@@ -97,10 +97,14 @@ The canonical new-campaign validator.
   frozen SHA-256 prompt-lane/profile identities, predeclared bounded semantic
   calibration and positive operational ceiling. R16 requires Family A 1.2
   final-rendered-token solver, lane reserves, matched preflight/inference
-  tokenization and a hash-pinned fixture. Completed classifications use the
-  `welp-final-classification-0.3.0-draft` contract and one selected profile
-  for all dimensions. Blocked/failed execution has no readiness verdict,
-  except an independently evidenced integration blocker on a blocked campaign.
+  tokenization and a hash-pinned fixture. The first 2026-09-23 snapshot retains
+  its frozen `welp-final-classification-0.3.0-draft` record. The subsequent
+  profile-identity clarification snapshot uses 0.3.1 and requires every
+  dimension's selected profile ID to equal the DEPLOYMENT prompt profile ID;
+  semantic and operational budget lanes remain separate measurements under
+  that same deployment profile. Blocked/failed execution has no readiness
+  verdict except an independently evidenced integration blocker on a blocked
+  campaign.
 
 ## LocalMaxxing disposition (`summaries/localmaxxing.json`)
 
@@ -130,7 +134,7 @@ The canonical new-campaign validator.
 
 ```bash
 python3 validators/validate_campaign_welp.py <campaign_dir> # exit 0 valid, 1 invalid
-python3 validators/validate_campaign_welp.py selftest       # embedded 26-fixture suite
+python3 validators/validate_campaign_welp.py selftest       # embedded 28-fixture suite
 python3 validators/validate_publication.py selftest
 python3 validators/validate_publication.py EXPORT PROFILE
 ```

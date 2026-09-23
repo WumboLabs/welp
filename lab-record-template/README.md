@@ -37,8 +37,11 @@ Required sections:
 18. Prospective deployment evidence: selected profile ID, exact prompt-lane
     hashes/template/sampler/effective reasoning state, disjoint calibration
     and bounded semantic ceiling, real operational role/SLO ceiling, completion
-    and token/time/resource costs by lane. A classification dimension cannot
-    borrow a different profile. Record applicable real-work module results,
+    and token/time/resource costs by lane. Semantic and operational ceilings
+    are distinct measurements of the same selected DEPLOYMENT profile; budget
+    lane is not part of the shared profile ID. A classification dimension cannot
+    borrow a different artifact/prompt/runtime/reasoning profile. Record applicable
+    real-work module results,
     deterministic and qualitative judgments, tool recovery and multi-turn
     observations, and NOT_TESTED/NOT_APPLICABLE reasons separately.
 

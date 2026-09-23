@@ -1,6 +1,6 @@
 {
   "policy_id": "welp-compatibility-policy",
-  "version": "1.2.0-draft",
+  "version": "1.2.1-draft",
   "updated": "2026-09-23",
   "purpose": "Prospective WELP methodology and historical compatibility policy; snapshot manifests remain immutable.",
   "rules": [
@@ -12,6 +12,7 @@
     "No cross-methodology score equivalence is claimed between v1 boolean outcomes, 2026-09-19 CP-1 triples, and prospective calibrated semantic/deployment prompt lanes. Each comparison must retain prompt/profile/budget/fixture identities.",
     "2026-09-23 supersedes word-fraction Family A construction with final-rendered-token placement; retains the five facts, depths and ±0.50 pp threshold. Earlier 8K/16K placement failures are fixture-limited historical evidence, not model retrieval failures. New lane-specific context reserves supersede a universal 512-token semantic reserve; 512 remains historical or a real declared operational cap.",
     "Prompt lanes MINIMAL, DEPLOYMENT, PUBLISHER when material, OPTIMIZED when preregistered are prospective. Historical prompts cannot be retroactively attributed to a new lane without exact byte/config evidence. Classification profile identity is required prospectively; blocked methodology execution does not imply an integration-blocked model.",
+    "Append-only 2026-09-23 profile clarification: a selected deployment profile ID fixes artifact/quant/runtime/build/hardware/context/template/DEPLOYMENT prompt/sampler/effective reasoning, but not generation-budget lane. Semantic and operational lanes are distinct measurements of the same selected deployment profile. Classification 0.3.1 and validator require selected profile equal DEPLOYMENT prompt profile; the prior 0.3.0 wording stays frozen under its own snapshot.",
     "Blocked LFM2.5-8B-A1B evidence and its BOS-invalidated attempt remain untouched: C0/artifact/runtime identity and measured fit/performance may be cited if unchanged and verified; reliability under arbitrary historical ceilings and context Family A 1.1 scores are not equivalent to prospective lanes/placement. Repeat reliability semantic/operational lanes and useful-context rungs under the new frozen method in a NEW linked campaign; recheck admission/profile, do not promote 2048 diagnostic outputs or reasoning traces to a verdict.",
     "Unchanged: exact artifact/hardware/runtime provenance, CP-1 outcome axes, evidence classes, early host-safety stops, execution state distinct from verdict, append-only evidence, public central registry authority and clean-success automatic lifecycle closeout."
   ],
@@ -22,6 +23,7 @@
     {"snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule", "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"},
     {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "automatic-closeout lifecycle in force; superseded as latest snapshot by documentation delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"},
     {"snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation", "status": "historical DRAFT; README lineage correction; 2026-09-19 measurement and 2026-09-22 lifecycle applied", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing", "status": "current DRAFT; prospective real-work methodology and automatic lifecycle in force", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-readme-lineage-documentation"}
+    {"snapshot_id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing", "status": "frozen DRAFT; 0.3.0 profile-lane wording superseded by append-only correction", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-readme-lineage-documentation"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-23-profile-identity-clarification", "status": "current DRAFT; deployment profile identity excludes budget lane; automatic lifecycle in force", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-23-real-hardware-real-testing"}
   ]
 }

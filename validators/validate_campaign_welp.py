@@ -522,10 +522,16 @@ def check(root: Path):
             else:
                 bad("R15_deployment_lanes", "frozen prompt identities and bounded calibrated/operational ceilings required")
             classification = m.get("classification")
+            correction_era = (sid != "welp-next-snapshot-2026-09-23-real-hardware-real-testing")
+            classification_contract = ("welp-final-classification-0.3.1-draft"
+                                       if correction_era else "welp-final-classification-0.3.0-draft")
+            deployment = prompt.get("DEPLOYMENT") if isinstance(prompt, dict) else None
+            deployment_profile = deployment.get("profile_id") if isinstance(deployment, dict) else None
             if m.get("campaign_outcome") not in {"BLOCKED", "FAILED_EXECUTION"}:
                 if (isinstance(classification, dict)
-                        and classification.get("contract") == "welp-final-classification-0.3.0-draft"
+                        and classification.get("contract") == classification_contract
                         and classification.get("profile_id")
+                        and (not correction_era or classification["profile_id"] == deployment_profile)
                         and isinstance(classification.get("dimension_profile_ids"), dict)
                         and set(classification["dimension_profile_ids"]) == PROFILE_DIMENSIONS
                         and set(classification["dimension_profile_ids"].values())
@@ -1162,6 +1168,17 @@ def _prospective_bundle(td, name, mutate=None):
     if mutate:
         mutate(manifest)
     return _revision_bundle(td, name, manifest_overrides=manifest)
+
+
+def _corrected_bundle(td, name, mutate=None):
+    def correction(m):
+        m["protocol_snapshot"]["id"] = "welp-next-snapshot-2026-09-23-profile-identity-clarification"
+        m["classification"]["contract"] = "welp-final-classification-0.3.1-draft"
+        if mutate:
+            mutate(m)
+    return _prospective_bundle(td, name, correction)
+
+
 def selftest():
     with tempfile.TemporaryDirectory() as td:
         rg_legacy = check(_good_legacy_wlep(td))
@@ -1198,6 +1215,11 @@ def selftest():
         rb_pro_profile = check(_prospective_bundle(
             td, "bad_prospective_profile", lambda m: m["classification"][
                 "dimension_profile_ids"].update({"BUDGET_DISCIPLINE": "other-profile"})))
+        rg_corrected = check(_corrected_bundle(td, "good_corrected"))
+        rb_corrected_profile = check(_corrected_bundle(
+            td, "bad_corrected_profile", lambda m: m["classification"].update({
+                "profile_id": "other-profile",
+                "dimension_profile_ids": {key: "other-profile" for key in PROFILE_DIMENSIONS}})))
         fails = []
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
                          ("welp_with_legacy_evidence_rejected", rg_mixed),
@@ -1226,11 +1248,15 @@ def selftest():
         if not rg_pro["valid"]:
             fails.append("prospective bundle rejected: " + str(
                 [x for x in rg_pro["findings"] if x[0] == "error"]))
+        if not rg_corrected["valid"]:
+            fails.append("corrected bundle rejected: " + str(
+                [x for x in rg_corrected["findings"] if x[0] == "error"]))
         for label, record, rule in [
             ("prompt", rb_pro_prompt, "R15_deployment_lanes"),
             ("context", rb_pro_context, "R16_context_lane_preflight"),
             ("reserve", rb_pro_reserve, "R16_context_lane_preflight"),
             ("profile", rb_pro_profile, "R16_classification_profile"),
+            ("deployment profile", rb_corrected_profile, "R16_classification_profile"),
         ]:
             if record["valid"] or not any(
                     x[0] == "error" and x[1] == rule for x in record["findings"]):
@@ -1275,7 +1301,7 @@ def selftest():
         if not any(f[0] == "warning" and f[1] == "R13_context_not_executed" for f in rg_rev_deferred["findings"]):
             fails.append("revision_context_deferred_missing_R13_warning")
         print(json.dumps({
-            "fixture_sets": 26,
+            "fixture_sets": 28,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],

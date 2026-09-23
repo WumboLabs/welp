@@ -1,0 +1,95 @@
+{
+  "snapshot_id": "welp-next-snapshot-2026-09-23-profile-identity-clarification",
+  "status": "DRAFT — NOT v1.0",
+  "welp_public_identity": "WELP — WumboLabs Evaluation Lifecycle Protocol (repo-candidate)",
+  "created_utc": "2026-09-23T15:46:37.939065+00:00",
+  "migration_type": "append-only-profile-identity-methodology-correction",
+  "methodology_changed": "YES",
+  "naming_changed": "NO",
+  "parent_snapshot": "welp-next-snapshot-2026-09-23-real-hardware-real-testing",
+  "parent_manifest": "../welp-next-snapshot-2026-09-23-real-hardware-real-testing/manifest.json (IMMUTABLE; SHA-256 62d47481c6c32a438dd329757529f1a26f7ee17e0a51656337db91243bb37402)",
+  "basis": "The immutable parent 0.3.0 contract included budget lane in selected profile ID while classification required semantic and operational dimensions to share one selected profile. Distinct budget lanes cannot both be the same lane-specific ID. This delta defines a common deployment profile with separate measurement lanes and binds classification to DEPLOYMENT prompt profile.",
+  "changes": {
+    "CP-PROFILE-ID": "Classification 0.3.1 removes budget lane from selected deployment profile identity while preserving separate lane identities/results, binds classification selected profile to DEPLOYMENT prompt profile, and retains 0.2 gates and blocked-outcome semantics.",
+    "COMPAT": "Parent manifest and 0.3.0 contract remain immutable; the first 2026-09-23 snapshot remains historical and is accepted by date+snapshot-aware validator. New linked campaigns use this correction; no model data or verdict changed."
+  },
+  "frozen_artifact_sha256": {
+    "protocol": {
+      "protocol/WELP.md": "f2b565ce455ce091b3cfc60212f8bf621d5d090750c1f2389b122344837a2ddd",
+      "protocol/context-scaling.md": "36363127afa67133b616cc76b4a73cb034ebd370442054a71b87ff50f65b2f3a"
+    },
+    "contracts": {
+      "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+      "contracts/welp-deployment-lanes-0.1.0-draft.json": "97d33d10889ca3d84730435a1182b02d93896549a682c6b342d7311f33c20070",
+      "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+      "contracts/welp-final-classification-0.3.0-draft.json": "2a15aca1cda9b608426a2d94a2c422f4a94552eeee9084da51593fa9204b4481",
+      "contracts/welp-final-classification-0.3.1-draft.json": "d790d963b98de73ad04717af5071d1667b1feddaeeccd87282aa62eaa446cae4",
+      "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+      "contracts/welp-modules.json": "80fbaf767b3f9da6a1db65b40f4ac50227efbbd9380affa4ad5e9fc371ab53ea",
+      "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+      "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+      "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+      "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+      "contracts/welp-real-work-0.1.0-draft.json": "71e6014d9edcdf78bb1cd5c385c211845b8fc0a5c725fb8f8e8a4dadd37cb558",
+      "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+      "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+      "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed"
+    },
+    "harness": {
+      "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+      "harness/capabilities.py": "992929adc4d1e8d866bedf0b2c0ff2522c14699b5ee6374a261630468942c06d",
+      "harness/classification.py": "80bf5c8142d651ec5e142424418387a13918d15612e8d8f3bc7026175a3f85ed",
+      "harness/context.py": "c8bda2de1fb23a76627a9fadc5b616068bd749e471b0c914baeadc60b351c828",
+      "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "harness/reliability.py": "702abc9dc92787718d5e082df8a8a6d36c7dba1fb9e5ec39dd8e52640d169a96",
+      "harness/welp_outcomes.py": "4fe8f751654cf3b2f2ce02ce3e58589148c161345f7ac5fe34d7112b8cd0126f"
+    },
+    "scorers": {
+      "scorers/rescore_acceptance.py": "98487c469b9c52f4d96243b15661c5216b265635be1f0357d91a42bb4315fe77",
+      "scorers/score_reliability.py": "7d6cbc1b9c3eba888304278b3c529454ebf1184bd9541ef04a7ab7b6dc03a4d0",
+      "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+    },
+    "fixtures": {
+      "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+      "fixtures/real_work/document-synthesis.json": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+      "fixtures/real_work/multi-turn-correction.json": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+      "fixtures/real_work/repository-timeout.json": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+      "fixtures/real_work/tool-recovery.json": "32bb940872488f2ef9f5b8de855f3af3a34de2793d3f136bd53593b3343552b7",
+      "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+      "fixtures/useful_context/family-a.json": "be091016381880723d75823bad0eadaf1ac92b673fd312b2756d73317eceeeef"
+    },
+    "schemas": {
+      "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+      "schemas/welp_campaign_manifest.schema.json": "bc9149494bccce154680f61f5c8b1b347208b65b69fd741cfdb80e169edaf475",
+      "schemas/welp_eval_profile.schema.json": "c1a64831ae0e994655b8828db7ff4dd69ed9571c90835634e307dc5683d8bcaa",
+      "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+      "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+      "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+      "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc",
+      "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+      "schemas/welp_website_publication.schema.json": "9b240984c8b6a2219e8de5caa255bbb216052e42f0b9b7baaa4dc557a5271f35"
+    },
+    "validators": {
+      "validators/validate_campaign_welp.py": "9a49c661c4ae2bdff8df19d58cf19160cb99345a128be7da1fb72aa1c2b31945",
+      "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8"
+    },
+    "docs_and_summaries": {
+      "README.md": "f46dc86f8770ce307ae929581b15ce499a0d6891f9127b73a97c5bcbe49efdb8",
+      "docs/naming-policy.md": "f1ab25aed7588ffe3b017eb819b73f2902a0dfea8c2830942ef764b38a66820d",
+      "docs/reproduction.md": "9abcc6a10d7b589564436b987679f16f1b80f4d1baebc8ce2250df3005c5a92a",
+      "docs/validator.md": "6242f95f51fc023e7ea8753152d9aac4bd5456a3c30f648a2f9fdd82c9c8f3dc",
+      "lab-record-template/LAB-RECORD-LAYOUT.md": "021fd755d2b34b3a48b6eff8bfc7839dd478ff9e8167561492d9e4d58934e87c",
+      "lab-record-template/README.md": "19d57200f32cf493975e0bff39480ba859db91e1c77c6fc9911c804e5bf18f4f",
+      "summaries/welp_compatibility_policy.json": "8671cc130f93ed42c439e5d75cbf07cb5752659e62d449d9c49ef85bb63572cc",
+      "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67"
+    }
+  },
+  "validation_at_freeze": {
+    "validator_selftest": "PASS (28 fixture sets, exit 0; old prospective snapshot accepted, corrected one accepted, cross-deployment-profile rejected)",
+    "classifier_selftest": "PASS (profile-pure and selected DEPLOYMENT profile checks)",
+    "parent_integrity": "44/52 parent-frozen files byte-identical; 8 re-frozen and one new contract",
+    "git_diff_check": "clean"
+  },
+  "historical_compatibility": "Parent and all earlier manifests, contracts, campaigns, scores and scientific registry remain unchanged.",
+  "model_testing_resume_gate": "Future campaigns use this snapshot and classification 0.3.1; freeze one selected deployment profile and separate semantic/operational budget lanes before inference."
+}

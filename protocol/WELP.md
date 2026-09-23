@@ -399,6 +399,16 @@ tokens, reasoning and total latency where observable, finish reason, cost and
 availability. Unknown hidden tokens remain UNKNOWN. A capability PASS at high
 cost can coexist with deployment NOT_READY for that role.
 
+The selected **deployment profile ID excludes generation-budget lane**:
+it fixes artifact/quant, runtime/build, hardware, configured context, chat
+template, DEPLOYMENT prompt, sampler and effective reasoning control.
+Semantic and operational ceilings are separate measurement lanes **of that
+same profile**, each retaining its own calibration/SLO rationale, task and
+outcome identity. All classification dimensions refer to the selected
+DEPLOYMENT profile ID; do not borrow another prompt/profile's capability
+or budget result. This clarification supersedes the profile definition in
+the immutable 0.3.0 classification contract; see 0.3.1.
+
 Prompt identities are predeclared and hash-frozen: MINIMAL (bounded raw-use
 subset), DEPLOYMENT (generic role prompt; primary deployment conclusion),
 PUBLISHER (official materially distinct settings if supported), and optional
@@ -461,7 +471,7 @@ promotion of truncated responses. See `summaries/welp_compatibility_policy.json`
 - `welp-context` 0.1.0-draft (superseded for full-context claims by `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
-- `welp-final-classification` 0.3.0-draft (profile-pure prospective verdict and blocked-execution guard; retains 0.2.0 dimension gates)
+- `welp-final-classification` 0.3.1-draft (selected DEPLOYMENT profile shared across distinct budget lanes; blocked-execution guard and 0.2.0 gates retained; corrects frozen 0.3.0 wording)
 - `welp-real-work` 0.1.0-draft (role applicability, qualitative/quantitative oracles, guarded executable fixtures)
 - `welp-preflight` 0.1.0-draft
 - Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`, `welp-omp-local-agent`.
