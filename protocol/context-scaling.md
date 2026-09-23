@@ -169,26 +169,26 @@ defect. When a runtime does not expose finish_reason, derive completion from
 measured token accounting (completion_tokens >= reserve => FAIL_LENGTH) and
 label the derivation DERIVED.
 
-**Standardized output reserve.** The context output reserve is **512 tokens**
-(`welp-generation-budget` 0.1.0-draft), derived as
-`max(512, 2 × answer_budget of the useful-context gate tasks)` — the gate
-task answer budget is 256 and measured canonical gate answers are 40–128
-tokens. Campaign-by-campaign 512-vs-640 variance is prohibited from the
-methodology-revision snapshot on; any exception must be pre-frozen, justified,
-and reported per the full-window exception rule.
+**Lane-specific reserve (prospective 2026-09-23).** The 2026-09-19
+methodology used a standardized 512-token reserve (`max(512, 2 × 256)`),
+which remains historical evidence. New campaigns reserve each lane's frozen
+total generation ceiling *before* building the near-full prompt. The semantic
+lane chooses a bounded, non-scored-calibrated ceiling for the effective
+reasoning mode (`welp-deployment-lanes` 0.1.0-draft); the operational lane uses
+a real role/SLO cap when one exists. Occupancy is measured against configured
+context minus that lane's reserve and documented safety allowance. Neither
+the semantic lane nor the operational lane silently borrows the other's
+occupancy, completion, or verdict. At any rung where a semantic reserve cannot
+leave enough input for the fixture, record NOT_APPLICABLE or PARTIAL with
+the exact reason; do not shrink the facts or fake a full-window test.
 
-**Semantic and operational lanes.** A rung whose retrieval/synthesis evidence
-is strong but whose normal operational generation budget prevented a completed
-final answer is reported **`BUDGET_LIMITED`** — not `FAILED` (the rung keeps
-its retrieval evidence visible) and not `VALIDATED`. Lane declarations:
-
-- `USEFUL_CONTEXT_MAX_OPERATIONAL`: highest rung passing all gates with a
-  completed answer **within the frozen operational profile** (frozen reserve,
-  frozen reasoning mode). This is the deployment-facing number.
-- `USEFUL_CONTEXT_MAX_SEMANTIC`: may only be claimed from a **PREDECLARED
-  non-starving lane** that actually produced a completed, scorable answer
-  (all gates PASS, completion COMPLETE). "Correct facts visible in the
-  reasoning trace" never promotes to semantic PASS.
+**Semantic and operational conclusions.** A truncated answer with positive
+retrieval/synthesis evidence is `BUDGET_LIMITED`, not retrieval FAILED or
+VALIDATED. `USEFUL_CONTEXT_MAX_SEMANTIC` requires a predeclared calibrated
+lane with a completed, scorable final answer and all gates PASS.
+`USEFUL_CONTEXT_MAX_OPERATIONAL` requires the same within the actual declared
+deployment budget/profile. A trace is never a final answer. Report total,
+reasoning and answer tokens/latency when observable and UNKNOWN otherwise.
 
 Use combined target depths **2%, 25%, 50%, 75%, and 95%**. Measure against the
 **final rendered/tokenized input**: for each target, record its actual token
@@ -199,16 +199,18 @@ and placement errors. All five placements must satisfy:
 - Preferred absolute error: **<=0.25 percentage points**.
 - Hard absolute error: **<=0.50 percentage points**.
 
-The five-depth placement set and its preflight evidence are validator-checked
-for methodology-revision-era campaigns (R13): the pre-revision campaign
-practice of four placed targets plus a ~99% instruction block does not satisfy
-the 95%-depth requirement (the qwen3-14b closeout completion of 2026-09-15 is
-the correction precedent; retained evidence stays unchanged).
-
-Render/tokenize the whole prompt, locate targets in that final token stream,
-adjust, then re-render and re-tokenize to verify occupancy and every depth.
-Nominal segment labels and independent-segment token-sum assumptions are invalid.
-Do not infer token offsets by separately tokenizing a prefix.
+The five-depth placement set is checked before inference. For the prospective
+Family A 1.2.0 fixture, call `harness/context.py:construct_family_a` with
+the intended lane's usable token budget, fixed seed, and a measurement callback
+that applies the pinned template and tokenizes the complete rendered stream
+with identical BOS/special-token behavior to inference. Locate each full target
+span uniquely in that stream; return its start offset and final token count.
+The bounded solver adjusts both filler length and positions, then checks
+occupancy and each depth. Retain its attempts and measured final token counts.
+Recheck that the inference request token count matches preflight; a mismatch
+invalidates that request. On failure stop the rung as a fixture/preflight
+blocker, never label the model retrieval FAILED. Historical 1.1.0 word-fraction
+placement and its 8K/16K incompatibility remain immutable evidence.
 
 At the highest runnable native context, use **at least two seeds**; at the
 highest runnable officially extended context, use **at least two seeds** for
@@ -222,12 +224,13 @@ five fields inside one combined prompt are **one inference request and five
 observations**, not five requests. Retain invalidated requests in execution
 accounting without counting them as valid coverage.
 
-The canonical fixture family (Family A) and its outcome evaluation live in
-`fixtures/useful_context/family-a.json` and `harness/context.py`
-(`welp-phase-harness/1.0.0-draft`); campaigns must use the canonical fixture
-and scorer rather than per-campaign copies. A supplementary Family B for
-generalization is planned P2 work and MUST NOT replace Family A as the
-canonical longitudinal fixture.
+The controlled longitudinal fixture Family A lives in
+`fixtures/useful_context/family-a.json` and `harness/context.py`; it
+characterizes *only* the controlled retrieval/synthesis dimension. For
+generalization to messy multi-document, repository and long-session tasks,
+report separate frozen families with their own tasks/oracles, geometry,
+applicability and limits. If absent, explicitly report NOT_TESTED; never
+promote a Family A maximum to every context role.
 
 ## C4 — Near-full performance and resources
 

@@ -34,6 +34,13 @@ Required sections:
 15. Model-card context coverage table below, including all untested/partial ranges and exact native/official extension maxima
 16. Separate practical-profile/baseline decision and model-card context-completeness gate
 17. Website publication disposition — `summaries/website-publication.json` disposition (`WEBSITE_READY | WEBSITE_BLOCKED | NOT_FOR_PUBLICATION | WEBSITE_PUBLISHED`), stable model/profile/event IDs, canonical-evidence state (`PUBLISHED` with `WumboLabs/evaluations` + full commit SHA + relative artifact path, or `PENDING_HUMAN_GATE` without a published citation), and website record slug. Follow the [publication operating contract](../docs/publication.md); never create a profile repository.
+18. Prospective deployment evidence: selected profile ID, exact prompt-lane
+    hashes/template/sampler/effective reasoning state, disjoint calibration
+    and bounded semantic ceiling, real operational role/SLO ceiling, completion
+    and token/time/resource costs by lane. A classification dimension cannot
+    borrow a different profile. Record applicable real-work module results,
+    deterministic and qualitative judgments, tool recovery and multi-turn
+    observations, and NOT_TESTED/NOT_APPLICABLE reasons separately.
 
 ## LocalMaxxing disposition
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """context.py — canonical useful-context phase module (welp-phase-harness/1).
 
-Implements CP-4 (protocol/context-scaling.md C3, methodology revision
-2026-09-19): standardized 512-token output reserve, verbatim finish capture
-requirements, CP-1 outcome records per request, rung dispositions including
-BUDGET_LIMITED, and the depth-set/placement contract (2/25/50/75/95 with
-0.25 pp preferred / 0.50 pp hard error).
+Implements CP-4 (protocol/context-scaling.md C3): historical 2026-09-19
+512-token comparator reserve, CP-1 outcomes, rung dispositions and the
+five-depth placement gate. Prospective Family A 1.2 construction uses the
+inference-equivalent final rendered token stream and lane-specific reserves.
 
 Selftest: python3 harness/context.py selftest
 """
@@ -32,7 +31,7 @@ STANDARD_RESERVE_TOKENS = 512
 
 
 def standardized_reserve(gate_answer_budget: int = GATE_ANSWER_BUDGET) -> int:
-    """reserve = max(512, 2 x gate answer budget) — the one documented rule."""
+    """Historical reserve = max(512, 2 x gate answer budget); not a new semantic cap."""
     return max(512, 2 * gate_answer_budget)
 
 
@@ -54,6 +53,54 @@ def placement_preflight(depths_pct):
     pref_ok = err <= PLACEMENT_PREFERRED_PP
     return {"pass": hard_ok, "max_error_pp": round(err, 3),
             "preferred": pref_ok, "hard": hard_ok}
+
+
+def construct_family_a(usable_tokens: int, seed: int, measure, max_attempts: int = 30):
+    """Place facts against the final rendered stream before any inference.
+
+    measure(content) returns (final_token_count, {fact_target: token_start}).
+    It must apply the pinned chat template and tokenize with the same BOS
+    behavior as inference. The caller retains each attempt as preflight evidence.
+    """
+    import random
+
+    if usable_tokens < 1024 or max_attempts < 1:
+        raise ValueError("invalid usable context or preflight bound")
+    fixture = json.loads(FIXTURE_FAMILY_A.read_text())
+    construction = fixture["construction"]
+    facts = construction["inserted_facts"]
+    pool = construction["word_pool"]
+    n = max(1, int(usable_tokens * 0.9))
+    positions = [max(0, min(n - 1, int(f["depth"] * n))) for f in facts]
+    attempts = []
+    for _ in range(max_attempts):
+        rng = random.Random(seed)
+        words = [rng.choice(pool) for _ in range(n)]
+        if len(set(positions)) != len(positions):
+            raise ValueError("fact positions collide at this context")
+        for pos, fact in zip(positions, facts):
+            words[pos] = fact["text"]
+        content = " ".join(words) + "\n" + construction["question_block"]
+        total, offsets = measure(content)
+        if (not isinstance(total, int) or total <= 0 or
+                set(offsets) != {f["target"] for f in facts} or
+                any(not isinstance(x, int) or x < 0 or x >= total for x in offsets.values())):
+            raise ValueError("invalid final-rendered token measurement")
+        depths = {f["target"]: 100 * offsets[f["target"]] / total for f in facts}
+        preflight = placement_preflight(depths)
+        occupancy = 100 * total / usable_tokens
+        attempts.append({"rendered_tokens": total, "occupancy_pct": occupancy,
+                         "depths_pct": depths, "placement": preflight})
+        if 97 <= occupancy <= 100 and preflight["pass"]:
+            return {"content": content, "filler_words": n, "positions": positions,
+                    "rendered_tokens": total, "preflight": attempts}
+        next_n = max(len(facts) + 1, round(n * (0.992 * usable_tokens) / total))
+        positions = [max(0, min(next_n - 1, round(
+            pos * next_n / n + (f["depth"] * total - offsets[f["target"]])
+            * next_n / total)))
+            for pos, f in zip(positions, facts)]
+        n = next_n
+    raise ValueError(f"Family A placement/occupancy failed after {max_attempts} attempts")
 
 
 def rung_outcome(gates: dict, finish, content: str, usage: dict = None,
@@ -167,6 +214,33 @@ def selftest() -> int:
         fails.append("family A must carry the five contract depths")
     if fx["generation_budget"]["reserve_tokens"] != standardized_reserve():
         fails.append("family A reserve must equal the standardized reserve")
+
+    # Synthetic tokenizer, NOT model evidence: fixed BOS/template and question tail
+    # make naive filler-fraction placement fail at 8K and 16K.
+    def synthetic_measure(content):
+        tokens = ["<bos>", "<user>"] + [word.strip(".,") for word in content.split()] + ["</user>"]
+        offsets = {}
+        for fact in fx["construction"]["inserted_facts"]:
+            target = fact["target"].split()
+            offsets[fact["target"]] = next(
+                i for i in range(len(tokens) - len(target) + 1)
+                if tokens[i:i + len(target)] == target)
+        return len(tokens), offsets
+
+    for usable in (7680, 15872):
+        try:
+            constructed = construct_family_a(usable, 42, synthetic_measure)
+            if not constructed["preflight"][-1]["placement"]["pass"]:
+                fails.append(f"Family A placement at {usable}")
+            if len(constructed["preflight"]) > 30:
+                fails.append("unbounded Family A preflight")
+        except ValueError as exc:
+            fails.append(f"Family A construction at {usable}: {exc}")
+    try:
+        construct_family_a(7680, 42, lambda _: (1, {}))
+        fails.append("malformed token evidence must fail")
+    except ValueError:
+        pass
 
     print(MODULE_ID, "selftest:", "PASS" if not fails else fails)
     return 0 if not fails else 1

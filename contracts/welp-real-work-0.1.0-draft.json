@@ -1,0 +1,21 @@
+{
+  "contract_id": "welp-real-work",
+  "version": "0.1.0-draft",
+  "applies_from_snapshot_date": "2026-09-23",
+  "status": "DRAFT / PROSPECTIVE",
+  "purpose": "Constrain role claims to observed real tasks, not a single synthetic probe. Preregister applicability and frozen fixtures/oracles before results.",
+  "required_core": [
+    {"role": "ordinary_assistant", "coverage": ["writing and technical summarization", "factual synthesis", "reasoning", "uncertainty and absent-information", "instruction following", "ambiguity and clarification"], "method": "Frozen bounded task set plus explicit blinded qualitative review for prose and ambiguity; deterministic assertions for provided facts, omissions and strict constraints. Do not infer general quality from the existing 12-task quality screen alone."},
+    {"role": "structured_output", "coverage": ["strict JSON consumed by a parser", "no fabricated fields", "schema adherence"], "method": "Parse exact object and test semantic fields, duplicate keys and extraneous output; do not reward parseable-but-wrong values."}
+  ],
+  "conditional_modules": [
+    {"role": "coding", "applicable_when": "Coding or repository assistant role is claimed", "minimum": "Frozen small real repository with files, defect/change, executable sandboxed tests, diff inspection and unrelated-change detection; include diagnosis and implementation, not only isolated function trivia", "claim_if_missing": "NOT_TESTED; do not call the model a coding assistant on the isolated moving_sum probe alone"},
+    {"role": "linux_systems", "applicable_when": "Linux/sysadmin diagnosis role is claimed", "minimum": "Realistic sanitized logs/config spread across files; diagnostic explanation grounded in evidence, absent information and non-destructive proposed actions", "claim_if_missing": "NOT_TESTED"},
+    {"role": "native_tools", "applicable_when": "A qualified native tool interface exists and agent/tool role is claimed", "fixture": "fixtures/real_work/tool-recovery.json", "oracle": "harness/capabilities.py:score_tool_recovery", "minimum": "Correct choice/arguments, sequential calls, error recovery, grounded final and stopping; tool responses from deterministic executor, not model-authored claims", "claim_if_missing": "NOT_TESTED or NOT_APPLICABLE with reason"},
+    {"role": "multi_turn", "applicable_when": "Multi-turn assistant/session role is claimed", "fixture": "fixtures/real_work/multi-turn-correction.json", "oracle": "harness/capabilities.py:score_multi_turn_final", "minimum": "Retain actual model prior turn, incorporate user correction, preserve earlier constraints, distinguish absent status, strict JSON", "claim_if_missing": "NOT_TESTED or NOT_APPLICABLE with reason"},
+    {"role": "long_context", "applicable_when": "A long-context role is claimed", "minimum": "Family A controlled retrieval plus separately frozen realistic multi-document and, where relevant, repository/session context families with distinct oracles and maxima", "claim_if_missing": "Only Family A maximum; other dimensions NOT_TESTED"}
+  ],
+  "qualitative_review": "Freeze rubric for correctness, completeness, relevance, clarity, verbosity, fabrication, constraints, prose/diagnostic usefulness; blind model identity where feasible, retain independent evaluator notes and disagreements, no false decimal precision or 'intelligence retained' score.",
+  "agent_safety": "Use local deterministic simulated read-only tools and sandboxed code oracles; no destructive external tools, no model inference as part of fixture selftests.",
+  "report": "Report each role's evidence, applicability, failures, prompt/budget/profile identities, latency/resource envelope and untested dimensions. Phase advance and final verdict are separate."
+}

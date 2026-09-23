@@ -1,0 +1,13 @@
+{
+  "fixture_id": "welp-real-work-multi-turn-correction-1",
+  "version": "0.1.0-draft",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "applicability": "Conversational assistant profile with multi-turn session support; otherwise NOT_APPLICABLE with reason",
+  "turns": [
+    {"role": "user", "content": "Draft a short deployment note: service example.service listens on port 8452. Do not state whether it is healthy unless a status check is provided."},
+    {"role": "assistant", "source": "observed_model_prior_turn"},
+    {"role": "user", "content": "Correction: the configured port is 8652, not 8452. Keep the service name. No health check has been supplied. Reply as strict JSON with keys service, port, health; use null for unknown health."}
+  ],
+  "oracle": {"format": "JSON object only, no Markdown", "exact_keys": ["service", "port", "health"], "service": "example.service", "port": 8652, "health": null, "forbid_old_port": 8452},
+  "measurement": "Score final turn only while retaining the actual earlier turn; record correction incorporation, original constraint retention, strict JSON and absent-status behavior separately. No previous answer is preloaded by the fixture."
+}

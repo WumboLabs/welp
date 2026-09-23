@@ -345,10 +345,10 @@ The configuration is part of the result
   (completion/truncation/budget discipline; guardrails, never semantic
   labels). Phases do not automatically double; reliability-class phases and
   the useful-context gate use two lanes when justified.
-- Standardized context output reserve: **512 tokens**, derived as
-  `max(512, 2 × answer_budget of the useful-context gate tasks)` with the
-  gate answer budget 256; campaign-by-campaign 512-vs-640 variance is
-  prohibited from this snapshot on.
+- The **historical 512-token Family A reserve** (2026-09-19 method)
+  remains a comparator only where it represents the frozen deployment limit.
+  From the prospective revision onward each lane reserves its own bounded
+  generation ceiling; semantic calibration and operational SLO are independent.
 - Cache policy: scientific performance arms run **disabled/verified
   uncached**; cached serving may be measured separately, labeled `CACHED`,
   and never replaces uncached canonical performance. Harness surfaces
@@ -378,16 +378,91 @@ unknown` (primary + evidence). Attribution does not erase or soften the
 measured result. Claim classes remain exactly: `MEASURED, DERIVED, INFERENCE,
 HYPOTHESIS, EXTERNAL_REPORTED, UNKNOWN`.
 
+## Real-work and deployment evidence (prospective 2026-09-23 revision)
+
+The campaign question is whether the **exact artifact, quant, runtime/build,
+GPU, context, sampler, template, prompt, reasoning mode and budget** can do
+useful work on the tested hardware. Producer benchmarks are EXTERNAL_REPORTED
+until independently measured. Loadable context, semantic success, operational
+completion, latency and resource cost are different results. Do not infer
+incapability from answerless reasoning at an arbitrary protocol ceiling; do
+not infer operational fitness from an expensive semantic-lane answer.
+
+`contracts/welp-deployment-lanes-0.1.0-draft.json` governs prospective budget
+calibration and prompt lanes. Freeze disjoint calibration examples and an ordered
+bounded ceiling ladder before scored tasks. The smallest ceiling that completes
+all calibration examples with answer headroom becomes the semantic lane; if
+none completes, record UNKNOWN at the bounded limit, not semantic FAIL.
+Operational caps come from an explicit deployment role/SLO, measured separately
+and never enlarged after seeing scored failures. Record total/reasoning/answer
+tokens, reasoning and total latency where observable, finish reason, cost and
+availability. Unknown hidden tokens remain UNKNOWN. A capability PASS at high
+cost can coexist with deployment NOT_READY for that role.
+
+Prompt identities are predeclared and hash-frozen: MINIMAL (bounded raw-use
+subset), DEPLOYMENT (generic role prompt; primary deployment conclusion),
+PUBLISHER (official materially distinct settings if supported), and optional
+OPTIMIZED (generic disjoint-task tuning, never answer-specific). Keep results
+separate by task, lane and profile. Do not select a winning lane after outputs.
+The same profile must supply all classification dimensions; a campaign blocked
+by a fixture has **no model verdict**, while a demonstrated runtime integration
+blocker may yield INTEGRATION_BLOCKED. Campaign COMPLETE_PASS remains independent
+of readiness.
+
+Preregister applicable real-work modules rather than treating one tool call or
+isolated code function as an agent/coding verdict. Ordinary assistance includes
+writing/summarization, factual synthesis, reasoning, Linux/config/log diagnosis,
+strict JSON, uncertainty and absent-information behavior. Coding requires a
+bounded repository task with executable checks and unrelated-diff inspection;
+native tools require correct choice/arguments, sequential state, error recovery,
+grounded continuation, unnecessary-call avoidance and stopping. Context evidence
+distinguishes controlled Family A retrieval from multi-document, codebase and
+conversation/session synthesis; absent a frozen supplementary fixture, those
+dimensions are NOT_TESTED, never inherited from Family A. Multi-turn correction
+and agent execution are applicable to conversational/agent roles only; a plan
+alone is not execution. Use mechanical oracles for deterministic claims and a
+frozen, model-identity-blinded rubric with independent review for prose/diagnostic
+quality. No universal intelligence-retained percentage.
+
+Report role-specific applicability/results, minimal-prompt behavior, recommended
+profile/quant/context/reasoning control, typical and tail latency, observed VRAM
+headroom, prompt-engineering dependence, failure modes, unsupported workloads,
+and evidence-backed hardware floor. The headline vocabulary remains unchanged.
+High precision is preferred if it meets fit/context/SLO; compare a lower quant
+only where measured fit/headroom/quality tradeoffs are material. Different
+effective reasoning controls, prompts or samplers become distinct profiles
+only when they change deployment behavior; avoid a combinatorial campaign.
+
+LLMGauge v0.78 is an **optional, overlapping run-level evidence producer**,
+not merely a performance layer: it captures prompt-suite behavior, fit attempts,
+VRAM, speed, lineage-qualified native runtime metrics and (on qualified vLLM
+streaming) TTFT. Its LocalMaxxing `llama-bench` adapter measures a separate
+512-prefill/128-decode workload with warmup and repetitions; those pp/tg/TTFT
+observations do not replace full-window WELP context or a matched deployment
+request. WELP owns campaign preregistration, applicability, semantic oracles,
+gates, classification and publication. An import must cite immutable raw
+artifact/hash, exact profile/runtime/hardware/workload, metric boundary/unit,
+cache state, requested/effective settings and availability. Missing or
+incommensurate metrics are not inferred; neither product requires the other.
+
+Historical campaigns retain their recorded snapshots and verdicts. The blocked
+LFM2.5-8B-A1B run is not a failed model classification; any continuation is a
+new linked event after this prospective snapshot, not a rewrite or scorer-only
+promotion of truncated responses. See `summaries/welp_compatibility_policy.json`.
+
 ## Canonical contracts (current)
 
 - `welp-outcomes` 0.1.0-draft (task outcome semantics; new)
 - `welp-generation-budget` 0.1.0-draft (budget policy, reserve, cache; new)
+- `welp-deployment-lanes` 0.1.0-draft (prospective budget/prompt identities,
+  calibration, conclusion lanes and resource reporting)
 - `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.2.0-draft (scorer v2 + re-derived 20×2 gate; supersedes 0.1.0-draft for new campaigns)
 - `welp-context` 0.1.0-draft (superseded for full-context claims by `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
-- `welp-final-classification` 0.2.0-draft (in-repo classification logic; supersedes 0.1.0-draft for new campaigns)
+- `welp-final-classification` 0.3.0-draft (profile-pure prospective verdict and blocked-execution guard; retains 0.2.0 dimension gates)
+- `welp-real-work` 0.1.0-draft (role applicability, qualitative/quantitative oracles, guarded executable fixtures)
 - `welp-preflight` 0.1.0-draft
 - Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`, `welp-omp-local-agent`.
 
@@ -407,10 +482,10 @@ HYPOTHESIS, EXTERNAL_REPORTED, UNKNOWN`.
 
 - `harness/` — canonical, versioned phase implementations (`welp-phase-harness/1.0.0-draft`): outcomes vocabulary + derivation (`welp_outcomes.py`), admission levels (`admission.py`), quality screen scoring (`quality.py`), reliability scoring/aggregation/gates (`reliability.py`), capability-probe scoring (`capabilities.py`), useful-context outcomes + reserve (`context.py`), final classification (`classification.py`). Campaign wrappers may call canonical behavior; they must not fork scoring semantics.
 - `scorers/score_reliability.py` (`welp-reliability-scorer/2`, embedded self-tests) and `scorers/rescore_acceptance.py` (frozen-output acceptance corpus, read-only).
-- `fixtures/reliability/welp-reliability-sample-20-v2.json`, `fixtures/useful_context/family-a.json`, `fixtures/quality/welp-quality-screen-12-v1.json` — frozen before outputs, hash-identified in campaign manifests.
+- `fixtures/reliability/welp-reliability-sample-20-v2.json`, `fixtures/useful_context/family-a.json`, `fixtures/quality/welp-quality-screen-12-v1.json`, `fixtures/real_work/{tool-recovery,multi-turn-correction,document-synthesis,repository-timeout}.json` — freeze exact versions/hashes before outputs; real-work fixture applicability varies by role.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts both WELP and legacy prefixes and both report naming generations, self-test fixtures all PASS; requires the LocalMaxxing completion disposition (`summaries/localmaxxing.json`) for new-format campaigns with snapshot dates from 2026-09-10 on, and the website publication disposition (`summaries/website-publication.json`) for new-format campaigns with snapshot dates from 2026-09-12 on. For methodology-revision-era campaigns (snapshot dates from 2026-09-19 on) it additionally enforces R09–R14: finish/outcome accounting, fixture/scorer hash identity, campaign outcome + budget policy records, reliability scorer v2 self-test, context depth-set/placement evidence, and cache-policy records; frozen historical bundles continue validating unchanged.
+- `validators/validate_campaign_welp.py` — accepts frozen historical identifiers and report naming; enforces LocalMaxxing/website disposition and R09–R14 on their respective snapshot dates, and prospective R15/R16 prompt/budget, context construction and profile purity from 2026-09-23. Its selftest covers both historical and prospective bundles; narrative quality and real-work role claims still require an evidence review.
 - `validators/validate_publication.py` — current immutable citations, scientific IDs,
   shared relationships, and profile-path consistency; legacy URL exports remain accepted.

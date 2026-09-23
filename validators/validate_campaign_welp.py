@@ -73,6 +73,11 @@ only; frozen historical bundles remain valid unchanged):
   R14  Cache policy record: scientific_arms DISABLED_UNCACHED with a
        verification marker (cached arms must be declared separately/labeled).
 
+Prospective real-work revision (snapshot dates >= 2026-09-23):
+  R15  Deployment/prompt lanes frozen by identity and bounded calibration.
+  R16  Context preflight uses Family A 1.2.0 final-token construction and
+       lane-specific reserves; classification dimensions are profile-pure.
+
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
 import hashlib
@@ -92,6 +97,10 @@ WEBSITE_EVIDENCE_STATES = {"PUBLISHED", "PENDING_HUMAN_GATE"}
 WEBSITE_DISPOSITION_REQUIRED_FROM = "2026-09-12"  # campaign snapshot dates from this day on
 PROFILE_STATUSES = {"current", "current-alternate", "historical", "superseded", "specialized"}
 METHODOLOGY_REVISION_FROM = "2026-09-19"  # CP-1..CP-12 outcome/budget semantics from this snapshot date on
+REAL_WORK_REVISION_FROM = "2026-09-23"
+DEPLOYMENT_LANES_CONTRACT = "welp-deployment-lanes-0.1.0-draft"
+PROFILE_DIMENSIONS = {"SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE",
+                      "CONTEXT_USABILITY", "INTEGRATION_QUALITY"}
 CAMPAIGN_OUTCOMES = {"COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"}
 REQUIRED_CONTEXT_DEPTHS_PCT = [2.0, 25.0, 50.0, 75.0, 95.0]
 STANDARD_RESERVE_TOKENS = 512
@@ -394,8 +403,22 @@ def check(root: Path):
                     if candidate.is_file():
                         actual = hashlib.sha256(candidate.read_bytes()).hexdigest()
                         if actual != meta["sha256"]:
-                            bad(f"R10_{section}_hash_mismatch",
-                                f"{name}: recorded sha256 does not match {path} bytes")
+                            if mdate and mdate.group(1) < REAL_WORK_REVISION_FROM:
+                                frozen = REPO_ROOT / "snapshot-freeze" / sid / "manifest.json"
+                                if frozen.is_file():
+                                    groups = json.loads(frozen.read_text()).get("frozen_artifact_sha256", {})
+                                    recorded = groups.get(section, {}).get(str(path))
+                                else:
+                                    recorded = None
+                                if recorded == meta["sha256"]:
+                                    warn(f"R10_{section}_historical_hash",
+                                         f"{name}: matches frozen snapshot, not changed current source")
+                                else:
+                                    bad(f"R10_{section}_hash_mismatch",
+                                        f"{name}: neither current source nor frozen snapshot matches")
+                            else:
+                                bad(f"R10_{section}_hash_mismatch",
+                                    f"{name}: recorded sha256 does not match {path} bytes")
                         else:
                             ok(f"R10_{section}_hash_verified", name)
 
@@ -437,19 +460,39 @@ def check(root: Path):
                         f"depths_pct must be exactly {REQUIRED_CONTEXT_DEPTHS_PCT}, got {depths!r}")
                 else:
                     ok("R13_context_depth_set", "2/25/50/75/95")
-                if ctxv.get("placement_preflight_pass") is True and \
-                        isinstance(ctxv.get("max_placement_error_pp"), (int, float)) \
-                        and ctxv["max_placement_error_pp"] <= 0.5:
+                if (ctxv.get("placement_preflight_pass") is True
+                        and isinstance(ctxv.get("max_placement_error_pp"), (int, float))
+                        and ctxv["max_placement_error_pp"] <= 0.5):
                     ok("R13_context_placement_preflight", str(ctxv["max_placement_error_pp"]))
                 else:
                     bad("R13_context_placement_preflight",
                         "placement_preflight_pass=true with max_placement_error_pp <= 0.5 required")
-                if ctxv.get("reserve_tokens") == STANDARD_RESERVE_TOKENS:
+                if mdate and mdate.group(1) >= REAL_WORK_REVISION_FROM:
+                    lanes = ctxv.get("lane_reserves")
+                    deployment = m.get("deployment_lanes")
+                    budgets = deployment.get("budgets") if isinstance(deployment, dict) else {}
+                    budgets = budgets if isinstance(budgets, dict) else {}
+                    if (isinstance(lanes, dict)
+                            and lanes.get("semantic") == budgets.get("semantic_ceiling")
+                            and lanes.get("operational") == budgets.get("operational_ceiling")
+                            and type(lanes.get("semantic")) is int
+                            and type(lanes.get("operational")) is int
+                            and lanes["semantic"] > 0 and lanes["operational"] > 0
+                            and ctxv.get("family_a_version") == "1.2.0-draft"
+                            and ctxv.get("construction") == "final-rendered-token-solver"
+                            and ctxv.get("inference_tokens_match_preflight") is True
+                            and any(isinstance(v, dict) and
+                                    v.get("path") == "fixtures/useful_context/family-a.json"
+                                    for v in (m.get("fixtures") or {}).values())):
+                        ok("R16_context_lane_preflight", "Family A 1.2; lane-specific reserves")
+                    else:
+                        bad("R16_context_lane_preflight",
+                            "Family A 1.2 final-token solver, lane reserves and matching inference tokens required")
+                elif ctxv.get("reserve_tokens") == STANDARD_RESERVE_TOKENS:
                     ok("R13_context_reserve", str(STANDARD_RESERVE_TOKENS))
                 else:
                     bad("R13_context_reserve",
-                        f"standardized reserve {STANDARD_RESERVE_TOKENS} required "
-                        "(welp-generation-budget 0.1.0-draft)")
+                        f"historical reserve {STANDARD_RESERVE_TOKENS} required")
         else:
             warn("R13_context_not_executed",
                  "context phase not in phases_executed; if the campaign stopped early this is expected — record the stop reason")
@@ -462,6 +505,39 @@ def check(root: Path):
             bad("R14_cache_policy_required",
                 "cache_policy {scientific_arms: DISABLED_UNCACHED, verification: <probe/telemetry evidence>} required")
 
+        if mdate and mdate.group(1) >= REAL_WORK_REVISION_FROM:
+            lanes = m.get("deployment_lanes")
+            prompt = lanes.get("prompt_lanes") if isinstance(lanes, dict) else None
+            budget = lanes.get("budgets") if isinstance(lanes, dict) else None
+            if (isinstance(lanes, dict) and lanes.get("contract") == DEPLOYMENT_LANES_CONTRACT
+                    and isinstance(prompt, dict) and {"MINIMAL", "DEPLOYMENT"} <= set(prompt)
+                    and all(isinstance(v, dict) and HASH.fullmatch(str(v.get("sha256", "")))
+                            and v.get("profile_id") for v in prompt.values())
+                    and isinstance(budget, dict) and type(budget.get("semantic_ceiling")) is int
+                    and budget["semantic_ceiling"] in (512, 1024, 2048, 4096, 8192)
+                    and budget.get("calibration_predeclared") is True
+                    and type(budget.get("operational_ceiling")) is int
+                    and budget["operational_ceiling"] > 0):
+                ok("R15_deployment_lanes", DEPLOYMENT_LANES_CONTRACT)
+            else:
+                bad("R15_deployment_lanes", "frozen prompt identities and bounded calibrated/operational ceilings required")
+            classification = m.get("classification")
+            if m.get("campaign_outcome") not in {"BLOCKED", "FAILED_EXECUTION"}:
+                if (isinstance(classification, dict)
+                        and classification.get("contract") == "welp-final-classification-0.3.0-draft"
+                        and classification.get("profile_id")
+                        and isinstance(classification.get("dimension_profile_ids"), dict)
+                        and set(classification["dimension_profile_ids"]) == PROFILE_DIMENSIONS
+                        and set(classification["dimension_profile_ids"].values())
+                            == {classification["profile_id"]}):
+                    ok("R16_classification_profile", classification["profile_id"])
+                else:
+                    bad("R16_classification_profile", "all classification dimensions must share the selected profile")
+            elif classification and classification.get("readiness") is not None:
+                if not (m.get("campaign_outcome") == "BLOCKED"
+                        and classification.get("readiness") == "INTEGRATION_BLOCKED"
+                        and classification.get("integration_evidence")):
+                    bad("R16_blocked_verdict", "blocked/failed execution cannot assert model readiness without demonstrated integration evidence")
     # ---- N03 improper-rewrite detection ----
     # A welp-* campaign whose contract IDs are ALL wlep-* (with no welp-* counterpart)
     # suggests the campaign was silently relabeled from WLEP to WELP. Reject.
@@ -1056,6 +1132,36 @@ def _good_revision_context_deferred(td):
                             drop=("context_validation",))
 
 
+
+
+def _prospective_bundle(td, name, mutate=None):
+    manifest = _revision_manifest()
+    manifest["protocol_snapshot"] = {
+        "id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing"}
+    manifest["fixtures"]["welp-useful-context-family-a"] = {
+        "path": "fixtures/useful_context/family-a.json",
+        "sha256": _sha256_of("fixtures/useful_context/family-a.json")}
+    manifest["context_validation"] = {
+        "depths_pct": REQUIRED_CONTEXT_DEPTHS_PCT,
+        "placement_preflight_pass": True, "max_placement_error_pp": 0.16,
+        "family_a_version": "1.2.0-draft",
+        "construction": "final-rendered-token-solver",
+        "inference_tokens_match_preflight": True,
+        "lane_reserves": {"semantic": 4096, "operational": 1024}}
+    manifest["deployment_lanes"] = {
+        "contract": DEPLOYMENT_LANES_CONTRACT,
+        "prompt_lanes": {
+            "MINIMAL": {"profile_id": "profile-a", "sha256": "a" * 64},
+            "DEPLOYMENT": {"profile_id": "profile-a", "sha256": "b" * 64}},
+        "budgets": {"semantic_ceiling": 4096, "operational_ceiling": 1024,
+                    "calibration_predeclared": True}}
+    manifest["classification"] = {
+        "contract": "welp-final-classification-0.3.0-draft",
+        "profile_id": "profile-a",
+        "dimension_profile_ids": {key: "profile-a" for key in PROFILE_DIMENSIONS}}
+    if mutate:
+        mutate(manifest)
+    return _revision_bundle(td, name, manifest_overrides=manifest)
 def selftest():
     with tempfile.TemporaryDirectory() as td:
         rg_legacy = check(_good_legacy_wlep(td))
@@ -1080,6 +1186,18 @@ def selftest():
         rb_rev_depths = check(_bad_revision_context_depths(td))
         rb_rev_cache = check(_bad_revision_cache_policy(td))
         rg_rev_deferred = check(_good_revision_context_deferred(td))
+        rg_pro = check(_prospective_bundle(td, "good_prospective"))
+        rb_pro_prompt = check(_prospective_bundle(
+            td, "bad_prospective_prompt", lambda m: m["deployment_lanes"].pop("prompt_lanes")))
+        rb_pro_context = check(_prospective_bundle(
+            td, "bad_prospective_context", lambda m: m["context_validation"].update(
+                {"construction": "word-fraction"})))
+        rb_pro_reserve = check(_prospective_bundle(
+            td, "bad_prospective_reserve", lambda m: m["context_validation"][
+                "lane_reserves"].update({"semantic": 512})))
+        rb_pro_profile = check(_prospective_bundle(
+            td, "bad_prospective_profile", lambda m: m["classification"][
+                "dimension_profile_ids"].update({"BUDGET_DISCIPLINE": "other-profile"})))
         fails = []
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
                          ("welp_with_legacy_evidence_rejected", rg_mixed),
@@ -1105,6 +1223,18 @@ def selftest():
                          ("revision_cache_policy_accepted", rb_rev_cache)]:
             if r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
+        if not rg_pro["valid"]:
+            fails.append("prospective bundle rejected: " + str(
+                [x for x in rg_pro["findings"] if x[0] == "error"]))
+        for label, record, rule in [
+            ("prompt", rb_pro_prompt, "R15_deployment_lanes"),
+            ("context", rb_pro_context, "R16_context_lane_preflight"),
+            ("reserve", rb_pro_reserve, "R16_context_lane_preflight"),
+            ("profile", rb_pro_profile, "R16_classification_profile"),
+        ]:
+            if record["valid"] or not any(
+                    x[0] == "error" and x[1] == rule for x in record["findings"]):
+                fails.append(f"prospective {label} failed to reject {rule}")
         if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
             fails.append("ambiguous_pair_missing_R02_error")
         if not any(f[0] == "warning" and f[1] == "R02_historical_report_pair" for f in rg_hist_pair["findings"]):
@@ -1145,7 +1275,7 @@ def selftest():
         if not any(f[0] == "warning" and f[1] == "R13_context_not_executed" for f in rg_rev_deferred["findings"]):
             fails.append("revision_context_deferred_missing_R13_warning")
         print(json.dumps({
-            "fixture_sets": 21,
+            "fixture_sets": 26,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],

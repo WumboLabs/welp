@@ -1,0 +1,13 @@
+{
+  "fixture_id": "welp-real-work-repository-timeout-1",
+  "version": "0.1.0-draft",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "applicability": "Coding/repository role only; isolated function trivia cannot substitute",
+  "user_task": "In this small Python repository, fix the timeout fallback: None means use the default, but explicit zero disables waiting. Keep the public function signature and unrelated deployment settings unchanged. Run the supplied tests and report what changed.",
+  "repository": {
+    "app/config.py": "DEFAULT_TIMEOUT = 30\nLOG_LEVEL = 'info'\n\ndef resolve_timeout(timeout):\n    return timeout or DEFAULT_TIMEOUT\n",
+    "tests/test_config.py": "import unittest\nfrom app.config import LOG_LEVEL, resolve_timeout\n\nclass ConfigTest(unittest.TestCase):\n    def test_none_uses_default(self):\n        self.assertEqual(resolve_timeout(None), 30)\n\n    def test_zero_is_explicit(self):\n        self.assertEqual(resolve_timeout(0), 0)\n\n    def test_positive_is_preserved(self):\n        self.assertEqual(resolve_timeout(7), 7)\n\n    def test_unrelated_config(self):\n        self.assertEqual(LOG_LEVEL, 'info')\n"
+  },
+  "oracle": {"command": "python3 -m unittest discover -s tests", "allowed_changes": ["app/config.py"], "required": "all tests pass in a disposable offline sandbox; inspect changed paths and diff for unrelated edits; reject test modification or removal", "baseline_expected": "zero test fails; other tests pass"},
+  "safety": "Never execute untrusted generated code on the host; campaign runner must use an isolated disposable execution boundary with no network, credentials or host mounts. Fixture selftest may execute only its own trusted baseline/reference."
+}

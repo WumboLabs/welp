@@ -76,7 +76,9 @@ The canonical new-campaign validator.
     missing/unknown finish_reason is an error.
   - **R10** Fixture/scorer hash identity: `fixtures`/`scorers` manifest entries
     require 64-hex `sha256`; when the referenced path resolves against the WELP
-    repo root, the recorded hash must match the file bytes
+    repo root, the recorded hash must match the file bytes. For earlier frozen
+    snapshots, validate against that snapshot's immutable frozen hash instead
+    of today's changed working-tree fixture or scorer bytes
     (`R10_fixtures_hash_mismatch` / `R10_scorers_hash_mismatch`).
   - **R11** `campaign_outcome` REQUIRED: exactly `COMPLETE_PASS |
     COMPLETE_WITH_GAPS | FAILED_EXECUTION | BLOCKED` (execution outcome is
@@ -85,11 +87,20 @@ The canonical new-campaign validator.
     REQUIRED, and `scorers['welp-reliability-scorer/2'].selftest = "PASS"`
     REQUIRED before live reliability use.
   - **R13** When the context phase executed (`phases_executed`): `context_validation`
-    REQUIRED with the exact depth set `[2, 25, 50, 75, 95]`, placement preflight
-    PASS (`max_placement_error_pp <= 0.5`), and the standardized
-    `reserve_tokens: 512`. Context deferred (early stop) is a warning, not an error.
+    REQUIRED with exact depths `[2, 25, 50, 75, 95]` and placement preflight
+    PASS (`max_placement_error_pp <= 0.5`). Pre-2026-09-23 snapshots require
+    their historical `reserve_tokens: 512`; prospective snapshots instead use
+    lane-specific R16 reserves. Deferred context is a warning.
   - **R14** `cache_policy` REQUIRED: `scientific_arms: DISABLED_UNCACHED` with a
     `verification` marker; cached serving arms are declared separately and labeled.
+- **R15–R16 (prospective snapshots dated >= 2026-09-23 only):** R15 requires
+  frozen SHA-256 prompt-lane/profile identities, predeclared bounded semantic
+  calibration and positive operational ceiling. R16 requires Family A 1.2
+  final-rendered-token solver, lane reserves, matched preflight/inference
+  tokenization and a hash-pinned fixture. Completed classifications use the
+  `welp-final-classification-0.3.0-draft` contract and one selected profile
+  for all dimensions. Blocked/failed execution has no readiness verdict,
+  except an independently evidenced integration blocker on a blocked campaign.
 
 ## LocalMaxxing disposition (`summaries/localmaxxing.json`)
 
@@ -118,8 +129,8 @@ The canonical new-campaign validator.
 ## Usage
 
 ```bash
-python3 validate_campaign_welp.py <campaign_dir>     # exit 0 valid, 1 invalid
-python3 validate_campaign_welp.py selftest           # run embedded 21-fixture suite
+python3 validators/validate_campaign_welp.py <campaign_dir> # exit 0 valid, 1 invalid
+python3 validators/validate_campaign_welp.py selftest       # embedded 26-fixture suite
 python3 validators/validate_publication.py selftest
 python3 validators/validate_publication.py EXPORT PROFILE
 ```

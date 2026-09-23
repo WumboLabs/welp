@@ -1,0 +1,13 @@
+{
+  "fixture_id": "welp-real-work-tool-recovery-1",
+  "version": "0.1.0-draft",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "applicability": "Only profiles with a qualified native tool-call interface; otherwise NOT_APPLICABLE, not FAIL",
+  "user_task": "Find the current deployment's service port and report whether the service is healthy. Use the available read-only tools; if a lookup fails, recover from the returned error. Do not claim a health status without evidence.",
+  "tools": {
+    "read_config": {"schema": {"path": "string"}, "allowed_paths": ["/etc/example/app.conf"], "response": {"port": 8452, "service": "example.service"}},
+    "check_service": {"schema": {"name": "string"}, "error_first": "service state temporarily unavailable; retry once", "response": {"name": "example.service", "active": true, "observed_at": "2026-09-23T00:00:00Z"}}
+  },
+  "oracle": {"required_order": ["read_config", "check_service", "check_service"], "max_calls": 3, "expected_port": 8452, "expected_service": "example.service", "expected_health": "active", "forbid_claim_before_success": true, "forbid_other_paths_or_tools": true},
+  "reporting": "Record schema validity, correct tool choice/arguments, error recovery, grounded final answer, total calls, unnecessary calls and stop; a successful isolated function call does not satisfy this fixture. Simulation is deterministic, local and read-only."
+}

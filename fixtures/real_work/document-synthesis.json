@@ -1,0 +1,19 @@
+{
+  "fixture_id": "welp-real-work-document-synthesis-1",
+  "version": "0.1.0-draft",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "documents": [
+    {"id": "ops-note", "text": "Aug 18 draft: the Bay service uses port 8452. The author guessed that failover takes two minutes. Do not treat this draft as an incident measurement."},
+    {"id": "config", "text": "Sep 20 effective configuration: service bay.service, listen_port=8652, replicas=2. This replaces the Aug draft. The file does not state the health or actual failover time."},
+    {"id": "incident", "text": "Sep 21 log excerpt: bay.service started at 09:14 and accepted a request at 09:15. There is no failover event or health-probe result in the excerpt."}
+  ],
+  "user_task": "Summarize the current port and what the incident evidence shows. Distinguish configuration from observed behavior. Can the failover time or present health be established? Cite the document IDs. Keep it under 130 words.",
+  "oracle": {
+    "required_claims": ["current configured port 8652 from config", "request observed at 09:15 in incident", "failover time not established", "present health not established"],
+    "forbidden_assertions": ["8452 is current", "two-minute failover is measured", "service is currently healthy"],
+    "required_citations": ["config", "incident"],
+    "word_limit": 130,
+    "qualitative_rubric": ["factual correctness", "complete requested distinctions", "no fabricated details", "clear and concise prose"],
+    "scoring": "Mechanical fact/citation/word checks are necessary but not sufficient. Blind independent review under the frozen rubric adjudicates paraphrases and assertion/denial context; disagreement and uncertainty retained, no fake percentage."
+  }
+}

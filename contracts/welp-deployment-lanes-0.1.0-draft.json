@@ -1,0 +1,25 @@
+{
+  "contract_id": "welp-deployment-lanes",
+  "version": "0.1.0-draft",
+  "applies_from_snapshot_date": "2026-09-23",
+  "status": "DRAFT / PROSPECTIVE",
+  "budget": {
+    "answer_budget": "Frozen from the task and accepted response forms, independent of model; preserve original task requirements.",
+    "semantic_calibration": "Before scored runs, use fixed, disjoint non-scored task examples of the same response class on the pinned runtime, template, sampler and reasoning state. Choose the smallest predeclared bounded cap in an ordered ladder that yields complete final answers on the calibration examples, leaving at least the task answer budget. Freeze ladder, examples, cap and stopping rule before scoring. A cap cannot be raised after seeing scored answers; failure of every cap is NOT_EVALUABLE and reported as a resource limit, not semantic FAIL.",
+    "ladder": [512, 1024, 2048, 4096, 8192],
+    "semantic_ceiling": "Selected by calibration, never unlimited; tasks more complex than calibration require separately justified frozen bounded ceilings. If even the largest cap cannot finish calibration, report semantic UNKNOWN and cost/latency at the bound rather than invent capability.",
+    "operational_ceiling": "Independent frozen deployment limit from intended role/SLO; no protocol-wide short-answer cap may masquerade as a real service limit. A failed operational lane remains visible even when semantic lane passes.",
+    "reasoning_accounting": "Record total generated tokens, reasoning tokens and answer tokens when observable, finish reason, TTFT channel/boundary, reasoning latency and total latency when observable, and availability/UNKNOWN otherwise. Never infer hidden reasoning tokens or use a trace as a final answer.",
+    "context_reserve": "Each context lane reserves its own declared total generation ceiling. The historical 512-token reserve is an operational comparator only where it is an actual deployment limit; semantic placement/occupancy uses its separately calibrated reserve and usable capacity.",
+    "cost_decision": "Semantic PASS with unacceptable wall time, token cost, VRAM, or completion at the operational limit is semantically capable but operationally expensive or unsuitable for that role; never silently rescue deployment with the semantic lane."
+  },
+  "prompt_lanes": {
+    "MINIMAL": "No crafted system prompt; native template-required role delimiters only. Required on a bounded diagnostic subset of ordinary-use tasks, not every expensive context rung.",
+    "DEPLOYMENT": "Generic role-appropriate assistant/coding/agent prompt frozen before outputs; primary role/deployment conclusion lane.",
+    "PUBLISHER": "Publisher-documented template, sampler, reasoning controls and tool formatting, when available and materially different; required comparison only for a supported material difference, otherwise NOT_APPLICABLE with reason.",
+    "OPTIMIZED": "Optional predeclared generic prompt tuning on disjoint development tasks; no benchmark-specific hints, oracle details or answer content. Never replace primary lane post hoc.",
+    "identity": "Record lane ID, exact prompt/template bytes and SHA-256, sampler, requested/effective reasoning state, task set, budget lane, profile ID, and applicability before inference. Do not pool or cherry-pick across lanes.",
+    "claim_rule": "Deployment conclusions use DEPLOYMENT on the selected profile; MINIMAL reports raw-use robustness; PUBLISHER describes recommended-use behavior; OPTIMIZED is a distinct tuned configuration. Each compares only matched tasks under recorded conditions."
+  },
+  "historical_compatibility": "Applies prospectively. Earlier 2048 semantic ceilings and 512-token context reserve remain interpretable under the snapshots that froze them, but neither is presumed non-starving for reasoning-only models."
+}

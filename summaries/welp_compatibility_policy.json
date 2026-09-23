@@ -1,15 +1,19 @@
 {
   "policy_id": "welp-compatibility-policy",
-  "version": "1.1.1-draft",
-  "updated": "2026-09-22",
-  "purpose": "Formal compatibility policy referenced by protocol/WELP.md. Supplied during the 2026-09-19 methodology revision (the file was previously referenced but missing; summaries/ was empty).",
+  "version": "1.2.0-draft",
+  "updated": "2026-09-23",
+  "purpose": "Prospective WELP methodology and historical compatibility policy; snapshot manifests remain immutable.",
   "rules": [
     "Frozen historical snapshots, contracts, fixtures, scorers, and campaign bundles are immutable. Reproducing a historical campaign uses the frozen artifacts recorded in that snapshot.",
     "New campaigns run under the current DRAFT snapshot. The 2026-09-19 methodology revision introduces outcome semantics (welp-outcomes 0.1.0-draft), the generation-budget policy (welp-generation-budget 0.1.0-draft), reliability scorer v2 + gate_v2 (welp-reliability 0.2.0-draft), and in-repo classification (welp-final-classification 0.2.0-draft).",
     "Historical campaign results are never relabeled under the new outcome vocabulary. Scorer-only rescoring of retained raw outputs is new supplementary evidence, explicitly linked to the original event; it never rewrites result JSON, reports, or published verdicts.",
     "A supplemental completion (e.g. a bounded retest under the revised methodology) is a NEW event linked to the original campaign/evidence, following the append-only precedent.",
-    "Validators accept frozen historical artifacts (legacy prefixes, legacy report naming, pre-revision manifests) without retroactive failure; methodology-revision rules R09-R14 bind only campaigns whose snapshot date is >= 2026-09-19.",
-    "No cross-methodology score equivalence is claimed between v1 boolean outcomes and CP-1 outcome triples; cross-readings are documented as mappings, never as rewrites."
+    "Validator R09-R14 apply from 2026-09-19. R15-R16 apply from 2026-09-23 only. An older fixture/scorer hash differing from current source is compared with its frozen snapshot manifest, not invalidated because the canonical source advanced.",
+    "No cross-methodology score equivalence is claimed between v1 boolean outcomes, 2026-09-19 CP-1 triples, and prospective calibrated semantic/deployment prompt lanes. Each comparison must retain prompt/profile/budget/fixture identities.",
+    "2026-09-23 supersedes word-fraction Family A construction with final-rendered-token placement; retains the five facts, depths and ±0.50 pp threshold. Earlier 8K/16K placement failures are fixture-limited historical evidence, not model retrieval failures. New lane-specific context reserves supersede a universal 512-token semantic reserve; 512 remains historical or a real declared operational cap.",
+    "Prompt lanes MINIMAL, DEPLOYMENT, PUBLISHER when material, OPTIMIZED when preregistered are prospective. Historical prompts cannot be retroactively attributed to a new lane without exact byte/config evidence. Classification profile identity is required prospectively; blocked methodology execution does not imply an integration-blocked model.",
+    "Blocked LFM2.5-8B-A1B evidence and its BOS-invalidated attempt remain untouched: C0/artifact/runtime identity and measured fit/performance may be cited if unchanged and verified; reliability under arbitrary historical ceilings and context Family A 1.1 scores are not equivalent to prospective lanes/placement. Repeat reliability semantic/operational lanes and useful-context rungs under the new frozen method in a NEW linked campaign; recheck admission/profile, do not promote 2048 diagnostic outputs or reasoning traces to a verdict.",
+    "Unchanged: exact artifact/hardware/runtime provenance, CP-1 outcome axes, evidence classes, early host-safety stops, execution state distinct from verdict, append-only evidence, public central registry authority and clean-success automatic lifecycle closeout."
   ],
   "snapshot_lineage": [
     {"snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex", "status": "frozen historical (pre-rename)"},
@@ -17,6 +21,7 @@
     {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "methodology in force; later lifecycle deltas supersede this as latest snapshot", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"},
     {"snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule", "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"},
     {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "automatic-closeout lifecycle in force; superseded as latest snapshot by documentation delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation", "status": "current DRAFT; README snapshot-lineage documentation correction only; 2026-09-19 methodology and 2026-09-22 automatic-closeout lifecycle remain in force", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"}
+    {"snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation", "status": "historical DRAFT; README lineage correction; 2026-09-19 measurement and 2026-09-22 lifecycle applied", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing", "status": "current DRAFT; prospective real-work methodology and automatic lifecycle in force", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-readme-lineage-documentation"}
   ]
 }

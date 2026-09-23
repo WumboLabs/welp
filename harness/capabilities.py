@@ -51,9 +51,11 @@ REPORTED_FIELDS = ["semantic", "completion", "budget", "finish_reason",
                    "time_to_first_reasoning_token", "time_to_final_answer"]
 
 
-def probe_outcome(probe: str, check_pass, row: dict, lane: str = "frozen") -> dict:
+def probe_outcome(probe: str, check_pass, row: dict, lane: str = "frozen",
+                  ceiling: int | None = None) -> dict:
     budgets = PROBE_BUDGETS[probe]
-    cap = budgets.get(f"{lane}_lane_generation_ceiling") or budgets.get("frozen_lane_generation_ceiling")
+    cap = ceiling if ceiling is not None else (budgets.get(f"{lane}_lane_generation_ceiling")
+                                                or budgets.get("frozen_lane_generation_ceiling"))
     completion = derive_completion(row.get("finish"), row.get("output") or "",
                                    row.get("usage") or {}, cap)
     budget = derive_budget(row.get("finish"), completion, row.get("output") or "",
@@ -66,6 +68,100 @@ def probe_outcome(probe: str, check_pass, row: dict, lane: str = "frozen") -> di
             "finish_reason": row.get("finish")}
 
 
+def score_tool_recovery(actions: list[dict]) -> dict:
+    """Replay a frozen read-only simulated tool transcript, not real system calls."""
+    fixture = json.loads((HERE.parent / "fixtures/real_work/tool-recovery.json").read_text())
+    oracle = fixture["oracle"]
+    order = oracle["required_order"]
+    failures = []
+    if not isinstance(actions, list) or len(actions) != len(order) + 1:
+        return {"semantic": "FAIL", "failures": ["wrong action count"]}
+    for i, tool in enumerate(order):
+        action = actions[i]
+        if not isinstance(action, dict) or action.get("tool") != tool:
+            failures.append(f"tool choice/order {i}")
+            continue
+        args = action.get("arguments")
+        wanted = {"path": "/etc/example/app.conf"} if i == 0 else {"name": "example.service"}
+        if args != wanted:
+            failures.append(f"arguments {i}")
+        if set(action) != {"tool", "arguments"}:
+            failures.append(f"tool action shape {i}")
+    final = actions[-1]
+    if not isinstance(final, dict) or set(final) != {"final"}:
+        failures.append("missing final answer or extra call")
+    else:
+        text = final["final"]
+        if (not isinstance(text, str) or "8452" not in text
+                or "is active" not in text.lower() or "not active" in text.lower()):
+            failures.append("ungrounded or incomplete final answer")
+    return {"semantic": "FAIL" if failures else "PASS", "failures": failures,
+            "tool_calls": len(actions) - 1,
+            "simulated_results": [fixture["tools"]["read_config"]["response"],
+                                  {"error": fixture["tools"]["check_service"]["error_first"]},
+                                  fixture["tools"]["check_service"]["response"]]}
+
+
+def score_multi_turn_final(content: str) -> dict:
+    """Evaluate corrected facts, absent evidence and strict JSON on final turn."""
+    fixture = json.loads((HERE.parent / "fixtures/real_work/multi-turn-correction.json").read_text())
+    oracle = fixture["oracle"]
+    failures = []
+
+    def unique_pairs(pairs):
+        if len({key for key, _ in pairs}) != len(pairs):
+            raise ValueError("duplicate JSON keys")
+        return dict(pairs)
+
+    try:
+        value = json.loads(content, object_pairs_hook=unique_pairs)
+    except (TypeError, ValueError):
+        value = None
+        failures.append("strict JSON")
+    if not isinstance(value, dict) or set(value) != set(oracle["exact_keys"]):
+        failures.append("exact object keys")
+    else:
+        if value["service"] != oracle["service"]:
+            failures.append("service retention")
+        if type(value["port"]) is not int or value["port"] != oracle["port"]:
+            failures.append("correction not incorporated")
+        if value["health"] is not None:
+            failures.append("absent health evidence fabricated")
+    return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
+
+
+def selftest_repository_fixture() -> list[str]:
+    """Exercise only the trusted frozen baseline/reference, never model code."""
+    import subprocess
+    import tempfile
+
+    fixture = json.loads((HERE.parent / "fixtures/real_work/repository-timeout.json").read_text())
+    failures = []
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        for name, source in fixture["repository"].items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(source)
+        command = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
+        baseline = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=10)
+        if baseline.returncode == 0 or "test_zero_is_explicit" not in baseline.stderr:
+            failures.append("repository fixture baseline must fail at explicit zero")
+        source = (root / "app/config.py").read_text()
+        if source.count("return timeout or DEFAULT_TIMEOUT") != 1:
+            failures.append("repository fixture baseline source changed")
+        else:
+            (root / "app/config.py").write_text(
+                source.replace("return timeout or DEFAULT_TIMEOUT",
+                               "return DEFAULT_TIMEOUT if timeout is None else timeout"))
+            reference = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=10)
+            if reference.returncode != 0 or "Ran 4 tests" not in reference.stderr:
+                failures.append("repository fixture reference does not pass all tests")
+        if (root / "tests/test_config.py").read_text() != fixture["repository"]["tests/test_config.py"]:
+            failures.append("repository fixture tests changed")
+    return failures
+
+
 def selftest() -> int:
     fails = []
     r = probe_outcome("reasoning", True, {"output": "...final answer...", "finish": "stop"})
@@ -74,8 +170,7 @@ def selftest() -> int:
     r = probe_outcome("reasoning", True, {"output": "...final answer...", "finish": "stop"}, lane="operational")
     if r["ceiling"] != 4096:
         fails.append("operational reasoning lane must be 4096")
-    # Qwen3.6 case: no final answer at 1500 -> FAIL_LENGTH/NOT_EVALUABLE on frozen lane;
-    # the same completed behavior at 4096 is a PASS on the operational lane.
+    # Answerless reasoning at the frozen cap is not a semantic failure.
     r = probe_outcome("reasoning", None, {"output": "", "finish": "length",
                                           "usage": {"completion_tokens": 1500, "reasoning_tokens": 1500}})
     if r["semantic"] != "NOT_EVALUABLE" or r["budget"] != "EXHAUSTED_IN_REASONING":
@@ -94,6 +189,31 @@ def selftest() -> int:
     for probe, b in PROBE_BUDGETS.items():
         if not b.get("rationale"):
             fails.append(f"{probe} missing budget rationale")
+    actions = [
+        {"tool": "read_config", "arguments": {"path": "/etc/example/app.conf"}},
+        {"tool": "check_service", "arguments": {"name": "example.service"}},
+        {"tool": "check_service", "arguments": {"name": "example.service"}},
+        {"final": "example.service is active on port 8452."},
+    ]
+    if score_tool_recovery(actions)["semantic"] != "PASS":
+        fails.append("valid sequential recovery must pass")
+    if score_tool_recovery(actions[:1] + actions[2:])["semantic"] != "FAIL":
+        fails.append("skipping failure must fail")
+    if score_tool_recovery(actions[:-1] + [{"final": "example.service is active."}])["semantic"] != "FAIL":
+        fails.append("ungrounded final must fail")
+    if score_tool_recovery([actions[0], {**actions[1], "arguments": {"name": "other"}},
+                            *actions[2:]])["semantic"] != "FAIL":
+        fails.append("wrong tool arguments must fail")
+    for text, want in [
+        ('{\"health\": null, \"port\": 8652, \"service\": \"example.service\"}', "PASS"),
+        ('{\"health\": \"active\", \"port\": 8652, \"service\": \"example.service\"}', "FAIL"),
+        ('{\"health\": null, \"port\": 8452, \"service\": \"example.service\"}', "FAIL"),
+        ('{\"health\": null, \"port\": 8652, \"port\": 8652, \"service\": \"example.service\"}', "FAIL"),
+        ('```json\\n{\"health\": null, \"port\": 8652, \"service\": \"example.service\"}\\n```', "FAIL"),
+    ]:
+        if score_multi_turn_final(text)["semantic"] != want:
+            fails.append(f"multi-turn oracle mismatch: {text}")
+    fails.extend(selftest_repository_fixture())
     print(MODULE_ID, "selftest:", "PASS" if not fails else fails)
     return 0 if not fails else 1
 

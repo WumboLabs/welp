@@ -1,0 +1,11 @@
+{
+  "contract_id": "welp-final-classification",
+  "version": "0.3.0-draft",
+  "status": "DRAFT / PROSPECTIVE",
+  "applies_from_snapshot_date": "2026-09-23",
+  "supersedes": "welp-final-classification-0.2.0-draft",
+  "unchanged": "Readiness vocabulary, dimension gates and thresholds from 0.2.0 remain in force; frozen campaigns retain their recorded contracts and verdicts.",
+  "profile_identity": "Every dimension used in a prospective readiness verdict must carry the same exact selected deployment profile ID (artifact, quantization, runtime/build, hardware, context, template, prompt lane, sampler, effective reasoning control and budget lane). No cross-profile dimension substitution or implicit best-of-lanes aggregation.",
+  "blocked_execution": "FAILED_EXECUTION issues no verdict. BLOCKED issues no verdict unless INTEGRATION_QUALITY=BLOCKED is independently demonstrated for the selected profile; a fixture, placement, harness, methodology, prerequisite or human-decision block alone never implies INTEGRATION_BLOCKED model readiness.",
+  "implementation": "harness/classification.py; python3 harness/classification.py selftest"
+}
