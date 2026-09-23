@@ -16,6 +16,7 @@
     {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "status": "frozen historical (naming-only)", "methodology_changed": "NO"},
     {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "methodology in force; later lifecycle deltas supersede this as latest snapshot", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"},
     {"snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule", "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "current DRAFT", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"}
+    {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "automatic-closeout lifecycle in force; superseded as latest snapshot by documentation delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"},
+    {"snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation", "status": "current DRAFT; README snapshot-lineage documentation correction only; 2026-09-19 methodology and 2026-09-22 automatic-closeout lifecycle remain in force", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"}
   ]
 }
