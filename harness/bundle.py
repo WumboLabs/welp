@@ -89,6 +89,9 @@ ROLE_REQUIRED_MODULES = {
 # Modules whose run answers carry free prose judged only by rubric review.
 QUALITATIVE_MODULES = {"coding", "document_synthesis", "linux_diagnosis"}
 REVIEWERS_REQUIRED = 2
+REVIEWERS_MAXIMUM = 3
+TIE_BREAK_ROLE = "tie_break"
+RUBRIC_AMBIGUITY = "RUBRIC_AMBIGUITY"
 
 
 # --------------------------------------------------------------------------
@@ -649,7 +652,8 @@ def derive_reliability(root: Path, evidence, setup_doc, findings):
 # shared qualitative adjudication binding (capability reviews + oracle reviews)
 # --------------------------------------------------------------------------
 def _adjudication_problems(root, reviews, *, target_sha, content=None,
-                           prompt_sha=None, dispositions=frozenset()):
+                           prompt_sha=None, dispositions=frozenset(),
+                           tie_break_dispositions=None):
     """Shared hash-bound review checks for qualitative adjudication records.
 
     Every review must bind a distinct identified evaluator (human|agent,
@@ -657,15 +661,31 @@ def _adjudication_problems(root, reviews, *, target_sha, content=None,
     rubric {id, path, sha256}, a rationale, exact quoted evidence from the
     reviewed bytes, the exact reviewed bytes (target_sha256) and — when given
     — the exact prompt bytes (prompt_sha256), and carry a disposition from
-    `dispositions`. Returns (problems, outcomes, independent_reviewers).
+    `dispositions`. A record declaring {"role": "tie_break"} is a tie-break
+    reviewer under welp-review-adjudication-0.1.0-draft: at most one is
+    permitted per target, it must additionally declare
+    previous_reviews_visible exactly false (it is an isolated blinded
+    adjudication that never saw the other reviews), and its disposition comes
+    from `tie_break_dispositions` (the deciding set plus RUBRIC_AMBIGUITY).
+    Agent reviewers must never be labeled human. Returns
+    (problems, outcomes, independent_reviewers).
     """
     problems, seen, outcomes, independent, rubric_shas = [], set(), set(), [], set()
     if not isinstance(reviews, list) or not reviews:
         return ["at least one review record is required"], outcomes, independent
+    tie_break_seen = 0
     for review in reviews:
         if not isinstance(review, dict):
             problems.append("review entry must be an object")
             continue
+        is_tie = review.get("role") == TIE_BREAK_ROLE
+        if is_tie:
+            tie_break_seen += 1
+            if tie_break_seen > 1:
+                problems.append("at most one tie-break reviewer is permitted per target "
+                                "(frozen maximum of three reviewers)")
+            if tie_break_dispositions is None:
+                problems.append("tie-break reviewer not permitted by this adjudication")
         evaluator = review.get("evaluator") or {}
         reviewer = evaluator.get("id")
         if not isinstance(reviewer, str) or not reviewer.strip() or reviewer in seen:
@@ -678,6 +698,11 @@ def _adjudication_problems(root, reviews, *, target_sha, content=None,
                 evaluator.get("model_identity_blinded") is not True:
             problems.append(f"{reviewer}: review must be independent and "
                             "model-identity-blinded")
+        if is_tie:
+            if review.get("previous_reviews_visible") is not False:
+                problems.append(f"{reviewer}: tie-break reviewer must declare "
+                                "previous_reviews_visible exactly false (an isolated "
+                                "blinded adjudication, never shown the other reviews)")
         if review.get("target_sha256") != target_sha:
             problems.append(f"{reviewer}: review is not bound to the exact reviewed bytes "
                             "(target_sha256 mismatch)")
@@ -709,9 +734,13 @@ def _adjudication_problems(root, reviews, *, target_sha, content=None,
                 or (content is not None and q not in content) for q in quotes):
             problems.append(f"{reviewer}: review must quote the exact reviewed text")
         disposition = review.get("disposition")
-        if disposition not in dispositions:
+        if is_tie and tie_break_dispositions is not None:
+            allowed = tie_break_dispositions
+        else:
+            allowed = dispositions
+        if disposition not in allowed:
             problems.append(f"{reviewer}: invalid review disposition {disposition!r} "
-                            f"(expected one of {sorted(dispositions)})")
+                            f"(expected one of {sorted(allowed)})")
             continue
         outcomes.add(disposition)
         if evaluator.get("independent_of_execution") is True and \
@@ -720,7 +749,74 @@ def _adjudication_problems(root, reviews, *, target_sha, content=None,
     if len(rubric_shas) > 1:
         problems.append("all reviewers of one target must adjudicate under the same "
                         "frozen rubric")
+    if len(seen) > REVIEWERS_MAXIMUM:
+        problems.append(f"more than {REVIEWERS_MAXIMUM} reviewers on one target is not "
+                        "permitted (frozen maximum of three reviewer calls)")
     return problems, outcomes, independent
+
+
+def _resolve_blinded_adjudication(root, reviews, *, target_sha, content=None,
+                                  prompt_sha=None, dispositions=frozenset(),
+                                  deciding_tie_break_dispositions=frozenset()):
+    """Frozen deciding-review adjudication rule (welp-review-adjudication-0.1.0-draft).
+
+    Two independent model-identity-blinded agreeing reviewers decide. On a
+    recorded 1-1 disagreement exactly ONE additional blinded tie-break
+    reviewer (role "tie_break", previous_reviews_visible false, bound to the
+    same rubric and reviewed bytes) may be invoked; a deciding 2-of-3
+    majority resolves the target and the minority review is retained. A
+    tie-break disposition of RUBRIC_AMBIGUITY fails closed: the rubric itself
+    is ambiguous or self-contradictory, the target stays unresolved, and
+    HUMAN_REVIEW_REQUIRED is recorded — majority voting never overrides an
+    invalid rubric. At most three reviewers per target; a tie-break invoked
+    without a recorded first-two disagreement, a second tie-break, or a
+    malformed tie-break record is rejected. Returns one of:
+      {"state": "resolved", "disposition": X}
+      {"state": "unresolved", "reason": str, "rubric_ambiguity": bool}
+      {"state": "problems", "problems": [..]}
+    """
+    problems, _outcomes, independent = _adjudication_problems(
+        root, reviews, target_sha=target_sha, content=content, prompt_sha=prompt_sha,
+        dispositions=dispositions,
+        tie_break_dispositions=deciding_tie_break_dispositions)
+    if problems:
+        return {"state": "problems", "problems": problems}
+    base = [r for r in reviews if isinstance(r, dict)
+            and r.get("role") != TIE_BREAK_ROLE]
+    tie = [r for r in reviews if isinstance(r, dict)
+           and r.get("role") == TIE_BREAK_ROLE]
+    if len(independent) < REVIEWERS_REQUIRED or len(base) < REVIEWERS_REQUIRED:
+        return {"state": "unresolved",
+                "reason": f"fewer than {REVIEWERS_REQUIRED} independent blinded reviewers; "
+                          "unresolved load-bearing review",
+                "rubric_ambiguity": False}
+    base_dispositions = [r["disposition"] for r in base]
+    if len(set(base_dispositions)) == 1:
+        if tie:
+            return {"state": "problems",
+                    "problems": ["tie-break reviewer invoked without a recorded "
+                                 "two-reviewer disagreement; re-reviewing an agreed "
+                                 "decision is not permitted"]}
+        return {"state": "resolved", "disposition": base_dispositions[0]}
+    if len(base) == REVIEWERS_REQUIRED and len(set(base_dispositions)) == 2:
+        if not tie:
+            return {"state": "unresolved",
+                    "reason": "reviewer disagreement; the frozen adjudication rule permits "
+                              "exactly one blinded tie-break reviewer (2-of-3)",
+                    "rubric_ambiguity": False}
+        tie_disposition = tie[0]["disposition"]
+        if tie_disposition == RUBRIC_AMBIGUITY:
+            return {"state": "unresolved",
+                    "reason": f"{RUBRIC_AMBIGUITY}: the tie-break review found the frozen "
+                              "rubric ambiguous or internally contradictory; "
+                              "HUMAN_REVIEW_REQUIRED; majority vote does not resolve an "
+                              "invalid rubric",
+                    "rubric_ambiguity": True}
+        return {"state": "resolved", "disposition": tie_disposition}
+    return {"state": "unresolved",
+            "reason": "reviewer disagreement with no tie-break slot remaining "
+                      f"(frozen maximum of {REVIEWERS_MAXIMUM} reviewers)",
+            "rubric_ambiguity": False}
 
 
 ORACLE_REVIEW_DISPOSITIONS = {"VALIDATED", "FAILED"}
@@ -729,11 +825,14 @@ ORACLE_REVIEW_DISPOSITIONS = {"VALIDATED", "FAILED"}
 def _resolve_oracle_reviews(root, cell, answer, prompt_text, findings, label):
     """Resolve Family A oracle ambiguity via blinded adjudications, fail closed.
 
-    Returns the agreed resolution ("VALIDATED"|"FAILED") only when at least
-    REVIEWERS_REQUIRED independent, model-identity-blinded reviewers bind the
-    exact prompt bytes, the exact answer bytes, a frozen rubric, a rationale
-    and exact quotes, and agree. Anything else returns None (pending); the
-    ambiguity is then never coerced into a measured disposition.
+    Returns the agreed resolution ("VALIDATED"|"FAILED") only when
+    independent, model-identity-blinded reviewers bind the exact prompt
+    bytes, the exact answer bytes, a frozen rubric, a rationale and exact
+    quotes. Two agreeing reviewers decide; a recorded 1-1 disagreement
+    admits exactly one blinded tie-break reviewer (deciding 2-of-3); a
+    RUBRIC_AMBIGUITY tie-break fails closed to human review. Anything else
+    returns None (pending); the ambiguity is then never coerced into a
+    measured disposition.
     """
     reviews = cell.get("oracle_reviews")
     if not reviews:
@@ -746,24 +845,18 @@ def _resolve_oracle_reviews(root, cell, answer, prompt_text, findings, label):
                        "prompt_sha256")
         return None
     answer_sha = hashlib.sha256(answer.encode()).hexdigest()
-    problems, outcomes, independent = _adjudication_problems(
+    resolved = _resolve_blinded_adjudication(
         root, reviews, target_sha=answer_sha, content=answer, prompt_sha=prompt_sha,
-        dispositions=ORACLE_REVIEW_DISPOSITIONS)
-    if problems:
-        for problem in problems:
+        dispositions=ORACLE_REVIEW_DISPOSITIONS,
+        deciding_tie_break_dispositions=ORACLE_REVIEW_DISPOSITIONS | {RUBRIC_AMBIGUITY})
+    if resolved["state"] == "problems":
+        for problem in resolved["problems"]:
             findings.error("B_context_oracle_review_unbound", f"{label}: {problem}")
         return None
-    if len(independent) < REVIEWERS_REQUIRED:
-        findings.error("B_context_oracle_review_unbound",
-                       f"{label}: fewer than {REVIEWERS_REQUIRED} independent blinded oracle "
-                       "reviewers cannot resolve an ambiguity")
+    if resolved["state"] == "unresolved":
+        findings.error("B_context_oracle_review_unbound", f"{label}: {resolved['reason']}")
         return None
-    if len(outcomes) != 1:
-        findings.error("B_context_oracle_review_unbound",
-                       f"{label}: oracle reviewer disagreement requires independent "
-                       "adjudication")
-        return None
-    return outcomes.pop()
+    return resolved["disposition"]
 
 
 # --------------------------------------------------------------------------
@@ -870,7 +963,8 @@ def derive_context(root: Path, evidence, setup_doc, findings):
                            f"{label}: actual outgoing prompt required")
         elif question_present and question_block not in prompt_text:
             findings.error("B_context_user_task_mismatch",
-                           f"{label}: outgoing user turn lacks the frozen Family A question block")
+                           f"{label}: outgoing user turn lacks the frozen Controlled Context "
+                           f"(Family A) question block")
         disposition = cell.get("disposition")
         evidence_note = cell.get("evidence")
         measured = disposition in {"VALIDATED", "FAILED", "BUDGET_LIMITED"} \
@@ -1041,10 +1135,14 @@ def _capability_review_target(root, run, content, findings, label):
     """Prose-bearing runs must carry a hash-bound independent qualitative review.
 
     A mechanical PASS on free-prose role detail is provisional and never
-    completes a module: two independent, model-identity-blinded reviewers
-    must adjudicate the exact answer bytes under one hash-bound frozen
-    rubric, with a rationale and exact quoted evidence; missing, unbound,
-    disagreeing or under-manned reviews stay unresolved load-bearing review.
+    completes a module: independent, model-identity-blinded reviewers
+    adjudicate the exact answer bytes under one hash-bound frozen rubric,
+    with a rationale and exact quoted evidence. Two agreeing reviewers
+    decide; a recorded 1-1 disagreement admits exactly one blinded
+    tie-break reviewer whose deciding vote resolves 2-of-3, while a
+    RUBRIC_AMBIGUITY tie-break fails closed to human review. Missing,
+    unbound, disagreeing (unbroken), over-manned or malformed reviews stay
+    unresolved load-bearing review.
     """
     answer_sha = hashlib.sha256(content.encode()).hexdigest()
     reviews = run.get("role_reviews") or []
@@ -1053,26 +1151,21 @@ def _capability_review_target(root, run, content, findings, label):
                 "target_sha256": answer_sha,
                 "reason": f"{label}: free-prose role detail requires independent "
                           "qualitative adjudication; a mechanical PASS is provisional only"}
-    problems, outcomes, independent = _adjudication_problems(
+    resolved = _resolve_blinded_adjudication(
         root, reviews, target_sha=answer_sha, content=content,
-        dispositions={"PASS", "FAIL", "NOT_EVALUABLE"})
-    if problems:
-        for problem in problems:
+        dispositions={"PASS", "FAIL", "NOT_EVALUABLE"},
+        deciding_tie_break_dispositions={"PASS", "FAIL", RUBRIC_AMBIGUITY})
+    if resolved["state"] == "problems":
+        for problem in resolved["problems"]:
             findings.error("B_role_review_unbound", f"{label}: {problem}")
         return {"complete": False, "pass": False, "unresolved": True,
-                "target_sha256": answer_sha, "reason": "; ".join(problems[:3])}
-    if len(independent) < REVIEWERS_REQUIRED:
+                "target_sha256": answer_sha, "reason": "; ".join(resolved["problems"][:3])}
+    if resolved["state"] != "resolved":
         return {"complete": False, "pass": False, "unresolved": True,
-                "target_sha256": answer_sha,
-                "reason": f"{label}: fewer than {REVIEWERS_REQUIRED} independent blinded "
-                          "reviewers; unresolved load-bearing review"}
-    if len(outcomes) != 1:
-        return {"complete": False, "pass": False, "unresolved": True,
-                "target_sha256": answer_sha,
-                "reason": f"{label}: reviewer disagreement requires independent adjudication"}
-    disposition = outcomes.pop()
-    return {"complete": True, "pass": disposition == "PASS", "unresolved": False,
-            "disposition": disposition, "target_sha256": answer_sha}
+                "target_sha256": answer_sha, "rubric_ambiguity": resolved["rubric_ambiguity"],
+                "reason": f"{label}: {resolved['reason']}"}
+    return {"complete": True, "pass": resolved["disposition"] == "PASS", "unresolved": False,
+            "disposition": resolved["disposition"], "target_sha256": answer_sha}
 
 
 def _coding_execution_evidence(root, run, findings, label):
@@ -1663,10 +1756,148 @@ def render_report(result: dict) -> str:
     return "\n".join(lines)
 
 
-def make_synthetic_bundle(root, variant="positive"):
+def make_synthetic_bundle(root, variant="positive", mutate=None):
     """Build explicitly synthetic integration evidence, never model evidence."""
     from synthetic_bundle import make_synthetic_bundle as build
-    return build(root, variant)
+    return build(root, variant, mutate=mutate)
+
+
+def _adjudication_selftest_failures(temp_root: Path) -> list:
+    """Frozen adjudication-rule regressions (welp-review-adjudication-0.1.0-draft).
+
+    Exercises the shared blinded adjudication resolver and the capability
+    review integration: agreement decides, a recorded 1-1 disagreement
+    admits exactly one blinded tie-break (2-of-3), a RUBRIC_AMBIGUITY
+    tie-break fails closed to human review, and malformed, unblinded,
+    unbound, over-manned or post-agreement reviewer records are rejected.
+    """
+    failures = []
+    root = temp_root
+    rubric_rel = "evidence/rubrics/adjudication-selftest.json"
+    rubric_sha = _sha256_bytes(json.dumps({
+        "rubric_id": "welp-role-review/adjudication-selftest/1",
+        "criteria": ["synthetic selftest rubric"]}).encode())
+    (root / "evidence" / "rubrics").mkdir(parents=True, exist_ok=True)
+    (root / rubric_rel).write_text(json.dumps({
+        "rubric_id": "welp-role-review/adjudication-selftest/1",
+        "criteria": ["synthetic selftest rubric"]}))
+    content = "SYNTHETIC answer text for adjudication selftest."
+    answer_sha = _sha256_bytes(content.encode())
+    prompt_sha = _sha256_bytes(b"SYNTHETIC prompt")
+
+    def review(rid, disposition, **over):
+        record = {"evaluator": {"id": rid, "kind": "agent",
+                                "independent_of_execution": True,
+                                "model_identity_blinded": True},
+                  "target_sha256": answer_sha,
+                  "rubric": {"id": "welp-role-review/adjudication-selftest/1",
+                             "path": rubric_rel, "sha256": rubric_sha},
+                  "rationale": "Synthetic adjudication under the frozen rubric.",
+                  "evidence": ["SYNTHETIC answer text"], "disposition": disposition}
+        record.update(over)
+        return record
+
+    def resolve(reviews, **kwargs):
+        return _resolve_blinded_adjudication(
+            root, reviews, target_sha=kwargs.pop("target_sha", answer_sha),
+            content=kwargs.pop("content", content),
+            prompt_sha=kwargs.pop("prompt_sha", None),
+            dispositions=kwargs.pop("dispositions", {"PASS", "FAIL", "NOT_EVALUABLE"}),
+            deciding_tie_break_dispositions=kwargs.pop(
+                "tie", {"PASS", "FAIL", RUBRIC_AMBIGUITY}))
+
+    def expect(name, got, want):
+        if got != want:
+            failures.append({"case": name, "got": got, "want": want})
+
+    expect("agree-pass", resolve([review("a", "PASS"), review("b", "PASS")]),
+           {"state": "resolved", "disposition": "PASS"})
+    expect("agree-fail", resolve([review("a", "FAIL"), review("b", "FAIL")]),
+           {"state": "resolved", "disposition": "FAIL"})
+    got = resolve([review("a", "PASS"), review("b", "FAIL")])
+    if got["state"] != "unresolved" or "tie-break" not in got["reason"]:
+        failures.append({"case": "disagreement-no-tie", "got": got})
+    expect("tie-pass", resolve([review("a", "PASS"), review("b", "FAIL"),
+                                review("t", "PASS", role=TIE_BREAK_ROLE,
+                                        previous_reviews_visible=False)]),
+           {"state": "resolved", "disposition": "PASS"})
+    expect("tie-fail", resolve([review("a", "PASS"), review("b", "FAIL"),
+                                review("t", "FAIL", role=TIE_BREAK_ROLE,
+                                        previous_reviews_visible=False)]),
+           {"state": "resolved", "disposition": "FAIL"})
+    got = resolve([review("a", "PASS"), review("b", "FAIL"),
+                   review("t", RUBRIC_AMBIGUITY, role=TIE_BREAK_ROLE,
+                          previous_reviews_visible=False)])
+    if got.get("state") != "unresolved" or not got.get("rubric_ambiguity") \
+            or "HUMAN_REVIEW_REQUIRED" not in got.get("reason", ""):
+        failures.append({"case": "tie-rubric-ambiguity", "got": got})
+    for name, tie_over in (
+            ("tie-malformed-no-visibility", {}),
+            ("tie-sees-previous-reviews", {"previous_reviews_visible": True}),
+            ("tie-unbound-target", {"target_sha256": "0" * 64}),
+            ("tie-invalid-disposition", {"disposition": "NOT_EVALUABLE"})):
+        tie = review("t", "PASS", role=TIE_BREAK_ROLE)
+        tie.update(tie_over)
+        got = resolve([review("a", "PASS"), review("b", "FAIL"), tie])
+        if got["state"] != "problems":
+            failures.append({"case": name, "got": got})
+    got = resolve([review("a", "PASS"), review("b", "FAIL"),
+                   review("t1", "PASS", role=TIE_BREAK_ROLE,
+                          previous_reviews_visible=False),
+                   review("t2", "FAIL", role=TIE_BREAK_ROLE,
+                          previous_reviews_visible=False)])
+    if got["state"] != "problems":
+        failures.append({"case": "fourth-reviewer-rejected", "got": got})
+    got = resolve([review("a", "PASS"), review("b", "PASS"),
+                   review("t", "FAIL", role=TIE_BREAK_ROLE,
+                          previous_reviews_visible=False)])
+    if got["state"] != "problems" or "without a recorded" not in ";".join(got["problems"]):
+        failures.append({"case": "tie-after-agreement-rejected", "got": got})
+    got = resolve([review("a", "PASS"), review("b", "FAIL"),
+                   review("c", "NOT_EVALUABLE")])
+    if got["state"] != "unresolved" or "no tie-break slot" not in got["reason"]:
+        failures.append({"case": "three-way-disagreement-no-slot", "got": got})
+    # oracle dispositions: prompt-bound reviews under VALIDATED/FAILED
+    def oracle_review(rid, disposition, **over):
+        return review(rid, disposition, prompt_sha256=prompt_sha, **over)
+
+    expect("oracle-agree", resolve(
+        [oracle_review("a", "VALIDATED"), oracle_review("b", "VALIDATED")],
+        prompt_sha=prompt_sha, dispositions=ORACLE_REVIEW_DISPOSITIONS,
+        tie=ORACLE_REVIEW_DISPOSITIONS | {RUBRIC_AMBIGUITY}),
+        {"state": "resolved", "disposition": "VALIDATED"})
+    expect("oracle-tie-break", resolve(
+        [oracle_review("a", "VALIDATED"), oracle_review("b", "FAILED"),
+         oracle_review("t", "FAILED", role=TIE_BREAK_ROLE,
+                       previous_reviews_visible=False)],
+        prompt_sha=prompt_sha, dispositions=ORACLE_REVIEW_DISPOSITIONS,
+        tie=ORACLE_REVIEW_DISPOSITIONS | {RUBRIC_AMBIGUITY}),
+        {"state": "resolved", "disposition": "FAILED"})
+    got = resolve([oracle_review("a", RUBRIC_AMBIGUITY), oracle_review("b", "VALIDATED")],
+                  dispositions=ORACLE_REVIEW_DISPOSITIONS,
+                  tie=ORACLE_REVIEW_DISPOSITIONS | {RUBRIC_AMBIGUITY})
+    if got["state"] != "problems":
+        failures.append({"case": "base-reviewer-ambiguity-rejected", "got": got})
+    # capability review integration: disagreement + tie-break completes the run
+    findings = Findings()
+    run = {"role_reviews": [review("a", "PASS"), review("b", "FAIL"),
+                            review("t", "PASS", role=TIE_BREAK_ROLE,
+                                   previous_reviews_visible=False)]}
+    state = _capability_review_target(root, run, content, findings, "selftest.docsyn[0]")
+    if state.get("complete") is not True or state.get("pass") is not True \
+            or findings.errors:
+        failures.append({"case": "capability-integration-tie-resolves",
+                         "state": state, "errors": findings.errors})
+    findings = Findings()
+    run = {"role_reviews": [review("a", "PASS"), review("b", "FAIL"),
+                            review("t", RUBRIC_AMBIGUITY, role=TIE_BREAK_ROLE,
+                                   previous_reviews_visible=False)]}
+    state = _capability_review_target(root, run, content, findings, "selftest.docsyn[0]")
+    if state.get("unresolved") is not True or not state.get("rubric_ambiguity") \
+            or "RUBRIC_AMBIGUITY" not in (state.get("reason") or ""):
+        failures.append({"case": "capability-integration-ambiguity",
+                         "state": state})
+    return failures
 
 
 def selftest():
@@ -1689,6 +1920,7 @@ def selftest():
             report = render_report(result)
             if report != render_report(evaluate_bundle(root)):
                 failures.append({"variant": variant, "error": "nondeterministic report"})
+        failures.extend(_adjudication_selftest_failures(Path(td) / "adjudication"))
     print(json.dumps({"pass": not failures, "failures": failures}, indent=2))
     return int(bool(failures))
 

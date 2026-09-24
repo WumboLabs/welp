@@ -178,7 +178,8 @@ def construct_family_a(usable_tokens: int, seed: int, measure, max_attempts: int
             * next_n / total)))
             for pos, f in zip(positions, facts)]
         n = next_n
-    raise ValueError(f"Family A placement/occupancy failed after {max_attempts} attempts")
+    raise ValueError(f"Controlled Context (Family A) placement/occupancy failed "
+                         f"after {max_attempts} attempts")
 
 
 def rung_outcome(gates: dict, finish, content: str, usage: dict = None,

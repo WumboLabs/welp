@@ -345,7 +345,8 @@ The configuration is part of the result
   (completion/truncation/budget discipline; guardrails, never semantic
   labels). Phases do not automatically double; reliability-class phases and
   the useful-context gate use two lanes when justified.
-- The **historical 512-token Family A reserve** (2026-09-19 method)
+- The **historical 512-token Controlled Context reserve** (2026-09-19 method;
+  legacy fixture ID: Family A)
   remains a comparator only where it represents the frozen deployment limit.
   From the prospective revision onward each lane reserves its own bounded
   generation ceiling; semantic calibration and operational SLO are independent.
@@ -426,9 +427,10 @@ strict JSON, uncertainty and absent-information behavior. Coding requires a
 bounded repository task with executable checks and unrelated-diff inspection;
 native tools require correct choice/arguments, sequential state, error recovery,
 grounded continuation, unnecessary-call avoidance and stopping. Context evidence
-distinguishes controlled Family A retrieval from multi-document, codebase and
+distinguishes Controlled Context retrieval from Multi-Document Context, codebase and
 conversation/session synthesis; absent a frozen supplementary fixture, those
-dimensions are NOT_TESTED, never inherited from Family A. Multi-turn correction
+dimensions are NOT_TESTED, never inherited from Controlled Context. Multi-Turn
+Correction
 and agent execution are applicable to conversational/agent roles only; a plan
 alone is not execution. Use mechanical oracles for deterministic claims and a
 frozen, model-identity-blinded rubric with independent review for prose/diagnostic
@@ -487,6 +489,33 @@ human agreement or statistically independent samples. Missing, conflicting or
 unqualified review blocks the conclusion, not the model. Semantic and
 operational lanes both contribute observed safety evidence.
 
+#### Review disagreement resolution (prospective 2026-09-24 hardening II)
+
+`welp-review-adjudication` 0.1 gives classification-deciding blinded review one
+frozen resolution path. Two independent, model-identity-blinded agreeing
+reviews decide. On a recorded 1–1 disagreement the rule permits exactly one
+additional blinded tie-break reviewer, bound like every reviewer (exact
+reviewed bytes, exact prompt bytes where the contract defines them, the same
+hash-bound frozen rubric, rationale, exact quoted evidence) and additionally
+declaring `role: "tie_break"` and `previous_reviews_visible: false` — an
+isolated blinded adjudication that never saw the other reviews, the model
+identity, or the desired outcome. A deciding tie-break resolves 2-of-3 and the
+minority review is retained. If the tie-break review finds the frozen rubric
+ambiguous or self-contradictory it records `RUBRIC_AMBIGUITY`: the target stays
+unresolved with HUMAN_REVIEW_REQUIRED, majority voting never overrides an
+invalid rubric, and no further reviewer calls are made. Three reviewers per
+target is the maximum; re-reviewing an agreed decision, a second tie-break, or
+a fourth reviewer is rejected.
+
+Reviewer independence boundary: two or three isolated reviewer calls from the
+same model family are independently isolated blinded adjudications, not a
+statistically independent human population. Reports and public documentation
+must not describe them as independent human review, an independent evaluator
+population, or statistically independent annotators. Retained evidence from
+older frozen snapshots stays immutable; re-adjudicating retained raw reviews
+under this rule requires a new linked event with unchanged reviewed bytes and
+rubric hash and is recorded there, never silently.
+
 ### Setup and fixed-screen uncertainty
 
 `welp-setup` checks a pre-scoring freeze of representative response classes,
@@ -495,6 +524,21 @@ ladder, answer headroom, maximum token/wall-time cost and separate operational
 SLO. Calibrate each claimed response class; four short-answer examples do not
 qualify long synthesis or multi-step tool work. No universal semantic token
 floor is established. Preserve a bounded UNKNOWN when no candidate completes.
+
+`welp-setup` 0.2 adds a bounded mechanical sanity layer under the
+representativeness review. Each response class freezes its expected answer
+geometry ({min_tokens, max_tokens, basis}, derived from the fixture rubrics),
+an explicit reasoning-bearing flag, and a named upper-geometry calibration
+example. check_setup fails closed before scored inference when the selected
+ceiling cannot hold the declared answer structure (geometry maximum plus the
+class answer budget), or when the upper-geometry calibration example's visible
+answer falls below the declared minimum at the frozen conservative conversion
+(two characters per token). Reasoning consumption never fails calibration —
+floors read the visible answer only. A genuinely concise class keeps a small
+ceiling; floors come only from the class's own frozen declarations, never a
+universal default. When the mechanical evidence contradicts the
+representativeness review, setup fails closed rather than silently choosing
+one.
 
 Bind exact outgoing messages, system prompt, rendered prompt/template, sampler,
 requested/effective reasoning and runtime/profile identity. Review prompt
@@ -520,20 +564,29 @@ the cap; never rerun until a favorable decision appears.
 `welp-context` 0.2 separates required rung/seed/lane inventory, execution
 validity, useful capability and lane-specific useful maximum. Valid measured
 negative results can complete coverage without validating any useful rung.
-Missing or invalid required evidence cannot support COMPLETE_PASS. Family A
-1.3 retains controlled facts and final-token placement, but uses the canonical
-answer oracle, including valid numbered and comparative forms; ambiguous
+Missing or invalid required evidence cannot support COMPLETE_PASS. The
+Controlled Context fixture 1.3 (legacy ID: Family A 1.3) retains controlled
+facts and final-token placement, but uses the canonical answer oracle,
+including valid numbered and comparative forms; ambiguous
 free-form answers require review rather than a silently permissive substring
 rule. Full-window performance and placement evidence are still required.
 
 The supplementary multi-document fixture tests distributed facts, conflicting
 versions, source-grounded synthesis and absent information. It does not turn
-Family A into a codebase or long-session benchmark. Real-work 0.2 adds bounded
+Controlled Context into a codebase or long-session benchmark. Real-work 0.2 adds bounded
 Linux/config/log diagnosis and a read-only tool simulator with disclosed
 discovery information, sequential results, recovery and grounded termination.
 Score observed transcripts, not hypothetical successful tool responses.
 Repository checks still require an isolated disposable execution environment.
 A missing fixture or unrun applicable role is NOT_TESTED, not NOT_APPLICABLE.
+
+Source attribution requires the right evidence, not one exact registry string
+(2026-09-24 hardening II): cited source references resolve when they are the
+frozen id, or an unambiguous word-boundary extension or truncation of exactly
+one frozen id, in Linux Diagnosis and Multi-Document Context alike. Glued,
+paraphrased or ambiguous citations keep failing mechanically — ambiguity is
+never guessed, and contradiction, grounding and safety requirements are
+unchanged.
 
 ### Measurement and evidence integration
 
@@ -581,7 +634,7 @@ is part of protocol hardening.
   calibration, conclusion lanes and resource reporting)
 - `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.3.0-draft (scorer v3, independent safety, paired lanes and bounded fixed-screen sensitivity)
-- `welp-context` 0.2.0-draft (canonical Family A oracle, coverage/execution/capability axes; full-window requirements remain in `context-scaling.md`)
+- `welp-context` 0.2.0-draft (canonical Controlled Context answer oracle, machine ID Family A; coverage/execution/capability axes; full-window requirements remain in `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
 - `welp-final-classification` 0.4.0-draft (evidence-derived dimensions, coverage/review blockers and selected DEPLOYMENT profile)

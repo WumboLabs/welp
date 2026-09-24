@@ -31,7 +31,8 @@
 5. **Phase 5 module applicability.** Freeze `phase5_applicability.json` before any Phase-5 execution.
 6. **Long-job durability.** Absolute path declared first; existence + row count + SHA-256 verified after exit; only then COMPLETE.
 7. **Context characterization (mandatory coverage accounting).** Freeze the [Context Scaling](../protocol/context-scaling.md) method revision/hash and answer the checklist below before context testing; finalize every row in the [model-card coverage table](../lab-record-template/README.md#model-card-context-coverage), including untested ranges. Capacity admission alone is not validation; practical default selection is not a context stop condition.
-   Prospective Family A uses `harness/context.py:construct_family_a` with a
+   The prospective Controlled Context fixture (legacy ID: Family A) uses
+   `harness/context.py:construct_family_a` with a
    callback that applies the pinned inference chat template/BOS and returns
    final token count and each fact's token offset. Retain the bounded
    placement attempts, verify final preflight/inference token equality, and
@@ -87,8 +88,8 @@ From 2026-09-24, `harness/context.py:context_summary` reports coverage,
 execution validity, capability and each lane's useful maximum separately.
 Every required rung/seed/lane must be accounted for. All valid negative rows
 can complete coverage while capability remains FAILED; missing, invalid or
-unresolved rows cannot. Keep controlled Family A and complementary
-multi-document/codebase/session evidence distinct.
+unresolved rows cannot. Keep the Controlled Context fixture and the
+complementary Multi-Document Context, codebase and session evidence distinct.
 
 ## Reliability, review and performance evidence
 

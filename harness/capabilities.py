@@ -283,6 +283,36 @@ def score_multi_turn_final(content: str) -> dict:
     return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
 
 
+def resolve_source_alias(cited, known_ids):
+    """Resolve one cited source reference to the unique frozen source it can
+    only mean, or None.
+
+    Source grounding requires the right evidence, not one exact registry
+    string: an exact frozen id always resolves, and so does an unambiguous
+    word-boundary extension or truncation of exactly one frozen id (the
+    lfm2.5 hardening-validation campaign's "journal_excerpt" for
+    "journal"). A citation matching several frozen ids, a glued form with no
+    word boundary, or nothing at all resolves to None and keeps failing
+    mechanically — ambiguity is never guessed.
+    """
+    if not isinstance(cited, str) or not cited:
+        return None
+    known = [s for s in known_ids if isinstance(s, str) and s]
+    if cited in known:
+        return cited
+    c = cited.lower()
+
+    def boundary_prefix(inner, outer):
+        return outer.startswith(inner) and len(outer) > len(inner) \
+            and not outer[len(inner)].isalnum()
+
+    matches = {s for s in known
+               if s.lower() == c
+               or boundary_prefix(s.lower(), c)
+               or boundary_prefix(c, s.lower())}
+    return matches.pop() if len(matches) == 1 else None
+
+
 def score_linux_diagnosis(case_id: str, content: str) -> dict:
     """Score one linux-diagnosis case against its frozen evidence registry.
 
@@ -326,12 +356,22 @@ def score_linux_diagnosis(case_id: str, content: str) -> dict:
             if not isinstance(ids, list) or not all(isinstance(s, str) for s in ids):
                 failures.append("root_cause source_ids shape")
             else:
-                unknown = sorted({s for s in ids if s not in oracle["source_ids"]})
-                if unknown:
-                    failures.append(f"unknown source ids: {unknown}")
-                if not set(ids).issubset(sources):
+                frozen_sources = list(oracle["source_ids"])
+                resolved = []
+                unresolved = []
+                for s in ids:
+                    target = resolve_source_alias(s, frozen_sources)
+                    if target is None:
+                        unresolved.append(s)
+                    else:
+                        resolved.append(target)
+                if unresolved:
+                    failures.append(f"unknown source ids: {sorted(set(unresolved))}")
+                if not set(resolved).issubset(sources):
                     failures.append(f"cited sources do not support {kind}")
-                missing = [s for s in required if s not in ids]
+                missing = [s for s in required
+                           if s not in resolved and
+                           resolve_source_alias(s, ids) is None]
                 if missing:
                     failures.append(f"missing required evidence citations: {missing}")
         if not isinstance(cause.get("detail"), str) or not cause["detail"].strip():
@@ -542,6 +582,8 @@ def score_multidocument(content: str) -> dict:
         failures.append("exact object keys")
     else:
         integer_keys = set(oracle.get("integer_keys_exact", []))
+        doc_ids = [d["id"] for d in fixture.get("documents", [])
+                   if isinstance(d, dict) and isinstance(d.get("id"), str)]
         for key, expected in oracle["expected_values"].items():
             got = value[key]
             if expected is None:
@@ -550,6 +592,10 @@ def score_multidocument(content: str) -> dict:
             elif key in integer_keys:
                 if type(got) is not int or got != expected:
                     failures.append(f"{key}: wrong value or type")
+            elif isinstance(expected, str) and expected in doc_ids:
+                if resolve_source_alias(got if isinstance(got, str) else "",
+                                        doc_ids) != expected:
+                    failures.append(f"{key}: wrong value")
             elif got != expected:
                 failures.append(f"{key}: wrong value")
     return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
@@ -739,6 +785,44 @@ def selftest() -> int:
         mutated(lambda a: a["root_cause"]["source_ids"].remove(
             oracle["supported_causes"][a["root_cause"]["kind"]]["required_sources"][0]),
             "missing required evidence citation")
+
+        # --- unambiguous source attribution (2026-09-24 hardening II) -----------
+        frozen = list(oracle["source_ids"])
+        alias_cases = [
+            (frozen[0], frozen[0]),                                # exact
+            (frozen[0] + "_excerpt", frozen[0]),                   # boundary extension
+            (frozen[0].upper(), frozen[0]),                        # case-insensitive exact
+        ]
+        for cited, want in alias_cases:
+            if resolve_source_alias(cited, frozen) != want:
+                fails.append(f"linux diagnosis {cid}: alias {cited!r} must resolve to "
+                             f"{want!r}")
+        for cited in ("totally_unknown", frozen[0].lower().replace("-", "")
+                      + frozen[1].lower().replace("-", ""),):
+            if resolve_source_alias(cited, frozen) is not None:
+                fails.append(f"linux diagnosis {cid}: ambiguous/glued alias {cited!r} "
+                             "must stay unresolved")
+        # the LFM campaign's rejected aliases must now resolve unambiguously
+        for cited in ("journal_excerpt", "config_snippet"):
+            got = resolve_source_alias(cited, frozen)
+            if got is None or got not in frozen:
+                fails.append(f"linux diagnosis {cid}: unambiguous alias {cited!r} must "
+                             f"resolve to a frozen source (got {got!r})")
+        # required-source coverage via alias: drop the exact id, cite the alias
+        required0 = oracle["supported_causes"][reference["root_cause"]["kind"]]["required_sources"][0]
+
+        def alias_required(a):
+            ids = a["root_cause"]["source_ids"]
+            ids[ids.index(required0)] = required0 + "_excerpt"
+        mutated(lambda a: a["root_cause"]["source_ids"].__setitem__(
+            a["root_cause"]["source_ids"].index(required0),
+            required0.lower().replace("-", "") + "x"),
+            "required source cited as glued unresolved form")
+        answer = json.loads(json.dumps(reference))
+        alias_required(answer)
+        if score_linux_diagnosis(cid, json.dumps(answer))["semantic"] != "PASS":
+            fails.append(f"linux diagnosis {cid}: required source cited via unambiguous "
+                         "alias must pass")
         mutated(lambda a: a["proposed_repair"].__setitem__("destructive", True),
                 "destructive flag")
         mutated(lambda a: a["proposed_repair"].__setitem__("action_class", []),
@@ -814,6 +898,15 @@ def selftest() -> int:
     multidoc_mutated({"replicas_conflicting_claim": "memo-2026-09-20"}, "wrong conflict source")
     multidoc_mutated({"health_probe_path": "/healthz"}, "fabricated absent fact")
     multidoc_mutated({"restart_observed_at": "09:14:31"}, "paraphrased log timestamp")
+    # unambiguous alternate source references are accepted; ambiguous ones are not
+    aliased = json.loads(multidoc_ref)
+    aliased["current_port_source"] = "config-rev7-effective"
+    if score_multidocument(json.dumps(aliased))["semantic"] != "PASS":
+        fails.append("multidocument: unambiguous alternate source reference must pass")
+    glued = json.loads(multidoc_ref)
+    glued["current_port_source"] = "configrev7"
+    if score_multidocument(json.dumps(glued))["semantic"] != "FAIL":
+        fails.append("multidocument: glued source reference must fail")
     for label, text in [
             ("missing key", '{"current_port": 8652, "current_port_source": "config-rev7"}'),
             ("duplicate key", '{"current_port": 8652, "current_port": 8652, '

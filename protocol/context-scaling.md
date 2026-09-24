@@ -199,8 +199,9 @@ and placement errors. All five placements must satisfy:
 - Preferred absolute error: **<=0.25 percentage points**.
 - Hard absolute error: **<=0.50 percentage points**.
 
-The five-depth placement set is checked before inference. Family A 1.3 retains
-the 1.2 construction geometry; call `harness/context.py:construct_family_a` with
+The five-depth placement set is checked before inference. The Controlled
+Context fixture 1.3 (legacy ID: Family A 1.3) retains the 1.2 construction
+geometry; call `harness/context.py:construct_family_a` with
 the intended lane's usable token budget, fixed seed, and a measurement callback
 that applies the pinned template and tokenizes the complete rendered stream
 with identical BOS/special-token behavior to inference. Locate each full target
@@ -224,16 +225,17 @@ five fields inside one combined prompt are **one inference request and five
 observations**, not five requests. Retain invalidated requests in execution
 accounting without counting them as valid coverage.
 
-The controlled longitudinal fixture Family A lives in
-`fixtures/useful_context/family-a.json` and `harness/context.py`; it
-characterizes *only* the controlled retrieval/synthesis dimension. For
-generalization to messy multi-document, repository and long-session tasks,
-report separate frozen families with their own tasks/oracles, geometry,
-applicability and limits. If absent, explicitly report NOT_TESTED; never
-promote a Family A maximum to every context role.
+The controlled longitudinal Controlled Context fixture (machine ID:
+`fixtures/useful_context/family-a.json`, Family A) lives in
+`harness/context.py`; it characterizes *only* the controlled
+retrieval/synthesis dimension. For generalization to messy multi-document,
+repository and long-session tasks, report separate frozen families with their
+own tasks/oracles, geometry, applicability and limits. If absent, explicitly
+report NOT_TESTED; never promote a Controlled Context maximum to every context
+role.
 
-From the 2026-09-24 hardening snapshot, score Family A through
-`harness/context.py:score_family_a`, not a campaign-local regex. Numbered
+From the 2026-09-24 hardening snapshot, score Controlled Context answers
+through `harness/context.py:score_family_a`, not a campaign-local regex. Numbered
 answers and clear comparative paraphrases count; mentioning a year in a
 question or a negated answer does not. Retain all six individual gates and
 unresolved review status. Scoring qualification does not waive completion,

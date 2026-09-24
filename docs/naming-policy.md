@@ -27,6 +27,50 @@ rules: [Report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy
 
 Do not rewrite frozen provenance identifiers. Exact historical snapshot IDs, contract IDs, conformance filenames, campaign directory names, and hash-bound evidence stay as recorded.
 
+## Display names for tests and modules (2026-09-24 hardening II)
+
+WELP tests and modules carry stable machine IDs (fixture IDs, module keys,
+contract IDs, file names) and short human-facing display names. Display names
+exist so docs, reports and the website read clearly without memorizing
+internal taxonomy. Rules:
+
+- Current-facing material (README, docs, protocol notes, templates, website
+  text, generated report prose) uses the clear display name.
+- Introduce a historical machine ID once, in parentheses, when disambiguation
+  helps — e.g. "Controlled Context (legacy ID: Family A 1.3)" — then use the
+  display name. Do not repeatedly expose legacy jargon.
+- Machine IDs never change: fixture paths, fixture versions, contract IDs,
+  module keys, evidence keys and frozen snapshots are provenance. New
+  prospective fixtures MAY use clearer IDs if compatibility mapping is
+  explicit and validators understand legacy IDs; prefer compatibility aliases
+  over breaking historical provenance.
+- Frozen historical reports are never rewritten to replace old labels.
+- Reviewer-facing evidence (rubric IDs, review packets) may include both the
+  display name and the machine ID.
+
+Canonical display-name map (machine ID -> display name):
+
+| Stable machine ID | Display name |
+|---|---|
+| `welp-useful-context-family-a` fixture (Family A 1.3) | Controlled Context |
+| multidocument fixture / `multidocument` module | Multi-Document Context |
+| `tool-recovery` / tool-recovery 0.2 module | Tool Recovery |
+| `linux-diagnosis` fixture | Linux Diagnosis |
+| repository coding fixture (`repository-timeout`) | Repository Repair |
+| `multi-turn-correction` fixture | Multi-Turn Correction |
+| quality screen (`welp-quality-screen-12-v1`) | Assistant Quality |
+| strict structured / JSON-exact tasks | Structured Output |
+| long-context performance arms | Long-Context Performance |
+| semantic budget lane (reasoning-bearing measurement) | Reasoning Budget |
+| `DEPLOYMENT` prompt lane | Deployment Prompt |
+| `MINIMAL` prompt lane | Minimal Prompt |
+| `PUBLISHER` prompt lane | Publisher Prompt |
+| `OPTIMIZED` prompt lane | Optimized Prompt |
+| semantic / operational budget lanes | Semantic Budget / Operational Budget |
+
+Names not on this map follow the rule of thumb: 2–4 clear words, plain English
+over jargon, no abstract letter/number-only labels.
+
 ## Validator compatibility
 
 The campaign validator may retain historical identifiers where required to validate frozen campaign artifacts. New campaigns must still use WELP identifiers.

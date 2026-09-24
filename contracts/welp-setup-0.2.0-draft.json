@@ -1,0 +1,60 @@
+{
+  "contract_id": "welp-setup",
+  "version": "0.2.0-draft",
+  "applies_from_snapshot_date": "2026-09-24",
+  "status": "DRAFT / PROSPECTIVE",
+  "module": "harness/setup.py (welp-harness-setup/1.1.0-draft)",
+  "schema": "schemas/welp_setup.schema.json",
+  "supersedes": {
+    "contract_id": "welp-setup",
+    "version": "0.1.0-draft",
+    "migration_type": "additive",
+    "note": "All 0.1.0-draft checks, evidence rules, blocker vocabulary and raw-evidence formats are unchanged. 0.2.0-draft adds the frozen per-class expected-answer-geometry metadata and the mechanical calibration representativeness sanity layer (ceiling geometry floor + upper-geometry example coherence). Retained 0.1.0-draft setup documents from older frozen snapshots stay structurally valid evidence under their own snapshot; they are never relabeled and are not grandfathered into new campaigns."
+  },
+  "purpose": "Frozen pre-scoring setup (preregistration) for scored WELP campaigns — plus a bounded mechanical sanity layer that catches obviously under-representative calibration BEFORE scored work. First motivated by the lfm2.5-8b-a1b hardening-validation campaign, where two toy retrieval calibration examples legitimately passed the ladder yet froze a 512-token ceiling that truncated both scored context-recall tasks: the judgment-layer representativeness review alone missed the mismatch until scored truncation exposed it. The sanity layer predicts no model response length; it fails setup closed only when the frozen declared answer geometry of a class contradicts the selected ceiling or the calibration evidence.",
+  "scope_note": "This is WELP preregistration evidence, not a competing LLMGauge schema and not an orchestration recipe. It carries no model outputs and selects no winners; it only proves the experiment was fixed, evidenced and reviewed before scoring.",
+  "interface": {
+    "check_setup": "check_setup(root: Path, setup: dict) -> list[str]; [] = the frozen plan may gate scoring; entries are plain blocker strings",
+    "cli": "python3 harness/setup.py check SETUP_JSON [ROOT] | selftest",
+    "synthetic_builder": "_synthetic_setup(root) -> dict — selftest/integration helper; writes a complete valid evidence tree under root/evidence/setup/ and returns a guaranteed-valid document for the same root",
+    "validator_integration": "Verify the manifest pointer (setup_evidence {path, sha256}) first, json.loads the document, then call check_setup(evidence_root, doc); root is the directory the document's evidence paths resolve against"
+  },
+  "versioning": {
+    "supported_versions": ["0.1.0-draft", "0.2.0-draft"],
+    "geometry_required_for": ["0.2.0-draft"],
+    "rule": "0.1.0-draft documents validate under the 0.1.0 rules only (no geometry requirements). New campaigns under snapshots from welp-next-snapshot-2026-09-24-review-and-setup-hardening onward must freeze 0.2.0-draft documents."
+  },
+  "document_keys_020_additions": {
+    "task_class_keys": {
+      "expected_answer_geometry": {
+        "min_tokens": "integer >= 1 — the frozen declared minimum expected VISIBLE answer size for scored tasks of this class, derived from the fixture rubrics (how much answer structure the rubric can evaluate)",
+        "max_tokens": "integer >= min_tokens — the frozen declared maximum expected answer structure for the class",
+        "basis": "non-empty string stating the fixture/rubric derivation of the declaration — a frozen human declaration, never a computed complexity score and never fake precision"
+      },
+      "reasoning_bearing": "explicit boolean — whether the class expects reasoning-bearing responses. Reasoning consumption NEVER fails calibration: all sanity floors read the visible answer only, and no check fails a class for completion_tokens being large",
+      "upper_geometry_example_id": "non-empty string naming one preregistered calibration example of the same class that represents the upper expected response geometry, or explicit null when the class declares no distinct upper geometry; missing key is a blocker"
+    },
+    "sanity_checks": {
+      "ceiling_geometry_floor": "the qualifying/selected ceiling must reach geometry.max_tokens + class maximum answer budget. Catches a ceiling that cannot hold the declared answer structure of the scored tasks (the lfm2.5 defect mode). A genuinely concise class declares a small geometry and keeps its small ceiling — no universal inflation",
+      "upper_geometry_coherence": "at the selected ceiling the declared upper-geometry calibration example must have completed with a visible answer of at least min_tokens x MIN_CHARS_PER_TOKEN characters (frozen MIN_CHARS_PER_TOKEN = 2, deliberately conservative — it can only catch gross under-representation, never measure length precisely). When the mechanical evidence contradicts the representativeness review, check_setup fails closed with an explicit error naming the contradiction — the setup does not silently choose between them",
+      "metadata_presence": "missing or malformed geometry metadata, a missing reasoning_bearing flag, or an upper_geometry_example_id that is neither null nor a preregistered example of the same class is a blocker"
+    }
+  },
+  "regression_contract": [
+    "tiny calibration examples falsely representing a long-answer class fail the upper-geometry sanity floor",
+    "same-class representative examples selecting a sufficient ceiling are accepted",
+    "calibration examples overlapping scored tasks are rejected (unchanged 0.1.0 rule)",
+    "missing class geometry metadata is rejected",
+    "a ceiling below the frozen geometry floor (declared max structure + answer budget) is rejected",
+    "a genuinely concise class is not forced to an unnecessarily large ceiling",
+    "a reasoning-bearing class never fails calibration because reasoning consumed budget"
+  ],
+  "non_goals": [
+    "no prediction of exact model response lengths",
+    "no opaque complexity score and no fake precision — the conversion constant is frozen, conservative and documented",
+    "no inference, orchestration or network access in check_setup",
+    "no semantic judging of answers",
+    "no universal ceiling inflation: floors come only from the class's own frozen declarations"
+  ],
+  "historical_compatibility": "Retained 0.1.0-draft setup documents (including the lfm2.5-8b-a1b hardening-validation campaign) remain valid evidence under their frozen snapshot. Whether such a campaign's calibration would also pass the 0.2.0 sanity layer is evaluated per section 28 of its successor adjudication, not silently grandfathered."
+}

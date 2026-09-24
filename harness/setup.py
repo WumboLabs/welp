@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """setup.py — canonical pre-scoring setup (preregistration) module (welp-phase-harness/1).
 
-Implements welp-setup 0.1.0-draft: validates the frozen pre-scoring setup
+Implements welp-setup 0.2.0-draft: validates the frozen pre-scoring setup
 document BEFORE any scored inference. The setup is WELP preregistration —
 frozen task classes, disjoint calibration, bounded ceiling ladders, lane
 identities, cache controls and seed bounds — not a competing LLMGauge schema
 and not an orchestration recipe. No inference happens here: check_setup reads
 retained raw evidence (read-only, hash-checked) and returns blocker strings;
-an empty list means scoring may proceed under the frozen plan.
+an empty list means scoring may proceed under the frozen plan. Retained
+0.1.0-draft documents stay structurally valid; only 0.2.0-draft documents
+carry the frozen expected-answer-geometry sanity layer.
 
-Checks (exact keys: contracts/welp-setup-0.1.0-draft.json):
+Checks (exact keys: contracts/welp-setup-0.2.0-draft.json):
   F1  freeze   frozen_before_scoring true + ISO frozen_utc; no winning lane
                selected after outputs.
   F2  profile  selected DEPLOYMENT profile identity (template, sampler,
@@ -33,7 +35,15 @@ Checks (exact keys: contracts/welp-setup-0.1.0-draft.json):
                prompts (the same example repeating across ladder rungs is
                required, not a violation); declared evidence compatibility:
                an open_knowledge task must never be covered by a
-               supplied_context lane.
+               supplied_context lane; 0.2.0-draft requires per-class frozen
+               response metadata: expected_answer_geometry
+               {min_tokens, max_tokens, basis} declaring the answer structure
+               the scored rubrics require, an explicit reasoning_bearing
+               flag, and upper_geometry_example_id naming one preregistered
+               calibration example that represents the upper expected
+               response geometry (or explicit null when the class declares
+               no distinct upper geometry); missing metadata is a blocker,
+               never a default.
   F5  ceiling  per-class semantic ceiling = first preregistered ladder rung
                (positive, bounded <= 8192) whose nonempty calibration set
                completes entirely — the same preregistered examples are
@@ -42,9 +52,20 @@ Checks (exact keys: contracts/welp-setup-0.1.0-draft.json):
                complete) — evidenced by raw hash-checked records (actual
                outgoing messages, max_tokens == rung, finite wall times
                inside preregistered per-request/total limits) with headroom
-               >= the class maximum answer budget; no qualifying rung is an
-               explicit resource blocker — never a semantic failure, never
-               NOT_APPLICABLE.
+               >= the class maximum answer budget; 0.2.0-draft adds the
+               mechanical representativeness sanity layer: the qualifying
+               rung must also reach the class frozen expected answer
+               geometry (max_tokens + class answer budget), and the declared
+               upper-geometry calibration example must produce a visible
+               answer of at least the declared minimum answer tokens at the
+               frozen sanity conversion (MIN_CHARS_PER_TOKEN = 2 characters
+               per token, visible answer only — reasoning consumption never
+               fails calibration); a mechanical sanity result that
+               contradicts the representativeness review fails setup closed
+               before scored inference, and a genuinely concise class is
+               never forced to a larger ceiling than its declared geometry;
+               no qualifying rung is an explicit resource blocker — never a
+               semantic failure, never NOT_APPLICABLE.
   F6  ops      operational caps independent and positive with SLO rationale;
                they are never compared against the semantic ceiling.
   F7  cache    scientific arms DISABLED_UNCACHED, cached arms separate; a
@@ -85,15 +106,25 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-MODULE_ID = "welp-harness-setup/1.0.0-draft"
-CONTRACT = "welp-setup-0.1.0-draft"
+MODULE_ID = "welp-harness-setup/1.1.0-draft"
+CONTRACT = "welp-setup-0.2.0-draft"
 SETUP_KIND = "welp-setup"
-SETUP_VERSION = "0.1.0-draft"
+SETUP_VERSION = "0.2.0-draft"
+# 0.1.0-draft documents remain valid retained evidence; only 0.2.0-draft
+# carries the frozen expected-answer-geometry sanity layer.
+SUPPORTED_SETUP_VERSIONS = ("0.1.0-draft", "0.2.0-draft")
+GEOMETRY_SETUP_VERSIONS = ("0.2.0-draft",)
 
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 MAX_LADDER_TOKENS = 8192
 BASE_SEED_COUNT = 2
 MIN_PROBE_REPEATS = 2
+# Frozen conservative sanity conversion for the visible-answer floor:
+# characters >= declared minimum tokens * MIN_CHARS_PER_TOKEN. Deliberately
+# conservative — it can only catch grossly under-representative calibration,
+# never measure answer length precisely. Reasoning consumption never
+# contributes to any failure: the floor reads the visible answer only.
+MIN_CHARS_PER_TOKEN = 2
 
 MANDATORY_LANES = ("MINIMAL", "DEPLOYMENT")
 CONDITIONAL_LANES = ("PUBLISHER", "OPTIMIZED")
@@ -286,8 +317,11 @@ def check_setup(root: Path, setup: dict) -> list[str]:
     # --- identity + F1 freeze -------------------------------------------------
     if setup.get("setup") != SETUP_KIND:
         errors.append(f"setup: kind must be {SETUP_KIND!r}")
-    if setup.get("version") != SETUP_VERSION:
-        errors.append(f"setup: unsupported version {setup.get('version')!r} (expected {SETUP_VERSION!r})")
+    setup_version = setup.get("version")
+    if setup_version not in SUPPORTED_SETUP_VERSIONS:
+        errors.append(f"setup: unsupported version {setup_version!r} "
+                      f"(expected one of {list(SUPPORTED_SETUP_VERSIONS)})")
+    geometry_required = setup_version in GEOMETRY_SETUP_VERSIONS
     if setup.get("frozen_before_scoring") is not True:
         errors.append("freeze: frozen_before_scoring must be exactly true")
     if not _parse_utc(setup.get("frozen_utc")):
@@ -391,6 +425,44 @@ def check_setup(root: Path, setup: dict) -> list[str]:
             if isinstance(t.get("prompt_sha256"), str):
                 scored_prompt_shas.setdefault(t["prompt_sha256"], set()).add(tid)
         class_max_budget[cid] = max(budgets) if budgets else 0
+
+    # --- F4 class response-geometry metadata (0.2.0-draft mechanical sanity) -----
+    class_geometry: dict = {}
+    if geometry_required:
+        for cid, entry in class_entries:
+            geometry = entry.get("expected_answer_geometry")
+            if not isinstance(geometry, dict):
+                errors.append(f"task_classes[{cid}]: expected_answer_geometry metadata is "
+                              "required — declare {min_tokens, max_tokens, basis}, the "
+                              "frozen answer structure the scored rubrics require; missing "
+                              "class metadata is a blocker, never a default")
+                continue
+            gmin, gmax, basis = (geometry.get("min_tokens"), geometry.get("max_tokens"),
+                                 geometry.get("basis"))
+            if not _is_int(gmin) or gmin < 1 or not _is_int(gmax) or gmax < gmin:
+                errors.append(f"task_classes[{cid}]: expected_answer_geometry must carry "
+                              "integer min_tokens >= 1 and max_tokens >= min_tokens "
+                              f"(got min_tokens={gmin!r}, max_tokens={gmax!r})")
+                continue
+            if not isinstance(basis, str) or not basis.strip():
+                errors.append(f"task_classes[{cid}]: expected_answer_geometry.basis must "
+                              "state the fixture/rubric derivation of the declared answer "
+                              "structure (frozen declaration, not a computed score)")
+                continue
+            reasoning_bearing = entry.get("reasoning_bearing")
+            if not isinstance(reasoning_bearing, bool):
+                errors.append(f"task_classes[{cid}]: reasoning_bearing must be an explicit "
+                              "boolean (whether the class expects reasoning-bearing "
+                              "responses); missing metadata is a blocker")
+                continue
+            upper_id = entry.get("upper_geometry_example_id")
+            if upper_id is not None and (not isinstance(upper_id, str) or not upper_id.strip()):
+                errors.append(f"task_classes[{cid}]: upper_geometry_example_id must name one "
+                              "preregistered calibration example representing the upper "
+                              "expected response geometry, or be explicit null")
+                continue
+            class_geometry[cid] = {"min_tokens": gmin, "max_tokens": gmax,
+                                   "upper_geometry_example_id": upper_id}
 
     for cid, entry in class_entries:
         values = {task_response_class.get(t.get("task_id")) for t in entry.get("scored_tasks") or []
@@ -651,6 +723,13 @@ def check_setup(root: Path, setup: dict) -> list[str]:
             errors.append(f"calibration: prompt sha256 {sha[:12]}... overlaps scored task(s) "
                           f"{sorted(scored_prompt_shas[sha])}; calibration must not repeat scored prompts")
 
+    if geometry_required:
+        for cid, geometry in class_geometry.items():
+            upper_id = geometry.get("upper_geometry_example_id")
+            if upper_id is not None and upper_id not in (class_example_ids.get(cid) or []):
+                errors.append(f"task_classes[{cid}]: upper_geometry_example_id {upper_id!r} must "
+                              "name a preregistered calibration example of the same class")
+
     # --- F4 class representativeness review (bound to the canonical digest) -------------
     for cid, entry in class_entries:
         review = entry.get("representativeness_review")
@@ -873,25 +952,33 @@ def check_setup(root: Path, setup: dict) -> list[str]:
         records = calib_records.get(cid) or []
         budget = class_max_budget.get(cid, 0)
         example_ids = class_example_ids.get(cid) or []
+        geometry = class_geometry.get(cid) if geometry_required else None
+        geometry_floor = (geometry["max_tokens"] + budget) if geometry else None
         expected = None
         for r in ladder_sorted:
             q = _rung_quality(records, r, example_ids)
-            if q and q["qualifies"] and q["max_tokens"] is not None and (r - q["max_tokens"]) >= budget:
+            if q and q["qualifies"] and q["max_tokens"] is not None \
+                    and (r - q["max_tokens"]) >= budget \
+                    and (geometry_floor is None or r >= geometry_floor):
                 expected = r
                 break
         if expected is None:
             if selected is not None:
                 errors.append(f"ceiling_selection[{cid}]: no preregistered ladder rung completes the "
-                              f"whole calibration set with headroom >= {budget}; selected_ceiling must "
-                              "be null with an explicit blocker")
+                              f"whole calibration set with headroom >= {budget}"
+                              + (f" and room for the frozen expected answer geometry "
+                                 f"(>= {geometry_floor})" if geometry_floor else "")
+                              + "; selected_ceiling must be null with an explicit blocker")
             if not (isinstance(blocker, str) and blocker in CEILING_BLOCKERS):
                 errors.append(f"ceiling_selection[{cid}]: explicit blocker {CEILING_BLOCKERS[0]} required "
                               "when no rung qualifies (a resource limit, not a semantic failure)")
         else:
             if not _is_int(selected) or selected != expected:
                 errors.append(f"ceiling_selection[{cid}]: selected_ceiling must be {expected}, the first "
-                              f"ladder rung completing the whole calibration set with headroom >= {budget} "
-                              f"(got {selected!r})")
+                              f"ladder rung completing the whole calibration set with headroom >= {budget}"
+                              + (f" and room for the frozen expected answer geometry (>= {geometry_floor})"
+                                 if geometry_floor else "")
+                              + f" (got {selected!r})")
             if blocker is not None:
                 errors.append(f"ceiling_selection[{cid}]: blocker must be null when a qualifying ceiling exists")
         if _is_int(selected) and selected in ladder_set:
@@ -901,10 +988,38 @@ def check_setup(root: Path, setup: dict) -> list[str]:
                 if headroom < budget:
                     errors.append(f"ceiling_selection[{cid}]: headroom {headroom} at ceiling {selected} is "
                                   f"below the class maximum answer budget {budget}")
+                if geometry is not None and selected < geometry_floor:
+                    errors.append(f"ceiling_selection[{cid}]: ceiling {selected} is below the class frozen "
+                                  f"expected answer geometry floor {geometry_floor} (declared max answer "
+                                  f"structure {geometry['max_tokens']} + answer budget {budget}); the "
+                                  "mechanical calibration sanity check contradicts the representativeness "
+                                  "review — recalibrate before scored inference")
                 obs = decl.get("observed_completion_count")
                 if obs is not None and obs != q["count"]:
                     errors.append(f"ceiling_selection[{cid}]: observed_completion_count {obs!r} != raw "
                                   f"completion count {q['count']} at ceiling {selected}")
+            if geometry is not None and geometry.get("upper_geometry_example_id"):
+                upper_id = geometry["upper_geometry_example_id"]
+                upper_rec = next((rec for rec in records
+                                  if isinstance(rec, dict) and rec.get("example_id") == upper_id
+                                  and rec.get("rung") == selected and rec.get("completed") is True), None)
+                if upper_rec is None:
+                    errors.append(f"ceiling_selection[{cid}]: upper-geometry calibration example "
+                                  f"{upper_id!r} must complete at the selected ceiling {selected}")
+                else:
+                    answer = upper_rec.get("answer")
+                    floor_chars = geometry["min_tokens"] * MIN_CHARS_PER_TOKEN
+                    if not isinstance(answer, str) or len(answer) < floor_chars:
+                        observed = len(answer) if isinstance(answer, str) else 0
+                        errors.append(f"ceiling_selection[{cid}]: calibration does not exercise the class "
+                                      f"output structure — upper-geometry example {upper_id!r} produced a "
+                                      f"visible answer of {observed} characters, below the frozen sanity "
+                                      f"floor {floor_chars} (declared minimum {geometry['min_tokens']} "
+                                      f"tokens x {MIN_CHARS_PER_TOKEN}); the mechanical calibration sanity "
+                                      "check contradicts the representativeness review — recalibrate with "
+                                      "examples that represent the upper expected response geometry before "
+                                      "scored inference (reasoning consumption never contributes to this "
+                                      "check; the floor reads the visible answer only)")
 
     # --- F6 operational caps ---------------------------------------------------------
     caps = setup.get("operational_caps")
@@ -1247,6 +1362,24 @@ def _synthetic_setup(root) -> dict:
             "decision": "REPRESENTATIVE",
         }
 
+    class_geometry = {
+        "short-factual": {
+            "expected_answer_geometry": {
+                "min_tokens": 8, "max_tokens": 96,
+                "basis": "single-sentence factual answers; rubric demands one direct "
+                         "sentence with no sections"},
+            "reasoning_bearing": False,
+            "upper_geometry_example_id": "c1",
+        },
+        "longform": {
+            "expected_answer_geometry": {
+                "min_tokens": 40, "max_tokens": 384,
+                "basis": "two-paragraph synthesis plus two listed follow-up actions"},
+            "reasoning_bearing": False,
+            "upper_geometry_example_id": "c1",
+        },
+    }
+
     return {
         "setup": SETUP_KIND,
         "version": SETUP_VERSION,
@@ -1284,6 +1417,7 @@ def _synthetic_setup(root) -> dict:
         "task_classes": [
             {
                 "class_id": "short-factual",
+                **class_geometry["short-factual"],
                 "scored_tasks": short_tasks,
                 "representativeness_review": rep_review("short-factual", short_tasks, short_examples),
                 "calibration": {
@@ -1297,6 +1431,7 @@ def _synthetic_setup(root) -> dict:
             },
             {
                 "class_id": "longform",
+                **class_geometry["longform"],
                 "scored_tasks": long_tasks,
                 "representativeness_review": rep_review("longform", long_tasks, long_examples),
                 "calibration": {
@@ -1372,6 +1507,97 @@ def selftest() -> int:
         errs = check_setup(root, s)
         if errs:
             fails.append(f"positive setup must pass: {errs}")
+        short_sel = s["ceiling_selection"]["per_class"]["short-factual"]
+        if short_sel["selected_ceiling"] != 512:
+            fails.append("a genuinely concise class must not be forced above its first "
+                         f"qualifying rung (short-factual got {short_sel['selected_ceiling']})")
+
+        # calibration representativeness sanity mutations (0.2.0-draft)
+        def m_missing_geometry(s, r):
+            del s["task_classes"][0]["expected_answer_geometry"]
+        expect("missing_geometry_metadata", "expected_answer_geometry", m_missing_geometry)
+
+        def m_missing_reasoning_flag(s, r):
+            del s["task_classes"][1]["reasoning_bearing"]
+        expect("missing_reasoning_flag", "reasoning_bearing", m_missing_reasoning_flag)
+
+        def m_bad_geometry_band(s, r):
+            s["task_classes"][0]["expected_answer_geometry"] = {
+                "min_tokens": 500, "max_tokens": 96, "basis": "inverted band"}
+        expect("inverted_geometry_band", "min_tokens", m_bad_geometry_band)
+
+        def m_unknown_upper_example(s, r):
+            s["task_classes"][1]["upper_geometry_example_id"] = "ghost-example"
+        expect("unknown_upper_geometry_example", "preregistered calibration example",
+               m_unknown_upper_example)
+
+        def m_ceiling_below_geometry(s, r):
+            s["task_classes"][1]["expected_answer_geometry"]["max_tokens"] = 700
+        expect("ceiling_below_expected_geometry", "expected answer geometry",
+               m_ceiling_below_geometry)
+
+        def m_tiny_upper_example(s, r):
+            geo = s["task_classes"][1]["expected_answer_geometry"]
+            geo["min_tokens"], geo["max_tokens"] = 300, 384
+            s["ceiling_selection"]["per_class"]["longform"]["selected_ceiling"] = 1024
+        expect("tiny_upper_geometry_example", "sanity floor", m_tiny_upper_example)
+
+        def m_upper_example_incomplete(s, r):
+            rel = s["task_classes"][1]["calibration"]["records_file"]
+            raw = json.loads((r / rel).read_text())
+            done = next(x for x in raw["records"] if x["completed"] is True)
+            done["completed"] = False
+            done["finish_reason"] = "length"
+            s["task_classes"][1]["calibration"]["records_sha256"] = _rewrite(r, rel, raw)
+        expect("upper_example_incomplete", "must complete at the selected ceiling",
+               m_upper_example_incomplete)
+
+        def m_reasoning_bearing_only(s, r):
+            # A reasoning-bearing class with large reasoning consumption and a
+            # visible answer above the sanity floor: no geometry failure.
+            s["task_classes"][1]["reasoning_bearing"] = True
+            rel = s["task_classes"][1]["calibration"]["records_file"]
+            raw = json.loads((r / rel).read_text())
+            done = next(x for x in raw["records"] if x["completed"] is True)
+            done["completion_tokens"] = 384 + 600
+            s["task_classes"][1]["calibration"]["records_sha256"] = _rewrite(r, rel, raw)
+            s["ceiling_selection"]["per_class"]["longform"]["selected_ceiling"] = 2048
+            s["ceiling_selection"]["ladder"] = [512, 1024, 2048, 4096, 8192]
+            raw["records"].append({
+                "example_id": "c1", "rung": 2048, "max_tokens": 2048,
+                "messages": [{"role": "system", "content": "You are a precise, grounded assistant."},
+                             {"role": "user",
+                              "content": "Explain in two paragraphs how a zipper converts a "
+                                         "sliding pull into locking teeth."}],
+                "completed": True, "finish_reason": "stop", "completion_tokens": 984,
+                "answer": ("A zipper's slider cams the two tape rows so alternating teeth lock; "
+                           "the top and bottom stops keep the slider on the track, and reversing "
+                           "the slider unlocks the rows."),
+                "wall_time_s": 7.0})
+            s["task_classes"][1]["calibration"]["records_sha256"] = _rewrite(r, rel, raw)
+        root, s = build("reasoning_bearing_ok")
+        m_reasoning_bearing_only(s, root)
+        errs = check_setup(root, s)
+        geometry_blockers = [e for e in errs if "geometry" in e or "sanity" in e]
+        if geometry_blockers:
+            fails.append(f"reasoning consumption alone must not fail calibration: "
+                         f"{geometry_blockers}")
+
+        def m_legacy(s, r):
+            s["version"] = "0.1.0-draft"
+            for entry in s["task_classes"]:
+                for key in ("expected_answer_geometry", "reasoning_bearing",
+                            "upper_geometry_example_id"):
+                    entry.pop(key, None)
+        root, s = build("legacy-010")
+        m_legacy(s, root)
+        errs = check_setup(root, s)
+        if errs:
+            fails.append(f"legacy 0.1.0-draft setup must remain structurally valid: {errs}")
+
+        def m_future(s, r):
+            s["version"] = "0.3.0-draft"
+        expect("unsupported_future_version", "unsupported version", m_future)
 
         # acceptance mutations
         expect("missing_class", "t-2", lambda s, r: s["task_classes"].pop(1))

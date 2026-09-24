@@ -95,8 +95,8 @@ The canonical new-campaign validator.
     `verification` marker; cached serving arms are declared separately and labeled.
 - **R15–R16 (prospective snapshots dated >= 2026-09-23 only):** R15 requires
   frozen SHA-256 prompt-lane/profile identities, predeclared bounded semantic
-  calibration and positive operational ceiling. R16 requires Family A 1.2
-  final-rendered-token solver, lane reserves, matched preflight/inference
+  calibration and positive operational ceiling. R16 requires the legacy
+  Family A 1.2 Controlled Context solver (final-rendered-token placement), lane reserves, matched preflight/inference
   tokenization and a hash-pinned fixture. The first 2026-09-23 snapshot retains
   its frozen `welp-final-classification-0.3.0-draft` record. The subsequent
   profile-identity clarification snapshot uses 0.3.1 and requires every
@@ -106,7 +106,7 @@ The canonical new-campaign validator.
   verdict except an independently evidenced integration blocker on a blocked
   campaign.
 - **Prospective hardening (snapshots dated >= 2026-09-24):** scorer v3,
-  Family A 1.3 and classification 0.4; manifest/schema required identity fields
+  the Family A 1.3 Controlled Context fixture and classification 0.4; manifest/schema required identity fields
   align, including model/runtime/requested/effective/publication fields.
   `hardening_evidence` is a rooted relative path plus SHA-256 to actual setup,
   paired reliability, context and role evidence. The bundle checker validates

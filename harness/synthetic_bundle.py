@@ -418,7 +418,14 @@ def _build_setup(root: Path, fixture: dict) -> dict:
     ctx_entry["response_class"] = CONTEXT_CLASS
 
     classes = [
-        {"class_id": RELIABILITY_CLASS, "scored_tasks": reliability_scored,
+        {"class_id": RELIABILITY_CLASS,
+         "expected_answer_geometry": {
+             "min_tokens": 1, "max_tokens": 256,
+             "basis": "frozen synthetic screen: exact-string echoes and two-line "
+                      "OBSERVED/UNKNOWN structures within the 256-token budget"},
+         "reasoning_bearing": False,
+         "upper_geometry_example_id": "c2",
+         "scored_tasks": reliability_scored,
          "representativeness_review": rep_review(
              RELIABILITY_CLASS, reliability_scored, example_ref[RELIABILITY_CLASS]),
          "calibration": {"lane_id": "DEPLOYMENT",
@@ -426,7 +433,14 @@ def _build_setup(root: Path, fixture: dict) -> dict:
                          "records_file": f"evidence/setup/calib/{RELIABILITY_CLASS}-records.json",
                          "records_sha256": calib_sha[RELIABILITY_CLASS],
                          **CAL_TIME_LIMITS}},
-        {"class_id": CONTEXT_CLASS, "scored_tasks": [ctx_entry],
+        {"class_id": CONTEXT_CLASS,
+         "expected_answer_geometry": {
+             "min_tokens": 1, "max_tokens": 128,
+             "basis": "frozen synthetic recall screen: one concise grounded line per "
+                      "question"},
+         "reasoning_bearing": False,
+         "upper_geometry_example_id": "k1",
+         "scored_tasks": [ctx_entry],
          "representativeness_review": rep_review(
              CONTEXT_CLASS, [ctx_entry], example_ref[CONTEXT_CLASS]),
          "calibration": {"lane_id": "DEPLOYMENT",
@@ -439,7 +453,7 @@ def _build_setup(root: Path, fixture: dict) -> dict:
     completion_counts = {cid: len(CALIBRATION[cid]) for cid in CALIBRATION}
     return {
         "setup": "welp-setup",
-        "version": "0.1.0-draft",
+        "version": "0.2.0-draft",
         "synthetic": True,
         "frozen_before_scoring": True,
         "frozen_utc": "2026-09-24T00:00:00+00:00",
@@ -916,7 +930,7 @@ def _build_manifest(root: Path, row_counts: dict, evidence_sha: str,
 # --------------------------------------------------------------------------
 # builder
 # --------------------------------------------------------------------------
-def make_synthetic_bundle(root, variant: str = "positive") -> Path:
+def make_synthetic_bundle(root, variant: str = "positive", mutate=None) -> Path:
     """Build a genuine self-contained SYNTHETIC hardening campaign at `root`.
 
     Writes the full campaign shell plus the hash-bound hardening evidence
@@ -924,7 +938,10 @@ def make_synthetic_bundle(root, variant: str = "positive") -> Path:
     review-blocked the expected classification is derived by running
     harness/bundle.py evaluate_bundle on the freshly written bundle (lazy
     import: no top-level circular dependency) and mirrored into the evidence
-    document and the manifest.
+    document and the manifest. `mutate(evidence, root)` runs after assembly
+    and before the evidence document is frozen: selftests use it to derive
+    regression variants (for example review-adjudication outcomes) from the
+    positive bundle.
     """
     if variant not in VARIANTS:
         raise ValueError(f"unknown synthetic bundle variant {variant!r}; "
@@ -979,6 +996,8 @@ def make_synthetic_bundle(root, variant: str = "positive") -> Path:
     }
 
     # 6. provisional manifest + evidence, then derive the classification
+    if mutate is not None:
+        mutate(evidence, root)
     evidence_sha = _put(root, EVIDENCE_REF, evidence)
     man = _build_manifest(root, row_counts, evidence_sha, max_error_pp)
     _write_shell(root, man)
