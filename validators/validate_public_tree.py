@@ -56,6 +56,7 @@ def text_of(path: Path) -> str | None:
 
 
 def validate(root: Path) -> dict:
+    root = root.resolve()
     result = {"root": str(root), "status": "PASS", "selected_files": 0, "errors": [], "findings": []}
     allow_path, manifest_path = root / "publication-allowlist.json", root / "PUBLICATION-MANIFEST.json"
     if not allow_path.is_file(): result["errors"].append("missing publication-allowlist.json"); return fail(result)
@@ -115,13 +116,24 @@ def selftest() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp)
         good = base/"GOOD_PUBLIC_TREE"; write_fixture(good); cases.append(("GOOD_PUBLIC_TREE", validate(good)["status"] == "PASS"))
+        protocol = base / "welp"
+        write_fixture(protocol)
+        for name in ("MODEL.md", "model-manifest.json", "PUBLICATION-POLICY.md",
+                     "publication-policy.json"):
+            (protocol / name).unlink()
+        previous = Path.cwd()
+        try:
+            os.chdir(protocol)
+            cases.append(("RELATIVE_PROTOCOL_ROOT", validate(Path("."))["status"] == "PASS"))
+        finally:
+            os.chdir(previous)
         secret = base/"SECRET_PRESENT"; write_fixture(secret, "api" + "_key=not-a-real-secret-12345678"); cases.append(("SECRET_PRESENT", validate(secret)["status"] == "FAIL"))
         binary = base/"MODEL_BINARY_PRESENT"; write_fixture(binary); (binary/"public/model.gguf").write_bytes(b"x"); cases.append(("MODEL_BINARY_PRESENT", validate(binary)["status"] == "FAIL"))
         link = base/"EXTERNAL_SYMLINK"; write_fixture(link); (link/"public/link").symlink_to("/tmp"); cases.append(("EXTERNAL_SYMLINK", validate(link)["status"] == "FAIL"))
         source = base/"SOURCES_INCLUDED"; write_fixture(source); spec=json.loads((source/"publication-allowlist.json").read_text()); spec["allowed"].append("sources/**"); spec["excluded"].remove("sources/**"); (source/"publication-allowlist.json").write_text(json.dumps(spec)); (source/"sources").mkdir(); (source/"sources/x.txt").write_text("x"); cases.append(("SOURCES_INCLUDED", validate(source)["status"] == "FAIL"))
         home = base/"ABSOLUTE_HOME_PATH"; write_fixture(home, "/home/" + "operator/private"); cases.append(("ABSOLUTE_HOME_PATH", validate(home)["status"] == "FAIL"))
         large = base/"UNKNOWN_LARGE_FILE"; write_fixture(large); (large/"public/large.txt").write_bytes(b"x"*1025); cases.append(("UNKNOWN_LARGE_FILE", validate(large)["status"] == "FAIL"))
-    print(json.dumps({"status":"PASS" if all(ok for _,ok in cases) else "FAIL","fixtures":[{"name":n,"expected": "PASS" if n=="GOOD_PUBLIC_TREE" else "FAIL","passed":ok} for n,ok in cases]}, indent=2))
+    print(json.dumps({"status":"PASS" if all(ok for _,ok in cases) else "FAIL","fixtures":[{"name":n,"expected": "PASS" if n in {"GOOD_PUBLIC_TREE", "RELATIVE_PROTOCOL_ROOT"} else "FAIL","passed":ok} for n,ok in cases]}, indent=2))
     return 0 if all(ok for _,ok in cases) else 1
 
 

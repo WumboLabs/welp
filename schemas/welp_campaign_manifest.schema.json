@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WELP campaign manifest",
-  "version": "0.1.0-draft",
+  "version": "0.2.0-draft",
+  "description": "Aligned with validate_campaign_welp.py: adds the R17 hardening_evidence pointer (welp-evidence-bundle-0.1.0-draft, campaign snapshot dates >= 2026-09-24), the closed welp-final-classification-0.4.0-draft vocabulary and dual welp-/wlep- contract prefixes. Historical-era records keep their original meaning.",
   "type": "object",
   "required": [
     "campaign_id",
@@ -55,7 +56,10 @@
       "type": "object",
       "required": [
         "requested",
-        "effective"
+        "effective",
+        "gate_baseline_reasoning_state",
+        "reasoning_requested",
+        "reasoning_effective"
       ],
       "properties": {
         "gate_baseline_reasoning_state": {
@@ -63,12 +67,20 @@
           "description": "Explicit gate reasoning state; required by the validator (M05) before any Phase-3 generation."
         },
         "reasoning_requested": {
-          "type": "string",
-          "description": "Reasoning control requested from the runtime (validator M06)."
+          "type": ["string", "object"],
+          "description": "Reasoning control requested from the runtime (validator M06); string label or structured control object."
         },
         "reasoning_effective": {
-          "type": "string",
+          "type": ["string", "object"],
           "description": "Reasoning control measured effective on the pinned runtime (validator M06); a requested-but-ignored control is recorded here as MEASURED-ineffective, never assumed effective."
+        },
+        "requested": {
+          "type": "object",
+          "description": "Requested serving configuration, distinct from observed effective settings."
+        },
+        "effective": {
+          "type": "object",
+          "description": "Effective serving profile summary (e.g. slot_count)."
         }
       }
     },
@@ -104,7 +116,7 @@
     },
     "generation_budget": {
       "type": "object",
-      "description": "Generation-budget policy record (validator R12).",
+      "description": "Generation-budget policy record (validator R12; historical era pre-2026-09-24 — the hardening era records calibration in the frozen setup instead).",
       "properties": {
         "contract": {"type": "string"},
         "lanes_declared": {"type": "boolean"}
@@ -112,27 +124,63 @@
     },
     "deployment_lanes": {
       "type": "object",
-      "description": "Prospective R15 prompt/profile hashes and bounded semantic/operational ceilings; required by the campaign validator from 2026-09-23.",
+      "description": "Historical-era record (R15, the 2026-09-23 snapshot generation): prompt/profile hashes and bounded global semantic/operational ceilings. From the 2026-09-24 hardening era the pre-scoring setup's per-class calibration inside the hash-bound hardening evidence governs instead; a global-cap record is no longer required.",
       "properties": {
         "contract": {"const": "welp-deployment-lanes-0.1.0-draft"},
         "prompt_lanes": {"type": "object"},
         "budgets": {"type": "object"}
       }
     },
+    "hardening_evidence": {
+      "type": "object",
+      "description": "R17 hash-bound pointer (required for campaign snapshot dates >= 2026-09-24): binds the welp-evidence-bundle-0.1.0-draft evidence document; the validator re-derives gate/context/classification from it via harness/bundle.py evaluate_bundle.",
+      "required": ["contract", "path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "welp-evidence-bundle-0.1.0-draft"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^(?!.:)(?!/)(?:(?!\\.\\.?(?:/|$))[^/\\\\]+/)*(?!\\.\\.?(?:/|$))[^/\\\\]+$",
+          "description": "Rooted relative POSIX path inside the campaign bundle directory (no leading '/', no '.' or '..' segment, no empty segment, no backslashes)."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "64-hex SHA-256 of the referenced evidence document bytes."
+        }
+      }
+    },
     "classification": {
       "type": "object",
-      "description": "Prospective R16 selected-profile-pure readiness record; a blocked methodological run has no verdict.",
+      "description": "Readiness record. Historical eras pin welp-final-classification 0.2.0/0.3.x with profile-pure dimensions (R16); from 2026-09-24 the contract is welp-final-classification-0.4.0-draft and any asserted readiness/dimensions are closed-vocabulary and must equal the classification derived from the hardening evidence bundle.",
       "properties": {
         "contract": {"type": "string"},
         "profile_id": {"type": "string"},
         "dimension_profile_ids": {"type": "object"},
-        "readiness": {"type": ["string", "null"]},
+        "readiness": {
+          "enum": ["READY", "READY_WITH_GUARDRAILS", "LIMITED_ROLE_ONLY", "NOT_READY",
+                   "INTEGRATION_BLOCKED", null],
+          "description": "Closed headline readiness vocabulary (welp-final-classification); blocked/failed execution carries no verdict."
+        },
+        "dimensions": {
+          "type": "object",
+          "description": "Closed per-dimension classification vocabulary; the bundle-derived values govern.",
+          "additionalProperties": false,
+          "properties": {
+            "SEMANTIC_CAPABILITY": {"enum": ["STRONG", "ACCEPTABLE", "WEAK", "UNKNOWN"]},
+            "BUDGET_DISCIPLINE": {"enum": ["GOOD", "FAIR", "POOR", "UNKNOWN"]},
+            "CONTEXT_USABILITY": {"enum": ["VALIDATED", "PARTIAL", "FAILED", "NOT_CHARACTERIZED", "INTEGRATION_BLOCKED"]},
+            "INTEGRATION_QUALITY": {"enum": ["CLEAN", "NOTES", "CONSTRAINTS", "BLOCKED"]}
+          }
+        },
         "integration_evidence": {"type": "string"}
       }
     },
     "cache_policy": {
       "type": "object",
-      "description": "Measurement cache policy (validator R14).",
+      "description": "Measurement cache policy (validator R14; historical era pre-2026-09-24 — hardening-era cache state is measured in the frozen pre-scoring setup).",
       "properties": {
         "scientific_arms": {"type": "string"},
         "verification": {"type": "string"},
@@ -145,7 +193,7 @@
     },
     "context_validation": {
       "type": "object",
-      "description": "Historical R13 or prospective R16 useful-context evidence: final-token placement and lane-specific reserves after 2026-09-23.",
+      "description": "Historical R13/R16 useful-context evidence: final-token placement, reserve 512 (pre-2026-09-23) or lane-specific reserves and Family A 1.2.0-draft (2026-09-23). From 2026-09-24 context execution is re-derived from the hardening evidence bundle (Family A 1.3.0-draft); a manifest record is optional.",
       "properties": {
         "depths_pct": {"type": "array", "items": {"type": "number"}},
         "placement_preflight_pass": {"type": "boolean"},
@@ -167,17 +215,21 @@
     },
     "contracts": {
       "type": "object",
+      "description": "Contract acceptance records; welp-* for current campaigns, wlep-* retained for frozen historical campaigns.",
       "patternProperties": {
-        "^welp-[a-z0-9-]+$": {
-          "type": "object"
-        }
+        "^welp-[a-z0-9-]+$": {"type": "object"},
+        "^wlep-[a-z0-9-]+$": {"type": "object"}
       }
     },
     "scorers": {
-      "type": "object"
+      "type": "object",
+      "description": "Scorer identity records: name -> {path, sha256, selftest}. 64-hex sha256 required (R10/R17); scorer welp-reliability-scorer/2 historically, /3 from 2026-09-24. Hardening-era path records are rooted relative and verified against current source bytes.",
+      "additionalProperties": {"type": "object"}
     },
     "fixtures": {
-      "type": "object"
+      "type": "object",
+      "description": "Fixture identity records: name -> {path, sha256}. 64-hex sha256 required (R10/R17); hardening-era path records are rooted relative and verified against current source bytes.",
+      "additionalProperties": {"type": "object"}
     },
     "artifact_index": {
       "type": "string"

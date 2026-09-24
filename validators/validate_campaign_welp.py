@@ -78,6 +78,28 @@ Prospective real-work revision (snapshot dates >= 2026-09-23):
   R16  Context preflight uses Family A 1.2.0 final-token construction and
        lane-specific reserves; classification dimensions are profile-pure.
 
+Hardening era (snapshot dates >= 2026-09-24):
+  R17  Evidence-bound hardening. manifest.hardening_evidence is a hash-bound
+       pointer {contract: welp-evidence-bundle-0.1.0-draft, path (rooted
+       relative to the campaign bundle), sha256}; the validator invokes
+       harness/bundle.py evaluate_bundle(root), integrates every bundle
+       finding into validity and re-derives gate/context/classification from
+       raw evidence, so asserted verdicts never stand alone (no bare asserted
+       PASS). Version identity is era-aware: reliability scorer /3 (via the
+       bundle), classification welp-final-classification-0.4.0-draft with the
+       closed dimension vocabulary, Family A 1.3.0-draft. Classification
+       readiness/dimensions use closed enums and any manifest-asserted
+       readiness/dimensions must equal the bundle-derived classification. The pre-2026-09-24
+       manifest records (R09-R16 generation budget, deployment-lane global
+       caps, context_validation/finish-accounting declarations) are not
+       required from this era on: per-class setup calibration and execution
+       validity are re-derived from the evidence bundle instead. New-era
+       manifest fixture/scorer path records are rooted-relative and verified
+       against current source bytes; historical absolute generation_evidence
+       paths are unchanged. Frozen snapshots before 2026-09-24 (including the
+       2026-09-23 snapshots whose Family A fixture and scorer moved on) keep
+       validating against their pinned snapshot-freeze hashes.
+
 Usage: validate_campaign_welp.py <campaign_dir> | selftest
 """
 import hashlib
@@ -98,7 +120,11 @@ WEBSITE_DISPOSITION_REQUIRED_FROM = "2026-09-12"  # campaign snapshot dates from
 PROFILE_STATUSES = {"current", "current-alternate", "historical", "superseded", "specialized"}
 METHODOLOGY_REVISION_FROM = "2026-09-19"  # CP-1..CP-12 outcome/budget semantics from this snapshot date on
 REAL_WORK_REVISION_FROM = "2026-09-23"
+HARDENING_FROM = "2026-09-24"  # evidence-bound hardening era (R17) from this snapshot date on
 DEPLOYMENT_LANES_CONTRACT = "welp-deployment-lanes-0.1.0-draft"
+EVIDENCE_BUNDLE_CONTRACT = "welp-evidence-bundle-0.1.0-draft"
+CLASSIFICATION_040 = "welp-final-classification-0.4.0-draft"
+FAMILY_A_13_VERSION = "1.3.0-draft"
 PROFILE_DIMENSIONS = {"SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE",
                       "CONTEXT_USABILITY", "INTEGRATION_QUALITY"}
 CAMPAIGN_OUTCOMES = {"COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"}
@@ -108,6 +134,230 @@ RELIABILITY_SCORER_V2 = "welp-reliability-scorer/2"
 OUTCOMES_CONTRACT = "welp-outcomes-0.1.0-draft"
 BUDGET_CONTRACT = "welp-generation-budget-0.1.0-draft"
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _is_rooted_rel(path) -> bool:
+    """True for a safe rooted-relative POSIX path (same discipline as the bundle loader)."""
+    if not isinstance(path, str) or not path or "\\" in path:
+        return False
+    if path.startswith("/") or (len(path) > 1 and path[1] == ":"):
+        return False
+    parts = path.split("/")
+    return all(p not in ("", ".", "..") for p in parts)
+
+
+def _hardening_modules():
+    """Import harness/bundle.py + harness/classification.py (lazy: historical
+    validation must not depend on hardening-harness import health)."""
+    harness = str(REPO_ROOT / "harness")
+    if harness not in sys.path:
+        sys.path.insert(0, harness)
+    import bundle
+    import classification
+    return bundle, classification
+
+
+def _check_hardening(root: Path, m: dict, bad, warn, ok):
+    """R17 — hardening-era (snapshot date >= 2026-09-24) evidence-bound checks.
+
+    The manifest binds its hardening evidence with a hash-addressed pointer;
+    the validator re-derives the reliability gate, context summary and final
+    classification from raw evidence via harness/bundle.py evaluate_bundle and
+    integrates every bundle finding into validity. Asserted verdicts (expected
+    classification, report prose, claimed PASS strings) never stand alone.
+    """
+    pointer = m.get("hardening_evidence")
+    if not isinstance(pointer, dict):
+        bad("R17_hardening_evidence_required",
+            "manifest.hardening_evidence {contract: welp-evidence-bundle-0.1.0-draft, "
+            "path, sha256} required for hardening-era campaigns")
+    else:
+        if pointer.get("contract") != EVIDENCE_BUNDLE_CONTRACT:
+            bad("R17_hardening_evidence_contract",
+                f"hardening_evidence.contract must be {EVIDENCE_BUNDLE_CONTRACT!r}, "
+                f"got {pointer.get('contract')!r}")
+        he_path = pointer.get("path")
+        if not _is_rooted_rel(he_path):
+            bad("R17_hardening_evidence_path",
+                f"hardening_evidence.path must be a rooted relative path without "
+                f"'..' (got {he_path!r})")
+        elif not HASH.match(str(pointer.get("sha256", ""))):
+            bad("R17_hardening_evidence_hash",
+                f"hardening_evidence.sha256 must be 64-hex (got {pointer.get('sha256')!r})")
+        else:
+            target = root / he_path
+            if not target.resolve().is_relative_to(root.resolve()):
+                bad("R17_hardening_evidence_path",
+                    f"hardening_evidence.path escapes the campaign bundle: {he_path}")
+            elif not target.is_file():
+                bad("R17_hardening_evidence_reference",
+                    f"referenced evidence file missing: {he_path}")
+            else:
+                actual = hashlib.sha256(target.read_bytes()).hexdigest()
+                if actual != pointer["sha256"]:
+                    bad("R17_hardening_evidence_hash",
+                        f"hardening_evidence.sha256 does not match {he_path} bytes")
+                else:
+                    ok("R17_hardening_evidence", he_path)
+
+    try:
+        bundle_mod, classification_mod = _hardening_modules()
+    except Exception as exc:
+        bad("R17_bundle_harness_unavailable",
+            f"harness/bundle.py could not be imported: {type(exc).__name__}: {exc}")
+        return
+    try:
+        bresult = bundle_mod.evaluate_bundle(root)
+    except Exception as exc:
+        bad("R17_bundle_evaluate_crashed", f"{type(exc).__name__}: {exc}")
+        return
+    for severity, code, detail in bresult.get("findings") or []:
+        if severity == "error":
+            bad(f"R17_bundle_{code}", detail)
+        elif severity == "warning":
+            warn(f"R17_bundle_{code}", detail)
+        else:
+            ok(f"R17_bundle_{code}", detail)
+    if not bresult.get("valid"):
+        bad("R17_bundle_invalid",
+            "harness/bundle.py evaluate_bundle rejected the hardening evidence "
+            "(see R17_bundle_* findings); derived evidence governs asserted verdicts")
+
+    # ---- version identity: Family A 1.3.0 for the hardening era ----
+    famver = (bresult.get("context") or {}).get("fixture_version")
+    if isinstance(famver, str) and famver:
+        if famver != FAMILY_A_13_VERSION:
+            bad("R17_context_family_a_version",
+                f"hardening-era Family A fixture must be {FAMILY_A_13_VERSION}, got {famver!r}")
+        else:
+            ok("R17_context_family_a_version", famver)
+    ctxv = m.get("context_validation")
+    if isinstance(ctxv, dict) and ctxv.get("family_a_version") is not None:
+        if ctxv.get("family_a_version") != FAMILY_A_13_VERSION:
+            bad("R17_context_family_a_version",
+                f"manifest.context_validation.family_a_version must be {FAMILY_A_13_VERSION} "
+                f"for hardening-era campaigns, got {ctxv.get('family_a_version')!r}")
+        else:
+            ok("R17_context_family_a_version_declared", str(ctxv["family_a_version"]))
+
+    # ---- identity fields aligned with the manifest schema required list ----
+    missing_identity = []
+    if not str(m.get("campaign_id") or "").strip():
+        missing_identity.append("campaign_id")
+    model = m.get("model")
+    if not isinstance(model, dict):
+        missing_identity.append("model")
+    else:
+        missing_identity += [f"model.{key}" for key in ("repo", "revision", "file")
+                             if not str(model.get(key) or "").strip()]
+        if not HASH.match(str(model.get("sha256", ""))):
+            missing_identity.append("model.sha256")
+    runtime = m.get("runtime")
+    if not isinstance(runtime, dict):
+        missing_identity.append("runtime")
+    else:
+        missing_identity += [f"runtime.{key}" for key in ("name", "build", "commit")
+                             if not str(runtime.get(key) or "").strip()]
+    if not str(m.get("publication_status") or "").strip():
+        missing_identity.append("publication_status")
+    serving = m.get("serving_profile")
+    if not isinstance(serving, dict):
+        missing_identity.append("serving_profile")
+    else:
+        missing_identity += [f"serving_profile.{key}" for key in ("requested", "effective")
+                             if not isinstance(serving.get(key), dict)]
+    if missing_identity:
+        bad("R17_identity_fields_required",
+            "hardening-era manifests record the schema identity fields; missing: "
+            + ", ".join(missing_identity))
+    else:
+        ok("R17_identity_fields", str(m.get("campaign_id")))
+
+    cout = m.get("campaign_outcome")
+    if cout in CAMPAIGN_OUTCOMES:
+        ok("R17_campaign_outcome", cout)
+    else:
+        bad("R17_campaign_outcome_required",
+            f"campaign_outcome must be one of {sorted(CAMPAIGN_OUTCOMES)}")
+
+    # ---- closed classification enums; asserted verdict must match derivation ----
+    cls = m.get("classification")
+    derived = bresult.get("classification")
+    if isinstance(cls, dict):
+        contract = cls.get("contract")
+        if contract is not None and contract != CLASSIFICATION_040:
+            bad("R17_classification_contract",
+                f"hardening-era classification contract must be {CLASSIFICATION_040!r}, "
+                f"got {contract!r}")
+        readiness = cls.get("readiness")
+        dims = cls.get("dimensions")
+        if readiness is not None and readiness not in classification_mod.READINESS:
+            bad("R17_classification_enum",
+                f"readiness {readiness!r} is outside the closed classification vocabulary "
+                f"{sorted(classification_mod.READINESS)}")
+        if dims is not None:
+            if not isinstance(dims, dict) or not dims:
+                bad("R17_classification_enum",
+                    "classification.dimensions must be a non-empty object when present")
+            else:
+                unknown = sorted(set(dims) - set(classification_mod.DIMENSIONS))
+                if unknown:
+                    bad("R17_classification_enum",
+                        f"unknown classification dimensions: {unknown}")
+                for name, value in sorted(dims.items()):
+                    if name in classification_mod.DIMENSIONS and value not in classification_mod.DIMENSIONS[name]:
+                        bad("R17_classification_enum",
+                            f"{name}: {value!r} is outside the closed vocabulary "
+                            f"{sorted(classification_mod.DIMENSIONS[name])}")
+        asserted_cls = readiness is not None or (isinstance(dims, dict) and bool(dims))
+        if asserted_cls:
+            if isinstance(derived, dict):
+                if readiness is not None and derived.get("readiness") != readiness:
+                    bad("R17_classification_mismatch",
+                        f"manifest.classification.readiness {readiness!r} != bundle-derived "
+                        f"{derived.get('readiness')!r}; the derived classification governs")
+                ddim = derived.get("dimensions")
+                if isinstance(dims, dict) and isinstance(ddim, dict) and dims != ddim:
+                    bad("R17_classification_mismatch",
+                        "manifest.classification.dimensions differ from the bundle-derived "
+                        "dimensions; the derived classification governs")
+            else:
+                bad("R17_classification_unverified",
+                    "manifest.classification asserts readiness/dimensions but no "
+                    "classification could be derived from hardening_evidence; "
+                    "a bare asserted verdict is never accepted")
+
+    # ---- new-era path discipline: fixture/scorer path records are rooted
+    # relative and hash-verified against current source (historical absolute
+    # generation_evidence paths keep their own M09/M10 rules) ----
+    for section in ("fixtures", "scorers"):
+        items = m.get(section)
+        if items is None:
+            continue
+        if not isinstance(items, dict):
+            bad(f"R17_{section}_record", f"manifest.{section} must be an object when present")
+            continue
+        for name, meta in sorted(items.items()):
+            if not isinstance(meta, dict) or not HASH.match(str(meta.get("sha256", ""))):
+                bad(f"R17_{section}_hash", f"{name}: 64-hex sha256 required")
+                continue
+            path = meta.get("path")
+            if path is None:
+                continue
+            if not _is_rooted_rel(str(path)):
+                bad(f"R17_{section}_path",
+                    f"{name}: hardening-era path records must be rooted relative, got {path!r}")
+                continue
+            candidate = REPO_ROOT / str(path)
+            if not candidate.is_file():
+                bad(f"R17_{section}_path", f"{name}: referenced file missing: {path}")
+                continue
+            actual = hashlib.sha256(candidate.read_bytes()).hexdigest()
+            if actual != meta["sha256"]:
+                bad(f"R17_{section}_hash_mismatch",
+                    f"{name}: recorded sha256 does not match current {path} bytes")
+            else:
+                ok(f"R17_{section}_hash_verified", name)
 
 
 def check(root: Path):
@@ -360,8 +610,11 @@ def check(root: Path):
     else:
         bad("M07_phase2_harness_version", "missing")
 
-    # ---- Methodology-revision rules R09-R14 (snapshot date >= 2026-09-19) ----
-    revision_era = bool(mdate and mdate.group(1) >= METHODOLOGY_REVISION_FROM)
+    # ---- Methodology-revision rules R09-R16 (snapshot date >= 2026-09-19,
+    # pre-hardening; hardening-era snapshots run R17 instead) ----
+    hardening_era = bool(mdate and mdate.group(1) >= HARDENING_FROM)
+    revision_era = bool(mdate and mdate.group(1) >= METHODOLOGY_REVISION_FROM
+                        and not hardening_era)
     if revision_era:
         # R09 CP-1 outcome/finish accounting
         os_ = m.get("outcome_semantics")
@@ -398,12 +651,20 @@ def check(root: Path):
                     continue
                 ok(f"R10_{section}_hash", name)
                 path = meta.get("path")
-                if path:
+                # Only hash-verify references that resolve inside the repo root
+                # (absolute or escaping paths are never read).
+                if path and _is_rooted_rel(str(path)):
                     candidate = REPO_ROOT / str(path)
                     if candidate.is_file():
                         actual = hashlib.sha256(candidate.read_bytes()).hexdigest()
                         if actual != meta["sha256"]:
-                            if mdate and mdate.group(1) < REAL_WORK_REVISION_FROM:
+                            # Frozen-hash compatibility covers every snapshot before
+                            # the 2026-09-24 hardening era, including the 2026-09-23
+                            # snapshots (whose Family A fixture and reliability scorer
+                            # moved on afterwards). Retained evidence is verified
+                            # against the snapshot's pinned immutable frozen hash —
+                            # never against an arbitrary recorded value.
+                            if mdate and mdate.group(1) < HARDENING_FROM:
                                 frozen = REPO_ROOT / "snapshot-freeze" / sid / "manifest.json"
                                 if frozen.is_file():
                                     groups = json.loads(frozen.read_text()).get("frozen_artifact_sha256", {})
@@ -544,6 +805,11 @@ def check(root: Path):
                         and classification.get("readiness") == "INTEGRATION_BLOCKED"
                         and classification.get("integration_evidence")):
                     bad("R16_blocked_verdict", "blocked/failed execution cannot assert model readiness without demonstrated integration evidence")
+
+    # ---- Hardening era R17 (snapshot date >= 2026-09-24): evidence-bound ----
+    if hardening_era:
+        _check_hardening(root, m, bad, warn, ok)
+
     # ---- N03 improper-rewrite detection ----
     # A welp-* campaign whose contract IDs are ALL wlep-* (with no welp-* counterpart)
     # suggests the campaign was silently relabeled from WLEP to WELP. Reject.
@@ -1179,6 +1445,82 @@ def _corrected_bundle(td, name, mutate=None):
     return _prospective_bundle(td, name, correction)
 
 
+def _retained_realwork_bundle(td, name):
+    """Retained 2026-09-23 bundle pinned to its frozen snapshot hashes.
+
+    Regression fixture for pre-hardening frozen-hash compatibility: the working
+    tree moved on after the freeze (Family A bumped to 1.3.0-draft, reliability
+    scorer updated), so a retained bundle records the hashes from its immutable
+    snapshot-freeze manifest — not an arbitrary value, and not today's bytes.
+    The bundle must stay valid with R10 historical-hash warnings.
+    """
+    frozen_sid = "welp-next-snapshot-2026-09-23-real-hardware-real-testing"
+    frozen = json.loads((REPO_ROOT / "snapshot-freeze" / frozen_sid
+                         / "manifest.json").read_text())
+    groups = frozen.get("frozen_artifact_sha256", {})
+
+    def pin_frozen(m):
+        for section in ("fixtures", "scorers"):
+            recorded = groups.get(section, {})
+            for meta in (m.get(section) or {}).values():
+                rec = recorded.get(str(meta.get("path")))
+                if rec:
+                    meta["sha256"] = rec
+
+    return _prospective_bundle(td, name, pin_frozen)
+
+
+# ---------------- hardening-era fixtures (R17, snapshot >= 2026-09-24) ----------------
+
+def _synthetic_hardening_bundle(td, variant):
+    """Build a BundleRecovery synthetic hardening bundle; returns its campaign root.
+
+    Exercises the FULL validator (check), not just harness/bundle.py: the
+    synthetic builder emits the whole campaign shell plus the hash-bound
+    hardening_evidence document, so positive/complete-negative must pass every
+    rule and the negative variants must be rejected through the integrated
+    bundle findings.
+    """
+    bundle_mod, _classification_mod = _hardening_modules()
+    dest = Path(td) / ("synthetic_" + variant.replace("-", "_"))
+    dest.mkdir(parents=True, exist_ok=True)
+    return Path(bundle_mod.make_synthetic_bundle(dest, variant=variant))
+
+
+def _mutated_synthetic_bundle(td, variant, mutate):
+    """Synthetic bundle whose campaign manifest is additionally mutated."""
+    g = _synthetic_hardening_bundle(td, variant)
+    man_path = g / "summaries/campaign_manifest.json"
+    man = json.loads(man_path.read_text())
+    mutate(man)
+    man_path.write_text(json.dumps(man))
+    return g
+
+
+def _bad_pointer_absolute(td):
+    """hardening_evidence.path outside the campaign bundle: R17 path error."""
+    return _mutated_synthetic_bundle(
+        td, "positive",
+        lambda m: m["hardening_evidence"].update({"path": "/etc/hardening-evidence.json"}))
+
+
+def _bad_pointer_hash(td):
+    """hardening_evidence.sha256 not matching the evidence bytes: R17 hash error."""
+    return _mutated_synthetic_bundle(
+        td, "positive",
+        lambda m: m["hardening_evidence"].update({"sha256": "0" * 64}))
+
+
+def _bad_asserted_classification(td):
+    """Bare asserted PASS on a negative-completed bundle: derived classification governs."""
+    def assert_ready(m):
+        m["classification"] = {
+            "contract": CLASSIFICATION_040, "readiness": "READY",
+            "dimensions": {"SEMANTIC_CAPABILITY": "STRONG", "BUDGET_DISCIPLINE": "GOOD",
+                           "CONTEXT_USABILITY": "VALIDATED", "INTEGRATION_QUALITY": "CLEAN"}}
+    return _mutated_synthetic_bundle(td, "complete-negative", assert_ready)
+
+
 def selftest():
     with tempfile.TemporaryDirectory() as td:
         rg_legacy = check(_good_legacy_wlep(td))
@@ -1220,7 +1562,28 @@ def selftest():
             td, "bad_corrected_profile", lambda m: m["classification"].update({
                 "profile_id": "other-profile",
                 "dimension_profile_ids": {key: "other-profile" for key in PROFILE_DIMENSIONS}})))
+        rg_retained = check(_retained_realwork_bundle(td, "good_retained_realwork"))
+
+        # ---- R17 hardening era: full-validator runs over synthetic bundles ----
+        rg_pos = rg_neg = rb_review = rb_incomplete = rb_exec = None
+        rb_pointer_abs = rb_pointer_hash = rb_asserted = None
+        synth_errors = []
+        try:
+            rg_pos = check(_synthetic_hardening_bundle(td, "positive"))
+            rg_neg = check(_synthetic_hardening_bundle(td, "complete-negative"))
+            rb_review = check(_synthetic_hardening_bundle(td, "review-blocked"))
+            rb_incomplete = check(_synthetic_hardening_bundle(td, "incomplete"))
+            rb_exec = check(_synthetic_hardening_bundle(td, "execution-error"))
+            rb_pointer_abs = check(_bad_pointer_absolute(td))
+            rb_pointer_hash = check(_bad_pointer_hash(td))
+            rb_asserted = check(_bad_asserted_classification(td))
+        except Exception as exc:
+            synth_errors.append("hardening synthetic bundles unavailable: "
+                                f"{type(exc).__name__}: {exc}")
         fails = []
+        fails.extend(synth_errors)
+
+        # Historical + prospective positive cases must be accepted.
         for label, r in [("legacy_wlep_rejected", rg_legacy), ("current_welp_rejected", rg_welp),
                          ("welp_with_legacy_evidence_rejected", rg_mixed),
                          ("new_hierarchy_rejected", rg_new),
@@ -1229,8 +1592,11 @@ def selftest():
                          ("new_format_website_rejected", rg_web),
                          ("historical_pre_hierarchy_pair_rejected", rg_hist_pair),
                          ("methodology_revision_rejected", rg_rev),
-                         ("revision_context_deferred_rejected", rg_rev_deferred)]:
-            if not r["valid"]:
+                         ("revision_context_deferred_rejected", rg_rev_deferred),
+                         ("retained_realwork_rejected", rg_retained),
+                         ("hardening_positive_rejected", rg_pos),
+                         ("hardening_complete_negative_rejected", rg_neg)]:
+            if r is not None and not r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         for label, r in [("unknown_prefix_accepted", rb_unknown), ("improperly_rewritten_legacy_accepted", rb_rewritten),
                          ("ambiguous_report_pair_accepted", rb_ambig),
@@ -1242,8 +1608,14 @@ def selftest():
                          ("revision_finish_accounting_accepted", rb_rev_finish),
                          ("revision_hash_mismatch_accepted", rb_rev_hash),
                          ("revision_context_depths_accepted", rb_rev_depths),
-                         ("revision_cache_policy_accepted", rb_rev_cache)]:
-            if r["valid"]:
+                         ("revision_cache_policy_accepted", rb_rev_cache),
+                         ("hardening_review_blocked_accepted", rb_review),
+                         ("hardening_incomplete_accepted", rb_incomplete),
+                         ("hardening_execution_error_accepted", rb_exec),
+                         ("hardening_pointer_absolute_accepted", rb_pointer_abs),
+                         ("hardening_pointer_hash_accepted", rb_pointer_hash),
+                         ("hardening_bare_asserted_classification_accepted", rb_asserted)]:
+            if r is not None and r["valid"]:
                 fails.append(label + ": " + str([x for x in r["findings"] if x[0] == "error"]))
         if not rg_pro["valid"]:
             fails.append("prospective bundle rejected: " + str(
@@ -1261,6 +1633,39 @@ def selftest():
             if record["valid"] or not any(
                     x[0] == "error" and x[1] == rule for x in record["findings"]):
                 fails.append(f"prospective {label} failed to reject {rule}")
+        # ---- R17 hardening-era assertions ----
+        if rg_retained is not None and not any(
+                f[0] == "warning" and f[1] in ("R10_fixtures_historical_hash",
+                                               "R10_scorers_historical_hash")
+                for f in rg_retained["findings"]):
+            fails.append("retained_realwork_missing_frozen_hash_warning")
+        if rg_pos is not None:
+            if not any(f[0] == "info" and f[1] == "R17_context_family_a_version"
+                       for f in rg_pos["findings"]):
+                fails.append("hardening_positive_missing_family_a_version_check")
+            if not any(f[0] == "info" and f[1] == "R17_hardening_evidence"
+                       for f in rg_pos["findings"]):
+                fails.append("hardening_positive_missing_pointer_check")
+            if not any(f[1] == "R17_identity_fields" for f in rg_pos["findings"]):
+                fails.append("hardening_positive_missing_identity_fields_check")
+        for label, record in [("review_blocked", rb_review), ("incomplete", rb_incomplete),
+                              ("execution_error", rb_exec)]:
+            if record is not None and not any(
+                    f[0] == "error" and f[1].startswith("R17_bundle_")
+                    for f in record["findings"]):
+                fails.append(f"hardening_{label}_missing_integrated_bundle_error")
+        if rb_pointer_abs is not None and not any(
+                f[0] == "error" and f[1] == "R17_hardening_evidence_path"
+                for f in rb_pointer_abs["findings"]):
+            fails.append("pointer_absolute_missing_R17_path_error")
+        if rb_pointer_hash is not None and not any(
+                f[0] == "error" and f[1] == "R17_hardening_evidence_hash"
+                for f in rb_pointer_hash["findings"]):
+            fails.append("pointer_hash_missing_R17_hash_error")
+        if rb_asserted is not None and not any(
+                f[0] == "error" and f[1] == "R17_classification_mismatch"
+                for f in rb_asserted["findings"]):
+            fails.append("bare_asserted_classification_missing_R17_mismatch_error")
         if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
             fails.append("ambiguous_pair_missing_R02_error")
         if not any(f[0] == "warning" and f[1] == "R02_historical_report_pair" for f in rg_hist_pair["findings"]):
@@ -1301,7 +1706,7 @@ def selftest():
         if not any(f[0] == "warning" and f[1] == "R13_context_not_executed" for f in rg_rev_deferred["findings"]):
             fails.append("revision_context_deferred_missing_R13_warning")
         print(json.dumps({
-            "fixture_sets": 28,
+            "fixture_sets": 38,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],
@@ -1311,6 +1716,9 @@ def selftest():
             "accepted_historical_pre_hierarchy_pair": rg_hist_pair["valid"],
             "accepted_methodology_revision": rg_rev["valid"],
             "accepted_methodology_revision_context_deferred": rg_rev_deferred["valid"],
+            "accepted_retained_realwork_2026_09_23": rg_retained["valid"],
+            "accepted_hardening_positive": bool(rg_pos and rg_pos["valid"]),
+            "accepted_hardening_complete_negative": bool(rg_neg and rg_neg["valid"]),
             "rejected_new_format_missing_localmaxxing": not rb_lmx_missing["valid"],
             "rejected_invalid_localmaxxing_status": not rb_lmx_status["valid"],
             "rejected_new_format_missing_website": not rb_web_missing["valid"],
@@ -1324,6 +1732,12 @@ def selftest():
             "rejected_revision_hash_mismatch": not rb_rev_hash["valid"],
             "rejected_revision_context_depths": not rb_rev_depths["valid"],
             "rejected_revision_cache_policy": not rb_rev_cache["valid"],
+            "rejected_hardening_review_blocked": bool(rb_review and not rb_review["valid"]),
+            "rejected_hardening_incomplete": bool(rb_incomplete and not rb_incomplete["valid"]),
+            "rejected_hardening_execution_error": bool(rb_exec and not rb_exec["valid"]),
+            "rejected_hardening_pointer_absolute": bool(rb_pointer_abs and not rb_pointer_abs["valid"]),
+            "rejected_hardening_pointer_hash": bool(rb_pointer_hash and not rb_pointer_hash["valid"]),
+            "rejected_hardening_bare_asserted_classification": bool(rb_asserted and not rb_asserted["valid"]),
             "failures": fails,
             "pass": not fails,
         }, indent=2))

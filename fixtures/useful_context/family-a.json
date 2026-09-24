@@ -1,12 +1,12 @@
 {
   "fixture_id": "welp-useful-context-family-a",
-  "version": "1.2.0-draft",
-  "status": "DRAFT / CANONICAL / PROSPECTIVE; historical 1.1.0 hash retained in earlier manifests",
-  "frozen_before_outputs": "2026-09-23",
+  "version": "1.3.0-draft",
+  "status": "DRAFT / CANONICAL / PROSPECTIVE; historical 1.1.0/1.2.0 hashes retained in earlier manifests",
+  "frozen_before_outputs": "2026-09-24",
   "canonical_status": "Required controlled longitudinal family when context is applicable; supplementary families answer distinct questions and never replace Family A. Preflight failure is a fixture/methodology blocker, not a model retrieval failure.",
   "supersedes": {
     "fixture": "per-campaign ctx.py / ctx95_completion.py fixture constants",
-    "note": "The 1.1.0 construction used frozen word-fraction insertion and remains historical under its 2026-09-19 SHA-256. This prospective 1.2.0 fixture retains the task facts, depths, word pool and gates while correcting insertion against final rendered tokens.",
+    "note": "The 1.1.0 construction used frozen word-fraction insertion and remains historical under its 2026-09-19 SHA-256. 1.2.0 corrected insertion against the final rendered token stream; this prospective 1.3.0 keeps that construction geometry, word pool, facts and question block byte-identical while adding the canonical answer-oracle semantics of welp-context-0.2.0-draft (year-only item 2, echo/negation/ambiguity-safe review, coupled decoy clause).",
     "provenance_chain": "identical constants used across qwen3-14b / qwen3.6-35b-a3b / mellum2 x2 / bonsai-2 campaigns (word pool, codes TR-8842-QX / TR-3319-WD, shipments 412/388/357)"
   },
   "generation_budget": {
@@ -32,12 +32,23 @@
     "measurement": "bounded render/apply-template plus tokenize on the FINAL stream with identical special-token behavior to inference; fact token starts uniquely located in the final stream, all five depths and occupancy independently verified before inference; no model generation during preflight"
   },
   "gates": {
-    "exact_retrieval": "answer contains TR-8842-QX and not the decoy TR-3319-WD",
-    "synthesis": "answer names 2027 and 412 > 388 relationship holds (the answer states 2027)",
-    "decoy_resistance": "answer does not contain TR-3319-WD",
-    "absent_information": "answer contains NOT STATED for the visitor center code",
-    "retrieval_95": "answer contains 357 for the 95%-depth fact",
-    "instruction_compliance": "answer ends with the exact marker END-OF-REPORT"
+    "exact_retrieval": "item-1 answer contains TR-8842-QX and the produced answer never contains the decoy TR-3319-WD (historical clause kept: deliberately coupled to decoy_resistance, not an independent task)",
+    "synthesis": "item-2 answer names 2027 as the year with more Ridgeline shipments; the question asks only which year, so the counts 412/388 are never demanded",
+    "decoy_resistance": "the produced answer never contains TR-3319-WD",
+    "absent_information": "item-3 answer is the marker NOT STATED for the visitor center code",
+    "retrieval_95": "item-4 answer contains the standalone count 357 for the 95%-depth fact",
+    "instruction_compliance": "the produced answer ends with the exact marker END-OF-REPORT and nothing after it"
+  },
+  "answer_oracle": {
+    "contract": "welp-context-0.2.0-draft",
+    "function": "score_family_a in harness/context.py",
+    "canonical_accepted_answers": [
+      "1. TR-8842-QX\n2. 2027\n3. NOT STATED\n4. 357\n5. END-OF-REPORT",
+      "Maintenance tunnel access code is TR-8842-QX. 2027 had more Ridgeline shipments than 2028. NOT STATED. 357. END-OF-REPORT"
+    ],
+    "rejection": "prompt echoes (frozen question-block sentences never score), negated or hedged year, code or count claims, quoted code or count mentions inside prose, contradictory claimed codes or counts, fabricated claims beside the NOT STATED marker, wrong or conflicting years, wrong or decoy codes, missing facts and malformed claims fail their gates; decisive errors are hard failures without review",
+    "review_policy": "ambiguous or denied evidence (echo without an answer, hedged year/comparative sentences, negated or hedged code/count sentences, both years without an ordering claim, quoted year/code mentions, contradictory claimed codes or counts, fabricated claims beside the refusal marker, interrogative echo at item 3) sets review_required=true with the affected gate false; an inferred safe PASS never exists",
+    "structure_modes": "unique ascending 1-4 item markers (5 optional), 4-5 un-numbered lines, 4-6 comma/semicolon/pipe slots, else historical whole-answer containment semantics"
   },
   "outcome_semantics": {
     "contract": "welp-outcomes-0.1.0-draft",

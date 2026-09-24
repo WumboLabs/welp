@@ -4,6 +4,41 @@
   "token": "wlep",
   "exceptions": [
     {
+      "path": "contracts/welp-reliability-0.2.0-draft.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Immutable prior reliability contract cites its original frozen predecessor path."
+    },
+    {
+      "path": "fixtures/reliability/welp-reliability-sample-20-v2.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Retained v2 fixture records its original frozen corpus identity."
+    },
+    {
+      "path": "schemas/welp_campaign_manifest.schema.json",
+      "classification": "FUNCTIONAL_COMPATIBILITY_KEEP",
+      "reason": "Historical contract-prefix acceptance matches the version-aware campaign validator."
+    },
+    {
+      "path": "summaries/welp_compatibility_policy.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Snapshot lineage preserves the original pre-rename snapshot identifier."
+    },
+    {
+      "path": "summaries/welp_migration_inventory.json",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Migration inventory preserves historical source paths and compatibility provenance."
+    },
+    {
+      "path": "tmp/full-context-coverage/REPORT.md",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Existing tracked historical report cites an original vault note filename; not a current publication surface."
+    },
+    {
+      "path": "tmp/report-artifact-hierarchy/REPORT.md",
+      "classification": "FROZEN_PROVENANCE_KEEP",
+      "reason": "Existing tracked historical report records legacy compatibility fixtures; its historical prose remains unchanged."
+    },
+    {
       "path": "validators/validate_campaign_welp.py",
       "classification": "FUNCTIONAL_COMPATIBILITY_KEEP",
       "reason": "Accepts frozen historical campaign snapshot IDs, contract prefixes, preflight const, and conformance filenames."

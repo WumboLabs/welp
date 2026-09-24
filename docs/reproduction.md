@@ -18,11 +18,16 @@
    OPTIMIZED lane. Choose a bounded semantic ceiling from disjoint nonscored
    calibration before scored answers; operational ceilings follow the real role
    SLO, not the semantic ceiling. Record completion, reasoning/answer tokens,
-   time and cost separately by lane. `welp-final-classification-0.3.1-draft`
-   requires all verdict dimensions to share the selected DEPLOYMENT profile ID;
-   budget lanes remain separate measurements under that profile, not distinct
-   selected profile IDs. The first 2026-09-23 snapshot retains its frozen
-   0.3.0 wording; the profile-identity clarification is a subsequent snapshot.
+   time and cost separately by lane. Classification 0.4 requires all verdict
+   dimensions to share the selected DEPLOYMENT profile ID; budget lanes are
+   separate measurements under that profile, not distinct profile IDs. Earlier
+   0.3.0/0.3.1 wording remains frozen under its own snapshot.
+   From 2026-09-24, run `harness/setup.py` against the pre-scoring setup:
+   response-class coverage and disjoint calibration, actual outgoing/rendered
+   prompt hashes and answerability review, effective profile controls, measured
+   cache state and bounded token/time costs. Do not apply a supplied-evidence-only
+   prompt to an open-knowledge task or reuse a short-answer calibration for
+   every output class. Missing setup evidence is a blocker.
 5. **Phase 5 module applicability.** Freeze `phase5_applicability.json` before any Phase-5 execution.
 6. **Long-job durability.** Absolute path declared first; existence + row count + SHA-256 verified after exit; only then COMPLETE.
 7. **Context characterization (mandatory coverage accounting).** Freeze the [Context Scaling](../protocol/context-scaling.md) method revision/hash and answer the checklist below before context testing; finalize every row in the [model-card coverage table](../lab-record-template/README.md#model-card-context-coverage), including untested ranges. Capacity admission alone is not validation; practical default selection is not a context stop condition.
@@ -36,7 +41,7 @@
 8. **LocalMaxxing completion disposition (mandatory).** Once the canonical practical profile is selected, evaluate LocalMaxxing eligibility per [WELP](../protocol/WELP.md#localmaxxing-completion-disposition). If eligible: freeze the canonical benchmark command and actual prompt, run the current official LocalMaxxing method, validate the local result, search for an exact existing submission, and submit during campaign completion when submission access works. Record `summaries/localmaxxing.json` with exactly one status (`SUBMITTED` with origin `NEW`/`VERIFIED_EXISTING` and the submission reference, `MEASURED_NOT_SUBMITTED`, `NOT_ELIGIBLE` with the demonstrated representation limit, or `BLOCKED` with the exact blocker), the canonical profile identity, configured context, actual prompt tokens, and the result summary. This step is the explicitly authorized external-submission exception; a generic "no external submission" rule must not suppress it, and it authorizes no other external action.
 9. **Final classification.** `harness/classification.py` derives the verdict from the evidence bundle. Report practical-profile selection separately from model-card context completeness; do not infer the latter from a classifier result. A blocked methodology campaign has no verdict without an independently demonstrated integration blocker.
    Preregister role applicability and real-work fixtures per
-   `contracts/welp-real-work-0.1.0-draft.json`. Native tool calls require an
+   `contracts/welp-real-work-0.2.0-draft.json`. Native tool calls require an
    effective interface and sequential state/error recovery, not a text-only
    imitation. Execute model-authored repository changes only in an isolated
    disposable sandbox; compare against executable tests and inspect unrelated
@@ -44,7 +49,12 @@
    uncertainty checks, a blind qualitative rubric, and any disagreement.
    Distinguish WELP campaign evidence from optional LLMGauge measurements;
    no historical event gains prospective labels retroactively.
-10. **Validation.** `validate_campaign_welp.py <campaign_dir>` MUST exit 0. It does not enforce the new narrative context-coverage gate: review the table and evidence explicitly.
+10. **Validation.** `python3 validators/validate_campaign_welp.py <campaign_dir>`
+    MUST exit 0. From 2026-09-24, provide hash-bound `hardening_evidence` and
+    rederive the classifier/report through `harness/bundle.py`; inspect required
+    context cells, role coverage and actual qualitative notes. Historical
+    bundles retain their weaker pinned checks. Exit 0 proves only the checks
+    performed, not independent scientific truth or subjective review accuracy.
 11. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` and the public-safe website-publication export `summaries/website-publication.json` with its explicit disposition — and, when requested, a `<campaign-slug>-review-report.md` human summary under the campaign bundle `<campaign>/reviews/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
 12. **Publication routing.** Follow the
     [four-layer publication contract](publication.md): local `research/model-evaluations/`
@@ -72,6 +82,30 @@ explicit dispositions before reporting:
 8. Which rows have useful-context validation at that near-full occupancy? Verify measured 2/25/50/75/95 depths (<=0.50 percentage-point error, <=0.25 preferred), highest-runnable native/extended seed requirements, and separate request/observation counts.
 9. What remains untested or partial? Record every gap, demonstrated fit/integration limit, evidence path, and deferral reason; never silently omit an advertised range.
 10. Is model-card context coverage complete? Only all completed required rung/maxima dispositions permit CONTEXT CHARACTERIZATION COMPLETE. PRACTICAL PROFILE SELECTED or PRACTICAL BASELINE CHARACTERIZED may precede this gate.
+
+From 2026-09-24, `harness/context.py:context_summary` reports coverage,
+execution validity, capability and each lane's useful maximum separately.
+Every required rung/seed/lane must be accounted for. All valid negative rows
+can complete coverage while capability remains FAILED; missing, invalid or
+unresolved rows cannot. Keep controlled Family A and complementary
+multi-document/codebase/session evidence distinct.
+
+## Reliability, review and performance evidence
+
+- Use scorer v3 and the frozen 20-task v3 fixture. Preserve actual per-request
+  caps, outgoing messages, finish reasons, usage and observed actions.
+- Retain explicit safety adjudications with task/answer/action hashes and
+  reviewer identity/type, blindness, independence and rationale. A task FAIL
+  is not unsafe behavior. Unresolved deciding review blocks completion.
+- Report unique tasks and task instances separately, all outcome denominators,
+  seed/category/lane counts, one-task and seed-removal sensitivity, and the
+  single bounded adaptive extension. No IID confidence interval is justified.
+- Preserve each performance repetition and warmup exclusion, cold/warm state,
+  exact metric boundary/unit and cache provenance. Retain all attempts after a
+  preregistered variance-triggered batch. Never infer missing raw samples.
+- Optional `harness/measurement.py` imports must match the actual LLMGauge
+  producer schema and immutable source evidence; NON_COMPARABLE is a valid
+  explicit disposition, never permission to manufacture a missing metric.
 
 ## Report artifact checklist
 

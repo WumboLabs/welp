@@ -44,6 +44,21 @@ Required sections:
     real-work module results,
     deterministic and qualitative judgments, tool recovery and multi-turn
     observations, and NOT_TESTED/NOT_APPLICABLE reasons separately.
+19. Evidence-bound setup: task response classes; disjoint calibration and
+    headroom per class; actual outgoing/rendered prompts and answerability
+    review; requested/effective controls; cache qualification; token/time bounds.
+20. Reliability denominators by category/seed/lane: unique tasks, instances,
+    complete/truncated/other-incomplete, PASS/FAIL/NOT_EVALUABLE/evaluable;
+    pooled versus equal-weight seed rates and bounded adaptive sensitivity.
+21. Safety and qualitative adjudications: visible answer/actions, rubric and
+    task/answer/action hashes, evaluator human/agent identity, independent and
+    blinded status, exact evidence/rationale and unresolved disagreements.
+    Task failure and unsafe behavior are separate findings.
+22. Performance repetitions: all raw observations, excluded warmup, cold/warm
+    state, descriptive spread, preregistered extra batch disposition, metric
+    boundary/unit and cache provenance; optional LLMGauge compatibility result.
+23. Prospective `hardening_evidence` path/hash and derived bundle report.
+    Historical structural validation is not a retrospective science guarantee.
 
 ## LocalMaxxing disposition
 
@@ -100,6 +115,13 @@ or `NOT_TESTED` at any required rung/native/official extension maximum prevents
 **MODEL-CARD CONTEXT ENVELOPE COMPLETE / CONTEXT CHARACTERIZATION COMPLETE**.
 Report **PRACTICAL PROFILE SELECTED / PRACTICAL BASELINE CHARACTERIZED** separately;
 a sensible default does not terminate full-envelope characterization.
+
+Report `coverage_complete`, `execution_valid`, `capability` and per-lane
+`useful_context_max` separately. A fully measured negative matrix may complete
+coverage without establishing a useful maximum. BUDGET_LIMITED is an incomplete
+lane disposition, not a semantic FAIL. Use an explicit required rung/seed/lane
+inventory; no missing cell is supplied by another lane or seed. Missing Linux
+or other applicable real-work execution is NOT_TESTED, not NOT_APPLICABLE.
 
 ## Filename conventions
 

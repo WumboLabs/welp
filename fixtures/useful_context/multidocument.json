@@ -1,0 +1,54 @@
+{
+  "fixture_id": "welp-useful-context-family-multidocument",
+  "version": "0.1.0-draft",
+  "status": "DRAFT / PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "frozen_before_outputs": "2026-09-24",
+  "role": "Complementary realistic multi-document context family. Extends the document-synthesis domain (bay.service) to a distributed construction containing current facts, superseded facts, one version-precedence conflict and one absent fact, carried by real memo/config/log documents rather than controlled random words. Distinct from Family A (controlled retrieval): reported separately, never inherited from it and never replacing it.",
+  "documents": [
+    {"id": "memo-2026-09-01", "kind": "memo", "version_status": "superseded", "text": "DEPLOYMENT MEMO BAY-MEMO-0901 - 2026-09-01\nbay.service serves the public API for the Bay project.\nCurrent listen port: 8452. Configured replicas: 2.\nHealth monitoring is handled by the platform team; no team-run probes exist.\nThis memo is superseded by later deployment memos."},
+    {"id": "config-rev6", "kind": "configuration", "version_status": "superseded", "text": "# bay.service effective configuration BAY-CFG-R6 - revision r6 (applied 2026-09-10)\nlisten_port = 8452\nreplicas = 4\nworkers = 4\nlog_path = /var/log/bay/app.log\n# superseded by revision r7"},
+    {"id": "runbook-ops", "kind": "runbook", "version_status": "reference", "text": "BAY OPS RUNBOOK BAY-RUNBOOK - deploys and rollbacks\nDeploys apply a pinned configuration revision and restart the unit. Rollbacks re-apply the previous revision and restart again. Never edit a rendered revision in place; open a change request instead."},
+    {"id": "config-rev7", "kind": "configuration", "version_status": "current", "text": "# bay.service effective configuration BAY-CFG-R7 - revision r7 (applied 2026-09-18)\nlisten_port = 8652\nreplicas = 2\nworkers = 4\nlog_path = /var/log/bay/app.log\n# this revision replaces r6; r7 is the effective configuration as of the date above"},
+    {"id": "log-excerpt-2026-09-21", "kind": "journal", "version_status": "observed", "text": "journal excerpt BAY-LOG-0921 - bay-01\n2026-09-21T09:14:31Z bay systemd[1]: Started bay.service.\n2026-09-21T09:14:31Z bay bay[5150]: bay.service listening on 0.0.0.0:8652 (revision r7)\n2026-09-21T09:15:02Z bay bay[5150]: first request accepted"},
+    {"id": "memo-2026-09-20", "kind": "memo", "version_status": "current", "text": "DEPLOYMENT MEMO BAY-MEMO-0920 - 2026-09-20\nThe revision r7 rollout completed on 2026-09-18: bay.service now serves on the r7 listen port. Earlier notes quoting the pre-r7 port are obsolete.\nConfigured replicas remain as set by revision r7.\nThe October maintenance window is not yet scheduled."},
+    {"id": "capacity-memo-2026-09-22", "kind": "memo", "version_status": "current", "text": "CAPACITY NOTE BAY-CAP-0922 - 2026-09-22\nFor the September sale window the on-call engineer temporarily raised bay.service to 4 replicas by hand on 2026-09-22. This hand-raise is not reflected in any configuration revision; the pending change request to make it permanent is still unapproved."}
+  ],
+  "construction": {
+    "seed": 42,
+    "documents": [
+      {"id": "memo-2026-09-01", "target_depth": 0.06, "offset_marker": "BAY-MEMO-0901"},
+      {"id": "config-rev6", "target_depth": 0.30, "offset_marker": "BAY-CFG-R6"},
+      {"id": "runbook-ops", "target_depth": 0.44, "offset_marker": "BAY-RUNBOOK"},
+      {"id": "config-rev7", "target_depth": 0.55, "offset_marker": "BAY-CFG-R7"},
+      {"id": "log-excerpt-2026-09-21", "target_depth": 0.68, "offset_marker": "BAY-LOG-0921"},
+      {"id": "memo-2026-09-20", "target_depth": 0.82, "offset_marker": "BAY-MEMO-0920"},
+      {"id": "capacity-memo-2026-09-22", "target_depth": 0.93, "offset_marker": "BAY-CAP-0922"}
+    ],
+    "filler_rule": "Deterministic unrelated operational log lines from random.Random(seed) over frozen templates with bounded integer ranges (1-2 digit counts and clock values, 3-digit series keys, 6-digit checkpoint ids); filler carries no question facts and never contains the frozen forbidden substrings.",
+    "filler_forbidden_substrings": ["8452", "8652", "replica", "listen_port", "BAY-", "health", "09:14:31"],
+    "insertion_mechanism": "construct_multidocument in harness/capabilities.py exposes each document id as [document: <id>] before its text and places whole documents iteratively against the FINAL rendered/tokenized stream via measure(content) -> (total_tokens, {document_id: token_start_of_offset_marker}); it stops before inference if occupancy or placement fails. Campaigns must tokenize with identical special-token behavior to inference, including BOS/template.",
+    "occupancy": {"preferred_pct": 99.0, "hard_pct": 97.0},
+    "placement": {"preferred_pp": 0.25, "hard_pp": 0.50},
+    "question_block": "Using only the documents above, reply with exactly one JSON object and nothing else, with exactly these keys:\n- current_port (integer): the configured listen port from the authoritative configuration revision.\n- current_port_source (string): the document id in the [document: <id>] label of that configuration revision.\n- superseded_port (integer): the older listen port that the current documents supersede.\n- replicas (integer): the configured replica count from the authoritative configuration revision.\n- replicas_conflicting_claim (string): the document id in the [document: <id>] label of the non-superseded memo that claims a different replica figure than the authoritative configuration revision; do not cite a superseded configuration.\n- restart_observed_at (string): the restart timestamp exactly as the log line prints it.\n- health_probe_path (string or null): the HTTP health probe path exactly as some document states it; if no document states a health probe path, null.\nPrecedence rule: the highest-numbered configuration revision is authoritative over memos and logs; a later memo never overrides a configuration revision for configured values."
+  },
+  "oracle": {
+    "format": "JSON object only, no Markdown, no code fences",
+    "exact_keys": ["current_port", "current_port_source", "superseded_port", "replicas", "replicas_conflicting_claim", "restart_observed_at", "health_probe_path"],
+    "expected_values": {
+      "current_port": 8652,
+      "current_port_source": "config-rev7",
+      "superseded_port": 8452,
+      "replicas": 2,
+      "replicas_conflicting_claim": "capacity-memo-2026-09-22",
+      "restart_observed_at": "2026-09-21T09:14:31Z",
+      "health_probe_path": null
+    },
+    "integer_keys_exact": ["current_port", "superseded_port", "replicas"],
+    "precedence_rule": "Highest configuration revision (config-rev7) wins over the superseded r6 dump and over every memo regardless of memo date; the newest-date memo is deliberately not the authority, so a newest-document-wins heuristic fails.",
+    "absent_fact": "health_probe_path is stated by no document (the 09-01 memo explicitly defers health monitoring to the platform team without naming a path); the only correct value is null.",
+    "alternates": "Any JSON key order and whitespace is valid; values are exact."
+  },
+  "scoring": "harness/capabilities.py:score_multidocument(content). Strict single JSON object, exact key set, exact values with integer-type enforcement, absent fact null.",
+  "limitations": "This is ONE complementary family and one task: the seven per-field checks are aspects of that single task, not seven independent tasks. A short constructed run proves construction and placement mechanics only and never a long-context capability claim; useful-context claims at depth require this family at real rung occupancy under the context-scaling method. Family A remains the only controlled longitudinal family; repository and session context stay separate and NOT_TESTED without their own fixtures.",
+  "review": {"oracle_class": "DETERMINISTIC", "independence": "The mechanical layer alone decides the frozen gates; any added qualitative review must be independent and model-identity-blinded."}
+}

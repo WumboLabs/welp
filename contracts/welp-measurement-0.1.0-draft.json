@@ -1,0 +1,118 @@
+{
+  "contract_id": "welp-measurement",
+  "version": "0.1.0-draft",
+  "applies_from_snapshot_date": "2026-09-24",
+  "status": "DRAFT / PROSPECTIVE",
+  "created": "2026-09-24",
+  "purpose": "Minimal executable WELP-side import/compatibility layer over EXISTING LLMGauge producer evidence formats, plus deterministic repetition summarization. WELP stays the read-only consumer: no LLMGauge edits, no competing export format, no metric inference. The practical-suite role is retained — native run/suite evidence imports under the same identity discipline as the LocalMaxxing speed module; this contract is not speed-only.",
+  "protocol_basis": [
+    "welp/protocol/WELP.md — methodology revision 2026-09-23: 'An import must cite immutable raw artifact/hash, exact profile/runtime/hardware/workload, metric boundary/unit, cache state, requested/effective settings and availability. Missing or incommensurate metrics are not inferred.'",
+    "llmgauge/docs/LOCALMAXXING_INTEGRATION_CONTRACT.md and llmgauge/src/llmgauge/core/localmaxxing.py — producer artifact shape and fingerprint algorithm (read as format authority; never modified).",
+    "llmgauge/docs/ARTIFACT_SCHEMAS.md — llmgauge.result.v0 identity and referenced-artifact semantics.",
+    "Primary evidence path: research/model-evaluations/lfm2.5-8b-a1b/lfm2.5-8b-a1b-rtx5070-welp-prospective-retest-2-2026-09-23/localmaxxing-artifact"
+  ],
+  "producer_formats": {
+    "supported": [
+      {
+        "schema_version": "llmgauge.localmaxxing_benchmark.v1",
+        "artifact_version": 1,
+        "method": "localmaxxing-llama-cpp-v1",
+        "shape": "benchmark.json as file or artifact directory; companion raw files (execution-evidence.json REQUIRED as the repetition raw pin, ttft-evidence.json REQUIRED whenever ttft is carried, telemetry-evidence.json and localmaxxing-submission-receipt.json optional) are digested and cross-checked against the sealed artifact",
+        "verification": "producer fingerprint recomputed over canonical JSON (sorted keys, compact separators, ensure_ascii) with the fingerprint member omitted; aggregate = arithmetic mean checks; repetition count/workload.warmup_repetitions consistency; positive finite observations; telemetry aggregate-vs-samples checks; REQUIRED positional repetition raw pin against execution-evidence.json (see import.fail_closed_rules.repetition_raw_pin) and ttft-evidence.json pin whenever ttft is carried",
+        "metrics": "tok_s_out, tok_s_prefill (tok/s, decode/prefill boundaries respectively), tok_s_total (companion combined run), ttft mean/samples (ms, benchmark proxy), telemetry peaks (MiB/W/C/%)"
+      },
+      {
+        "schema_version": "llmgauge.result.v0",
+        "scope": "bounded single-run import: run status, model/runtime/suite identity, sampler and cache fields with their *_state semantics, per-task metric availability, referenced raw artifact hashes (raw prompt/output/stderr/cleaned paths), transcript digest verification. result.v0 carries NO hardware, cache-regime or timing-boundary facts: those required axes are satisfiable only through a verified digest-pinned sidecar; absent, the import is NON_COMPARABLE — a result.v0 import without them is descriptive evidence, never a qualified comparison.",
+        "explicitly_not": "no cross-task pooling (different prompts are different workloads); no repetition/warmup structure exists in this format; run_fingerprint is recorded, not recomputed (producer payload versions v0-v7 vary); agent-harness/external-benchmark dedicated import shapes carry no native measurements and are refused"
+      }
+    ],
+    "unknown_optional_fields": "tolerated; never a rejection reason"
+  },
+  "import": {
+    "interface": "harness/measurement.py: import_llmgauge(source: Path, expected: dict) -> {status, reasons, metrics, provenance}",
+    "statuses": ["COMPATIBLE", "NON_COMPARABLE"],
+    "required_identity": "expected must carry the COMPLETE preregistered comparison identity (REQUIRED_EXPECTED_AXES in harness/measurement.py) for the routed producer format — source-bytes pin, model-artifact identity pin, cache_regime, timing_boundary, metric boundary/units, model identity, engine/runtime build, hardware, effective offload/KV, workload geometry incl. context_length, repetitions and warmup policy. A missing caller axis is NON_COMPARABLE ('expected comparison identity incomplete'), never an implicit don't-care; structural unavailability in the native format never relaxes the gate — the axis is then satisfied ONLY through a verified digest-pinned sidecar, and absent evidence means NON_COMPARABLE. Unknown expected keys (typos, unsupported axes) are rejected, never ignored.",
+    "fail_closed_rules": {
+      "read_only": "the source is never written, moved, or repaired",
+      "missing_metadata": "unavailability is judged from the SOURCE ONLY. A caller-supplied expected value never substitutes for absent source metadata; each such axis yields an explicit availability reason and NON_COMPARABLE.",
+      "null_semantics": "an explicit producer null means the field is not represented and is treated as absent (sidecar-fillable)",
+      "model_artifact_identity": "the producer fingerprint/seal authenticates the BENCHMARK BYTES, not the model artifact. The model file digest (model_artifact_sha256) must be verified independently: via model.provenance.sha256 for result.v0, or via a digest-pinned qualification sidecar reference (e.g. a model manifest) for the localmaxxing format. Name/revision/quantization/size never stand in for artifact identity.",
+      "repetition_raw_pin": "the sealed repetitions must verify positionally against the raw llama-bench evidence: repetition i is exactly one prefill row (n_prompt=workload.prompt_tokens, n_gen=0) and one decode row (n_prompt=0, n_gen=workload.output_tokens) whose avg_ts equal the sealed tok_s_prefill/tok_s_out pair, with per-row engine config (n_batch, n_ubatch, type_k/type_v, n_gpu_layers, no_kv_offload, split_mode, main_gpu, load_mode) matching the artifact runtime. Set membership of throughputs proves nothing (swaps/duplicates pass it) and is not accepted. execution-evidence.json is required; ttft-evidence.json is required whenever the artifact carries ttft.",
+      "hashes": "producer fingerprint (localmaxxing), source file digest, every companion/raw referenced file digest, and transcript digest are verified; any mismatch is NON_COMPARABLE",
+      "unavailable": "explicit noncomparability, never inference; reasons carry machine-stable prefixes (schema:/hash:/availability:/axis:/unit:/raw:/sidecar:/consistency:)"
+    },
+    "expected_axes": {
+      "sections": "model/engine/hardware/runtime/workload objects hold dotted axis keys matched against actual producer fields (native names preferred; e.g. runtime.kv_cache_type_k, hardware.gpu_name, workload.warmup_repetitions)",
+      "top_level": [
+        "artifact_sha256 (REQUIRED) — source file digest pin",
+        "model_artifact_sha256 (REQUIRED) — model artifact identity pin",
+        "cache_regime (REQUIRED) — no native producer field; satisfied only through the verified digest-pinned sidecar, else NON_COMPARABLE",
+        "timing_boundary (REQUIRED) — no native producer field (which window the metric measures: decode-only, prefill, end-to-end, first-token); satisfied only through the verified digest-pinned sidecar, else NON_COMPARABLE",
+        "metric_units (REQUIRED, non-empty) — expectations checked against the native metric definitions; contradiction or unknown metric is a unit-definition mismatch",
+        "workload.context_length (REQUIRED, in the workload section) — optional native localmaxxing field, matched when present, sidecar-filled otherwise; result.v0 pins it natively via runtime.ctx_size",
+        "artifact_fingerprint — optional additional producer-fingerprint pin (localmaxxing only)",
+        "repetition_structure — available for localmaxxing, explicitly unavailable for single-run result.v0",
+        "qualification_sidecar — digest-pinned evidenced fill (see below)"
+      ]
+    },
+    "qualification_sidecar": {
+      "rule": "An evidenced sidecar may fill an ABSENT source field ONLY when immutable references allow verifying the actual value; assertions are never accepted. It never overrides a present source value.",
+      "schema": "welp-measurement-qualification-sidecar/1",
+      "fields_entry": "{axis: {value, evidence: {path, sha256, json_pointer}}} — the referenced evidence file must exist inside the source tree, hash exactly to the pinned sha256, and its JSON pointer must resolve to exactly the claimed value",
+      "sidecar_pinning": "REQUIRED: expected.qualification_sidecar.expected_sha256 must pin the sidecar file itself; an unpinned sidecar is not an immutable reference and is rejected",
+      "failure": "any unverifiable entry is an explicit sidecar: reason and the axis stays unavailable"
+    },
+    "availability_vocabulary": {
+      "available": "the admitted source directly carries the value or exact bytes",
+      "absent": "the supported format permits omission and no value is present (cache_regime, cold-start lane, context window)",
+      "unavailable": "required evidence is missing, invalid, or contradicted; always NON_COMPARABLE when the axis was demanded",
+      "note": "aligned with the LLMGauge closed availability vocabulary; an availability state is not a value"
+    },
+    "channels_and_roles": {
+      "ttft": "imported benchmark TTFT is labeled proxy_benchmark_ttft and is never direct deployment TTFT",
+      "channels": "stream-first-token, final-first-output and end-to-end observations are kept separate end to end and never pooled",
+      "warmup": "warmup exclusion is the producer-method preregistered designated sample only (workload.warmup_repetitions, evidenced by raw warmup stdout); never retrospective",
+      "evidence_availability": "every import reports an explicit evidence_availability block: measurements, warmup evidence, cold-start, background-load telemetry, TTFT, hardware, KV-cache config, cache regime, actual prompt tokens, referenced raw artifacts"
+    }
+  },
+  "summarization": {
+    "interface": "harness/measurement.py: summarize_repetitions(values, policy) -> dict",
+    "reported": "all raw values in execution order (including designated warmups), n, mean, sample_sd (n-1; null at n<2), median, min, max, cv",
+    "default_policy": "prospective warmed: 1 designated warmup + 5 measured repetitions; a separately measured cold process-startup lane is summarized independently and never pooled",
+    "warmup_rule": "warmups are excluded only as preregistered designated samples, batch-major (batch_warmups [1,1] removes the first observation of EACH batch, never two consecutive observations of one batch); no retrospective outlier removal (outlier_removal is always 'none')",
+    "variance_flag": "CV > 0.10 fires only as a preregistered policy trigger (cv_flag_threshold; explicit null disables). The first batch's CV and trigger are reported separately (first_batch); the pooled flag governs the reported set.",
+    "additional_batch": "when preregistered (max_batches 2), the ONE additional batch is legitimate ONLY on a first-batch variance trigger; a trigger with only the first batch present yields lane status 'pending_additional_batch' (incomplete, extension required before any gate decision); after the second batch ALL observations are retained and reported pooled with a residual_flag; executed-but-untriggered or unpreregistered batches are rejected",
+    "pooling": "different workloads and different policies are never pooled; one call summarizes exactly one workload under one policy; result.v0 per-task metrics are never pooled across prompts",
+    "confidence_interval": "none; IID confidence intervals are unsupported and never emitted",
+    "determinism": "pure functions of inputs; identical inputs yield byte-identical JSON output"
+  },
+  "harness": {
+    "identity": "welp-harness-measurement/1.0.0-draft",
+    "path": "harness/measurement.py",
+    "selftest_required": true,
+    "selftest": "python3 harness/measurement.py selftest — native-compatible synthetic import in the exact producer shape (internally consistent positional pp/tg raw rows, digest-pinned sidecar covering model-artifact identity, cache_regime and timing_boundary, native optional workload.context_length, complete frozen expectation) plus rejection for: incomplete caller identity, unknown/typo'd expected keys, each critical identity/cache/context/unit/metric/repetition/provenance mismatch, swapped repetitions (positional pin), missing observations, nonfinite values, missing raw pins, unpinned/unverifiable sidecar; deterministic summary tests incl. batch-major batch_warmups exclusion, trigger-gated extension (untriggered second batch rejected, pending_additional_batch status, residual flag), and policy type discipline. No real LFM evidence is imported or fabricated in the selftest.",
+    "cli": [
+      "python3 harness/measurement.py import SOURCE EXPECTED_JSON (exit 0 COMPATIBLE, 1 NON_COMPARABLE, 2 usage/IO)",
+      "python3 harness/measurement.py summarize INPUT_JSON  ({\"values\": [...], \"policy\": {...}})"
+    ],
+    "dependencies": "Python standard library only; no network, no model execution, no GPU access"
+  },
+  "unmet_schema_requirements": {
+    "model_artifact_digest": "llmgauge.localmaxxing_benchmark.v1 carries model identity only as hf_id/revision/local_reference/quantization/profile plus model_size in raw rows — never the model file digest. The source fingerprint authenticates benchmark bytes, not the model artifact; a COMPATIBLE import therefore requires a digest-pinned qualification sidecar referencing an immutable model manifest, and real artifacts without one are NON_COMPARABLE by design.",
+    "cache_regime": "no native cache-reuse-regime field in either format; the axis is REQUIRED and satisfied only through the verified digest-pinned sidecar, else NON_COMPARABLE — cache policy is never inferred from artifact bytes. KV/offload/placement configuration axes ARE native and required.",
+    "timing_boundary": "no explicit timing-boundary field in either format; the axis is REQUIRED (which window each metric measures) and satisfied only through the verified digest-pinned sidecar, else NON_COMPARABLE",
+    "context_window": "workload.context_length is REQUIRED. localmaxxing carries it only as an optional producer field (mapped when present; per audit it can exist additively), sidecar-filled otherwise — prompt depth is never a context-window substitute. result.v0 pins it natively via runtime.ctx_size (configured capacity, not validated occupancy).",
+    "requested_vs_effective": "localmaxxing runtime fields are command-requested values; effective placement/KV residency is evidence only via raw llama-bench rows (n_gpu_layers, type_k/type_v, no_kv_offload), which the positional raw pin verifies per repetition",
+    "run_fingerprint_recomputation": "llmgauge.result.v0 run_fingerprint payloads (producer versions v0-v7) are recorded, not recomputed; verification relies on file and referenced-artifact digests",
+    "cold_start_lane": "no producer format measures cold process startup; a cold lane must come from WELP's own measurement",
+    "telemetry_scope": "localmaxxing telemetry is total-device (nvidia-smi), not per-model attribution"
+  },
+  "non_goals": [
+    "no LLMGauge repository changes; LLMGauge remains an optional, overlapping evidence producer",
+    "no network, submission, publication, or external actions",
+    "no metric renaming, flattening, inference, or relabeling of historical campaigns",
+    "no replacement of WELP context scaling, deployment lanes, or classification contracts"
+  ],
+  "historical_compatibility": "Applies prospectively from 2026-09-24. Existing campaign evidence is never re-imported or relabeled by this contract; producer artifacts already recorded in campaigns (e.g. the LFM2.5-8B-A1B retest-2 localmaxxing-artifact) keep their original interpretation, and this module's read-only import adds nothing to them."
+}

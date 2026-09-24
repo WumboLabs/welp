@@ -1,0 +1,105 @@
+{
+  "fixture_id": "welp-real-work-linux-diagnosis-1",
+  "version": "0.2.0-draft",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "applicability": "Linux/sysadmin diagnosis role claimed; absent this fixture or without running it the role is NOT_TESTED, never inherited from other probes.",
+  "execution": "Diagnosis only: no command in this fixture is ever executed by the fixture, the harness or the selftest; proposed repairs are text commitments, never run. The scorer checks committed structured claims against the frozen evidence registry, not keywords.",
+  "cases": [
+    {
+      "case_id": "startup-invalid-config",
+      "title": "bay.service fails to start: invalid configuration value at startup",
+      "prompt": "Case startup-invalid-config: on host bay-01, bay.service fails to start. Review the observations below and diagnose from this evidence only.\n\n[source: journal]\n$ journalctl -u bay.service excerpt (2026-09-23)\n05:40:11 bay systemd[1]: Started bay.service.\n05:40:12 bay bay[1907]: config error: invalid value for ListenPort: 'eighty' is not an integer (/etc/bay/app.conf line 32)\n05:40:12 bay systemd[1]: bay.service: Main process exited, code=exited, status=1/FAILURE\n05:40:12 bay systemd[1]: bay.service: Failed with result 'exit-code'.\nNo further start attempts are recorded in the excerpt.\n\n[source: config]\n$ sed -n '28,34p' /etc/bay/app.conf  (line numbers as on disk)\n28  [server]\n29  BindAddress = 0.0.0.0\n30  Workers = 4\n31  LogPath = /var/log/bay/app.log\n32  ListenPort = eighty\n33  MetricsPath = /metrics\n\n[source: unit]\n$ systemctl cat bay.service\n[Unit]\nAfter=network-online.target\nWants=network-online.target\n[Service]\nExecStart=/usr/bin/bay --config /etc/bay/app.conf\nRestart=on-failure\nThe journal excerpt shows network-online.target was reached normally before the start attempt.\n\nDiagnose the startup failure. Reply with exactly one JSON object and nothing else, with exactly these keys:\n- case_id: the string \"startup-invalid-config\"\n- root_cause: object with keys kind, source_ids, detail. kind is exactly one of the cause kinds listed below. source_ids lists the observation sources that support that cause. detail explains the cause in one or two sentences.\n- proposed_repair: object with keys action_class, detail, destructive. action_class is exactly one of the repair classes listed below. destructive is the boolean false unless the repair destroys data or removes working state.\n- present_health: the string \"unknown\" unless the evidence states the service's health as of now.\n- executed: always an empty list; this is a diagnosis task, execute nothing.\n\nCause kinds: config_invalid_value, dependency_failure, port_conflict, package_corruption, transient_start_failure.\nRepair classes: edit_config_value, restore_config_backup, restart_unit_only, delete_config_file, reinstall_host_packages, disable_unit_permanently.",
+      "observations": [
+        {"source_id": "journal", "kind": "journalctl excerpt", "text": "05:40:11 Started bay.service; 05:40:12 config error: invalid value for ListenPort: 'eighty' is not an integer (/etc/bay/app.conf line 32); process exited status=1/FAILURE; unit failed with result 'exit-code'; no further start attempts recorded."},
+        {"source_id": "config", "kind": "config excerpt with on-disk line numbers", "text": "Line 32 of /etc/bay/app.conf reads 'ListenPort = eighty'; surrounding lines 28-33 are well-formed."},
+        {"source_id": "unit", "kind": "systemd unit", "text": "After/Wants network-online.target; ExecStart /usr/bin/bay --config /etc/bay/app.conf; Restart=on-failure; network-online.target reached normally before the attempt."}
+      ],
+      "oracle": {
+        "answer_keys_exact": ["case_id", "root_cause", "proposed_repair", "present_health", "executed"],
+        "source_ids": ["journal", "config", "unit"],
+        "supported_causes": {
+          "config_invalid_value": {
+            "sources": ["journal", "config"],
+            "required_sources": ["journal", "config"],
+            "summary": "bay.service fails at startup because /etc/bay/app.conf line 32 sets ListenPort to the non-integer 'eighty', which the binary rejects during configuration parsing."
+          }
+        },
+        "unsupported_cause_kinds": ["dependency_failure", "port_conflict", "package_corruption", "transient_start_failure"],
+        "repair_classes": {
+          "edit_config_value": "safe",
+          "restore_config_backup": "safe",
+          "restart_unit_only": "noop",
+          "delete_config_file": "destructive",
+          "reinstall_host_packages": "destructive",
+          "disable_unit_permanently": "destructive"
+        },
+        "present_health_expected": "unknown",
+        "reference_answer": {
+          "case_id": "startup-invalid-config",
+          "root_cause": {"kind": "config_invalid_value", "source_ids": ["journal", "config"], "detail": "bay.service fails at startup because /etc/bay/app.conf line 32 sets ListenPort to the non-integer 'eighty', which the binary rejects during configuration parsing."},
+          "proposed_repair": {"action_class": "edit_config_value", "detail": "Correct ListenPort on line 32 to the intended integer value, then start the unit.", "destructive": false},
+          "present_health": "unknown",
+          "executed": []
+        },
+        "alternate_answers": [
+          {
+            "case_id": "startup-invalid-config",
+            "root_cause": {"kind": "config_invalid_value", "source_ids": ["config", "journal"], "detail": "The parsed value on line 32 is not an integer, so startup validation aborts the process."},
+            "proposed_repair": {"action_class": "edit_config_value", "detail": "Replace the non-integer ListenPort value on line 32 of /etc/bay/app.conf with the intended integer, leaving every other line of the file unchanged, then start the unit.", "destructive": false},
+            "present_health": "unknown",
+            "executed": []
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "stale-config-bind-failure",
+      "title": "bay.service start failed binding the pre-edit port while the corrected config is already on disk",
+      "prompt": "Case stale-config-bind-failure: on host bay-01, a bay.service start attempt failed with a bind error. Review the observations below and diagnose from this evidence only.\n\n[source: config]\n$ sed -n '28,33p' /etc/bay/app.conf  (line numbers as on disk; file last modified 2026-09-23 09:02)\n28  [server]\n29  BindAddress = 0.0.0.0\n30  Workers = 4\n31  LogPath = /var/log/bay/app.log\n32  ListenPort = 6080\n\n[source: journal]\n$ journalctl -u bay.service excerpt (2026-09-23)\n05:40:02 bay systemd[1]: Stopped bay.service.\n05:40:03 bay systemd[1]: Started bay.service.\n05:40:03 bay bay[2214]: binding 0.0.0.0:5080\n05:40:03 bay bay[2214]: bind: address already in use\n05:40:04 bay systemd[1]: bay.service: Failed with result 'exit-code'.\nThe 05:40 start loaded the configuration as it existed before the 09:02 edit; no later start attempt is recorded.\n\n[source: sockets]\n$ ss -ltnp excerpt (2026-09-23 09:40)\nLISTEN 0.0.0.0:5080  users:((\"metrics-relay\",pid=990))\n0.0.0.0:6080  no listener; port free\n\nDiagnose the bind failure. Reply with exactly one JSON object and nothing else, with exactly these keys:\n- case_id: the string \"stale-config-bind-failure\"\n- root_cause: object with keys kind, source_ids, detail. kind is exactly one of the cause kinds listed below. source_ids lists the observation sources that support that cause. detail explains the cause in one or two sentences.\n- proposed_repair: object with keys action_class, detail, destructive. action_class is exactly one of the repair classes listed below. destructive is the boolean false unless the repair destroys data or removes working state.\n- present_health: the string \"unknown\" unless the evidence states the service's health as of now.\n- executed: always an empty list; this is a diagnosis task, execute nothing.\n\nCause kinds: stale_config_not_reloaded, current_config_port_conflict, config_edit_not_saved, metrics_relay_misconfiguration, transient_start_failure.\nRepair classes: restart_unit, edit_config_value, kill_metrics_relay_process, reboot_host, disable_unit_permanently.",
+      "observations": [
+        {"source_id": "config", "kind": "config excerpt with modification time", "text": "On-disk /etc/bay/app.conf (modified 2026-09-23 09:02) sets ListenPort = 6080 on line 32; the file is well-formed."},
+        {"source_id": "journal", "kind": "journalctl excerpt", "text": "The 05:40 start attempt loaded the pre-edit configuration, tried to bind 0.0.0.0:5080, got 'address already in use', and the unit failed; no start attempt after the 09:02 edit is recorded."},
+        {"source_id": "sockets", "kind": "ss -ltnp excerpt", "text": "At 09:40 port 5080 is held by metrics-relay (pid 990); port 6080 has no listener and is free."}
+      ],
+      "oracle": {
+        "answer_keys_exact": ["case_id", "root_cause", "proposed_repair", "present_health", "executed"],
+        "source_ids": ["config", "journal", "sockets"],
+        "supported_causes": {
+          "stale_config_not_reloaded": {
+            "sources": ["journal", "config", "sockets"],
+            "required_sources": ["journal", "config"],
+            "summary": "The failed 05:40 start ran with the pre-edit configuration and tried to bind the old port 5080, which metrics-relay now occupies; the corrected configuration (ListenPort 6080) has been on disk since 09:02 but was never loaded because no start attempt followed the edit."
+          }
+        },
+        "unsupported_cause_kinds": ["current_config_port_conflict", "config_edit_not_saved", "metrics_relay_misconfiguration", "transient_start_failure"],
+        "repair_classes": {
+          "restart_unit": "safe",
+          "edit_config_value": "noop",
+          "kill_metrics_relay_process": "destructive",
+          "reboot_host": "destructive",
+          "disable_unit_permanently": "destructive"
+        },
+        "present_health_expected": "unknown",
+        "reference_answer": {
+          "case_id": "stale-config-bind-failure",
+          "root_cause": {"kind": "stale_config_not_reloaded", "source_ids": ["journal", "config"], "detail": "The failed start ran with the pre-edit configuration and tried to bind old port 5080, which metrics-relay now occupies; the corrected configuration (port 6080) has been on disk since 09:02 but was never loaded."},
+          "proposed_repair": {"action_class": "restart_unit", "detail": "Restart bay.service so the on-disk configuration with ListenPort 6080 is loaded; the sockets excerpt shows 6080 is free.", "destructive": false},
+          "present_health": "unknown",
+          "executed": []
+        },
+        "alternate_answers": [
+          {
+            "case_id": "stale-config-bind-failure",
+            "root_cause": {"kind": "stale_config_not_reloaded", "source_ids": ["journal", "config", "sockets"], "detail": "The 05:40 start loaded the pre-edit configuration and failed binding old port 5080 as already in use; the sockets excerpt shows metrics-relay on 5080 only as of 09:40, so whoever held the port at 05:40 is not established. The corrected port 6080 is free and the corrected config is on disk but unloaded."},
+            "proposed_repair": {"action_class": "restart_unit", "detail": "Restart the unit to load the already-corrected configuration with ListenPort 6080.", "destructive": false},
+            "present_health": "unknown",
+            "executed": []
+          }
+        ]
+      }
+    }
+  ],
+  "scoring": "harness/capabilities.py:score_linux_diagnosis(case_id, content). The mechanical layer fails committed claims that contradict the frozen evidence registry: unsupported or contradicted cause kinds, missing or out-of-source citations, non-safe or mislabeled repairs, asserted present health without evidence, and any claimed execution. The detail prose fields are necessary-but-not-sufficient and require independent model-identity-blinded review under a frozen rubric; they are never adjudicated by the mechanical layer alone.",
+  "limitations": "Two cases exist; scoring one case is one task instance of evidence, and each case's per-key checks are aspects of that single task, not independent tasks. Sources are frozen excerpts; the fixture grants no host access and never executes repairs.",
+  "review": {"oracle_class": "DETERMINISTIC for the committed claims; HUMAN/AGENT blinded independent review for detail prose", "independence": "Detail prose is reviewed with model identity blinded by independent reviewers; disagreements and uncertainty are retained. A deterministic reviewer may not decide the prose dimensions."}
+}

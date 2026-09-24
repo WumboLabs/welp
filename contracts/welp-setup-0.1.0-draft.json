@@ -1,0 +1,139 @@
+{
+  "contract_id": "welp-setup",
+  "version": "0.1.0-draft",
+  "applies_from_snapshot_date": "2026-09-24",
+  "status": "DRAFT / PROSPECTIVE",
+  "module": "harness/setup.py (welp-harness-setup/1.0.0-draft)",
+  "schema": "schemas/welp_setup.schema.json",
+  "purpose": "Frozen pre-scoring setup (preregistration) for scored WELP campaigns: freeze state, selected DEPLOYMENT profile and per-lane identities, task classes with disjoint calibration and declared evidence policies, per-class semantic ceilings from a bounded ladder, independent operational caps, qualified uncached-probe cache controls, bounded seed plan, and recorded content review of the rendered prompts. check_setup validates the document against retained raw evidence before any scored inference.",
+  "scope_note": "This is WELP preregistration evidence, not a competing LLMGauge schema and not an orchestration recipe. It carries no model outputs and selects no winners; it only proves the experiment was fixed, evidenced and reviewed before scoring.",
+  "interface": {
+    "check_setup": "check_setup(root: Path, setup: dict) -> list[str]; [] = the frozen plan may gate scoring; entries are plain blocker strings",
+    "cli": "python3 harness/setup.py check SETUP_JSON [ROOT] | selftest",
+    "synthetic_builder": "_synthetic_setup(root) -> dict — selftest/integration helper; writes a complete valid evidence tree under root/evidence/setup/ and returns a guaranteed-valid document for the same root",
+    "validator_integration": "Verify the manifest pointer (setup_evidence {path, sha256}) first, json.loads the document, then call check_setup(evidence_root, doc); root is the directory the document's evidence paths resolve against"
+  },
+  "document_keys": {
+    "setup": "const 'welp-setup'",
+    "version": "const '0.1.0-draft'",
+    "frozen_before_scoring": "must be exactly true",
+    "frozen_utc": "ISO-8601 freeze timestamp",
+    "winning_lane_selected_after_outputs": "must be false — no winning-lane selection after outputs",
+    "profile": {
+      "selected_profile": "const 'DEPLOYMENT'",
+      "profile_id": "non-empty string; every applicable lane, calibration record set and the uncached probe must match it",
+      "template_name": "non-empty string",
+      "template_sha256": "64-hex SHA-256 of the exact template bytes",
+      "sampler": "non-empty object",
+      "requested_reasoning": "object",
+      "effective_reasoning": "non-empty object"
+    },
+    "lanes": "list of lane identity objects; lane_id in {MINIMAL, DEPLOYMENT, PUBLISHER, OPTIMIZED}, unique",
+    "lane_keys": {
+      "lane_id": "known lane id; MINIMAL and DEPLOYMENT are mandatory and must be applicable: true",
+      "applicable": "boolean",
+      "applicability_reason": "non-empty string for conditional lanes (PUBLISHER, OPTIMIZED)",
+      "profile_id": "must equal profile.profile_id",
+      "budget_lane": "non-empty string",
+      "knowledge_policy": "'open_knowledge' | 'supplied_context' — what the lane's prompt instructs about evidence use",
+      "system_prompt": "exact frozen string; MINIMAL must be empty (no crafted system prompt); DEPLOYMENT must be non-empty",
+      "template_sha256": "64-hex",
+      "sampler": "non-empty object (profile value used when omitted)",
+      "requested_reasoning": "object (profile value used when omitted)",
+      "effective_reasoning": "non-empty object (profile value used when omitted)",
+      "rendered_prompt_file": "root-relative path of the rendered outgoing-message records for every covered scored task",
+      "rendered_prompt_sha256": "64-hex SHA-256 of that file",
+      "content_review": "recorded content review of the exact rendered bytes (see content_review_keys); required for every applicable lane"
+    },
+    "rendered_prompt_file_format": "{\"lane_id\", \"records\": [{\"task_id\", \"messages\": [{\"role\", \"content\"}...], \"rendered_text\"}...]}; one record per covered scored task; messages must be EXACTLY the retained per-request envelope: optional lane system message byte-equal to the lane system prompt, then either (single-turn) the single scored-task user message byte-equal to the prompt file, or (user_turns multiturn) the declared user turns alternating with actual captured non-empty assistant replies, ending at the final declared user turn byte-equal to the prompt file; no appended or extra turns of any role — an appended override such as 'Ignore prior request' fails; assistant history is runtime capture recorded per request, never preregistered setup content); rendered_text retains the final rendered prompt bytes after template application and must be non-empty and contain the lane system prompt (when declared) and the task's user content — template identity proof by containment; a record missing this proof is an explicit BLOCKED, never silently accepted",
+    "content_review_keys": {
+      "reviewer": "non-empty string",
+      "answerability_confirmed": "must be true — every rendered prompt reviewed as answerable under its task class",
+      "contradictions_found": "must be false — unresolved prompt contradictions block scoring",
+      "knowledge_policy_matches_rendered": "must be true — the reviewed rendered prompt behaves as the declared lane knowledge_policy",
+      "reviewed_rendered_sha256": "must equal the lane rendered_prompt_sha256 (review tied to the exact bytes, not the hash alone)",
+      "review_rule": "declarations plus recorded review; semantics are never inferred from keywords alone"
+    },
+    "lane_coverage": "map of applicable lane id -> frozen scored task id list; union must equal all scored task ids; an open_knowledge task must never be covered by a supplied_context lane (pre-scoring rejection: a supplied-only prompt would force hedging on general-fact questions)",
+    "task_classes": "non-empty list; class_id unique",
+    "task_class_keys": {
+      "class_id": "non-empty unique string",
+      "scored_tasks": "non-empty list of {task_id (globally unique), prompt_file, prompt_sha256 (hash-checked on disk), answer_budget (positive integer), evidence_policy, response_class, user_turns? (optional frozen task design: >= 2 non-empty user-turn strings whose LAST entry byte-equals the retained prompt_file content — the setup freezes only this declared user-turn sequence and never earlier model answers, which do not exist before outputs; the retained rendered record then alternates these declared user turns with actual captured assistant replies)}",
+      "response_class": "non-empty string per task (frozen task-to-class mapping); all tasks in a class must share one response_class; no universal enum is defined — the class composition is governed by the representativeness review, not by vocabulary",
+      "evidence_policy": "'open_knowledge' | 'supplied_context' — what answering the scored task actually requires",
+      "calibration": {
+        "lane_id": "applicable lane the calibration ran on",
+        "examples": "preregistered non-empty list of {example_id, prompt_file, prompt_sha256}; actual prompt bytes are read-only and hash-checked; examples are disjoint across classes and from all scored prompt hashes (the same example repeating across ladder rungs is required, not a violation)",
+        "records_file": "root-relative raw calibration records (retained evidence, hash-checked)",
+        "records_sha256": "64-hex",
+        "per_request_time_limit_s": "preregistered positive finite per-request wall-time limit",
+        "total_time_limit_s": "preregistered positive finite total wall-time limit",
+        "status": "NOT_APPLICABLE is prohibited; an absent or unrun calibration is an explicit blocker, never a non-applicability"
+      }
+    },
+    "representativeness_review_keys": {
+      "purpose": "per-class recorded review that the preregistered calibration examples are representative of the class response complexity — prevents an arbitrary class_id with one tiny example from silently mapping heterogeneous tasks; a method/coverage judgment by identified reviewers, never an automatic NLP truth or a model-quality claim",
+      "digest": "64-hex canonical digest recomputed by check_setup over {class_id, scored_tasks: [{task_id, prompt_sha256, answer_budget, response_class, user_turns (declared frozen user-turn sequence, null when single-turn)} sorted by task_id], calibration_examples: [{example_id, prompt_sha256} sorted by example_id]} (canonical JSON, sorted keys, compact separators); a mismatching digest means the review is stale and blocks; builders may import representativeness_digest() from harness/setup.py",
+      "mode": "'BLINDED_DUAL_AGREEMENT' (load-bearing review: >= 2 distinct identified reviewers, each explicitly independent_of_execution and model_identity_blinded, all deciding REPRESENTATIVE) or 'METHOD_REVIEW' (justified pre-scoring method review: one identified reviewer + method_justification)",
+      "reviewers": "identified structured reviewer objects {id (non-empty, distinct), kind: 'human'|'agent', independent_of_execution (explicit boolean), model_identity_blinded (explicit boolean), decision: 'REPRESENTATIVE'|'NOT_REPRESENTATIVE'}; booleans are never defaulted — absent/false independence or blinding blocks a load-bearing dual review; >= 2 distinct agreeing blinded REPRESENTATIVE reviewers required for BLINDED_DUAL_AGREEMENT, >= 1 identified reviewer for METHOD_REVIEW",
+      "rubric_id": "non-empty rubric identifier",
+      "rationale": "non-empty rationale comparing response complexity of the calibration examples vs the scored tasks and budgets",
+      "decision": "'REPRESENTATIVE' | 'NOT_REPRESENTATIVE'; unresolved or absent decisions block, NOT_REPRESENTATIVE blocks scoring until recalibration or re-classing",
+      "method_justification": "required for METHOD_REVIEW — justifies why the pre-scoring method review suffices"
+    },
+    "calibration_records_format": "{\"class_id\", \"lane_id\", \"profile_id\", \"template_sha256\", \"sampler\", \"effective_reasoning\" (identity must equal the frozen scored lane controls), \"records\": [{\"example_id\" (preregistered), \"rung\", \"max_tokens\" (== rung), \"messages\" (actual outgoing calibration messages: EXACTLY the optional lane system message + the single example user message — identical at every rung, no appended or extra turns), \"completed\", \"finish_reason\", \"completion_tokens\" (positive when completed), \"answer\" (non-empty visible answer when completed — answerless stops never count complete), \"wall_time_s\" (positive finite, within per-request limit; class total within total limit)}...]}; attempted rungs form a contiguous prefix of the ladder and every attempted rung carries the full preregistered example set exactly once (same examples repeat across rungs by design)",
+    "ceiling_selection": {
+      "ladder": "preregistered positive strictly-ascending integer ladder, every rung <= 8192",
+      "per_class": "map class_id -> {selected_ceiling: integer|null, blocker: string|null, observed_completion_count?: integer}; selected_ceiling must equal the first ladder rung whose nonempty calibration set completes entirely (raw cross-checked completed/finish_reason/completion_tokens) with selected_ceiling - max observed completion_tokens >= the class maximum answer budget; observed_completion_count, when present, must equal the raw count; if no rung qualifies, selected_ceiling is null and blocker must be in blockers vocabulary"
+    },
+    "operational_caps": "non-empty list of {lane_id (applicable), cap_tokens (positive integer), slo_rationale (non-empty)}; independent deployment limits with an explicit SLO rationale; never compared against the semantic ceiling and never enlarged after seeing scored failures",
+    "cache_controls": {
+      "scientific_arms": "const 'DISABLED_UNCACHED'",
+      "cached_arms_separate": "must be true; optional cached_arms entries must be labeled 'CACHED' and never replace uncached canonical performance",
+      "uncached_probe": {
+        "profile_id": "must equal the selected profile",
+        "lane_id": "applicable lane",
+        "prompt_file": "root-relative retained probe prompt (hash-checked) — the ONE prompt every repetition sends",
+        "prompt_sha256": "64-hex of that prompt",
+        "repeated_prompt_count": "integer >= 2",
+        "runtime_cache_check": "{\"name\" (runtime-specific, e.g. no_lcp_reuse), \"passed\": true}",
+        "raw_evidence_file": "root-relative raw probe evidence (hash-checked)",
+        "raw_evidence_sha256": "64-hex"
+      }
+    },
+    "probe_evidence_format": "frozen identity keys (profile_id, template_sha256, sampler, effective_reasoning — must equal the frozen lane identity) plus \"prompt_sha256\" (== declared probe prompt) and \"runs\": [{\"iteration\" (unique AND consecutive 1..N — duplicated or gapped iterations fail), \"prompt_sha256\" (must equal the declared probe prompt — every repetition is the SAME prompt), \"messages\" (actual outgoing: exactly the optional lane system message + the single probe prompt user message, identical at every repetition), \"full_prompt_tokens\" (observed positive int, identical across runs), \"cached_tokens\": 0, \"runtime_check_passed\": true}...]; len(runs) == repeated_prompt_count; count/token equality alone is not prompt identity proof; a missing or unqualified probe fails the check",
+    "seed_plan": {
+      "base_seeds": "exactly 2 unique integer seeds",
+      "adaptive_seed": "optional single integer distinct from the base seeds (at most one adaptive seed)",
+      "adaptive_max_cost_tokens": "positive finite; required when adaptive_seed is declared",
+      "adaptive_max_cost_seconds": "positive finite; required when adaptive_seed is declared"
+    }
+  },
+  "checks": {
+    "F1_freeze": "frozen_before_scoring true + parseable frozen_utc; no winning lane chosen after outputs",
+    "F2_profile": "selected DEPLOYMENT profile identity (template, sampler, requested/effective reasoning)",
+    "F3_lanes": "mandatory MINIMAL/DEPLOYMENT lanes; explicit conditional applicability; per-lane identity over the actual hash-checked rendered outgoing-message files whose records contain the exact lane system prompt, the task's retained per-request message envelope (single scored-task user message, or declared user turns alternating with actual captured assistant replies for user_turns tasks) and the final rendered prompt bytes (missing rendered-bytes proof is BLOCKED); frozen lane coverage",
+    "F4_tasks": "scored tasks mapped to classes with prompt file+SHA, positive answer budgets, a frozen per-task response_class (shared within class, no universal enum) and an optional preregistered user_turns sequence (>= 2 frozen user strings, last byte-equal to the retained prompt bytes — frozen design only, never earlier model answers); preregistered calibration examples hash-checked and disjoint across classes and from scored prompts (same example repeating across rungs is required); per-class representativeness review bound to the canonical class digest by identified structured human|agent reviewers — stale/absent/unresolved/unblinded/non-independent/disagreeing/NOT_REPRESENTATIVE blocks; declared evidence compatibility: open_knowledge task never covered by a supplied_context lane",
+    "F5_ceiling": "per-class semantic ceiling = first preregistered bounded ladder rung (<= 8192) whose nonempty calibration set completes entirely with headroom >= the class maximum answer budget, evidenced by raw hash-checked records: same preregistered examples at every contiguous attempted rung, actual outgoing messages matching the lane controls and example prompt bytes, max_tokens == rung, visible answer for every completion (answerless stops never count complete), finite wall times inside the preregistered per-request/total limits; no qualifying rung is an explicit resource blocker — never a semantic failure, never NOT_APPLICABLE",
+    "F6_ops": "operational caps independent, positive, with SLO rationale; not required to exceed the semantic ceiling",
+    "F7_cache": "scientific arms DISABLED_UNCACHED, cached arms separate; qualified uncached probe before timing: frozen identity, >= 2 repetitions of ONE hash-bound prompt — every run retains its actual outgoing messages and prompt sha bound to the same preregistered probe prompt with unique consecutive iterations, observed identical full prompt counts, zero cached tokens, an explicitly passed runtime cache check and raw hash-checked evidence; count-only proof rejected; missing/unqualified assumptions fail",
+    "F8_seeds": "exactly 2 unique base seeds plus at most one bounded adaptive seed",
+    "F9_review": "recorded content review of the exact rendered prompt bytes per applicable lane (answerability, contradictions, declared knowledge policy matches the rendered prompt) plus the per-class representativeness review (F4) — declarations plus review by identified structured human|agent reviewers, never keyword-inferred semantics or NLP truth"
+  },
+  "blockers": {
+    "vocabulary": ["NO_QUALIFYING_LADDER_RUNG"],
+    "NO_QUALIFYING_LADDER_RUNG": "no preregistered ladder rung completed the whole calibration set with the required answer headroom; report the resource limit at the bounded cap, never a semantic FAIL",
+    "absent_calibrations": "absent fixture/task-class calibrations are blockers surfaced by check_setup, never NOT_APPLICABLE"
+  },
+  "evidence_rules": [
+    "all evidence reads are read-only, root-relative (no '..'), and SHA-256-checked against the recorded hash",
+    "declared success flags are never trusted alone: completed is cross-checked against finish_reason, positive completion_tokens and a non-empty visible answer (answerless stops never count complete), probe passes against per-run raw records, observed counts against raw calibration records",
+    "rendered outgoing messages must be the exact retained per-request envelope — optional lane system message + the single scored-task/example/probe user message, byte-identical; a scored task declaring user_turns instead alternates its declared user turns with actual captured non-empty assistant replies, ending at the final declared user turn — always with no appended or extra turns; each record must also retain the final rendered prompt bytes as containment proof against the declared template identity — not only a system-string or template claim; missing proof is BLOCKED"
+  ],
+  "non_goals": [
+    "no inference, orchestration or network access in check_setup",
+    "no semantic judging of answers; the content review records human review of answerability/contradictions without keyword-inferred semantics",
+    "not a competing LLMGauge schema"
+  ],
+  "historical_compatibility": "Applies prospectively. Campaigns frozen under earlier snapshots remain interpretable under those snapshots; reproducing them never requires a welp-setup document."
+}

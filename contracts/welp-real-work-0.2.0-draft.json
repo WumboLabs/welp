@@ -1,0 +1,43 @@
+{
+  "contract_id": "welp-real-work",
+  "version": "0.2.0-draft",
+  "status": "DRAFT / PROSPECTIVE",
+  "created": "2026-09-24",
+  "supersedes": {
+    "contract_id": "welp-real-work",
+    "version": "0.1.0-draft",
+    "frozen_path": "contracts/welp-real-work-0.1.0-draft.json",
+    "migration_type": "methodology-revision",
+    "note": "Historical campaigns keep 0.1.0-draft, its fixtures (including the 0.1 tool-recovery substring oracle) and existing campaign wrappers unchanged. Changes in 0.2: tool-recovery fixture v0.2 (published tool schemas plus the known initial path in the task, service name learned from config, per-call recorded results validated against the deterministic executor, exact structured final answer); new linux-diagnosis fixture with two evidence-grounded cases; new multidocument useful-context family extending the document-synthesis domain; explicit applicability vocabulary and review metadata. Required-core coverage and the qualitative-review doctrine are unchanged."
+  },
+  "purpose": "Constrain role claims to observed real tasks, not a single synthetic probe. Preregister applicability and frozen fixtures/oracles before results; score what the model actually produced, never what a fixture synthesized on its behalf.",
+  "applicability_vocabulary": {
+    "NOT_TESTED": "Required whenever the fixture is absent from the campaign or a claimed role was never run. A claimed role without its fixture or run is NOT_TESTED in that role — never PASS and never FAIL. This includes an unrun claimed role on an otherwise applicable profile.",
+    "NOT_APPLICABLE": "Permitted only with recorded evidence that the role is excluded for the tested profile (for example, a preflight record demonstrating no qualified native tool-call interface). The excluding evidence path must appear in the manifest or report; an unevidenced NOT_APPLICABLE is invalid.",
+    "FAIL": "Reserved for a run of a frozen fixture whose oracle failed. Inapplicability is never FAIL."
+  },
+  "required_core": [
+    {"role": "ordinary_assistant", "coverage": ["writing and technical summarization", "factual synthesis", "reasoning", "uncertainty and absent-information", "instruction following", "ambiguity and clarification"], "method": "Frozen bounded task set plus explicit blinded qualitative review for prose and ambiguity; deterministic assertions for provided facts, omissions and strict constraints. Do not infer general quality from the existing 12-task quality screen alone."},
+    {"role": "structured_output", "coverage": ["strict JSON consumed by a parser", "no fabricated fields", "schema adherence"], "method": "Parse exact object and test semantic fields, duplicate keys and extraneous output; do not reward parseable-but-wrong values."}
+  ],
+  "conditional_modules": [
+    {"role": "coding", "applicable_when": "Coding or repository assistant role is claimed", "minimum": "Frozen small real repository with files, defect/change, executable sandboxed tests, diff inspection and unrelated-change detection; include diagnosis and implementation, not only isolated function trivia", "claim_if_missing": "NOT_TESTED; do not call the model a coding assistant on the isolated moving_sum probe alone"},
+    {"role": "linux_systems", "applicable_when": "Linux/sysadmin diagnosis role is claimed", "fixture": "fixtures/real_work/linux-diagnosis.json", "oracle": "harness/capabilities.py:score_linux_diagnosis", "minimum": "Two distinct realistic sanitized log/config cases; structured observations with source IDs; supported-cause selection, safe non-destructive proposed repair, unknown present health and explicit no execution; the mechanical layer fails committed claims that contradict the evidence registry, and detail prose additionally requires blinded independent review", "claim_if_missing": "NOT_TESTED"},
+    {"role": "native_tools", "applicable_when": "A qualified native tool interface exists and agent/tool role is claimed", "fixture": "fixtures/real_work/tool-recovery.json (0.2.0-draft)", "oracle": "harness/capabilities.py:execute_tool plus score_tool_recovery", "minimum": "Correct choice/arguments with per-call recorded results validated against the deterministic executor; sequence, recoverable error and retry, call budget, grounded exact structured final answer and stopping; tool observations come from the executor replay, never from model-authored claims; the task publishes the available schemas and the known initial path while the service name is learned from config", "claim_if_missing": "NOT_TESTED or NOT_APPLICABLE with reason"},
+    {"role": "multi_turn", "applicable_when": "Multi-turn assistant/session role is claimed", "fixture": "fixtures/real_work/multi-turn-correction.json", "oracle": "harness/capabilities.py:score_multi_turn_final", "minimum": "Retain actual model prior turn, incorporate user correction, preserve earlier constraints, distinguish absent status, strict JSON", "claim_if_missing": "NOT_TESTED or NOT_APPLICABLE with reason"},
+    {"role": "long_context", "applicable_when": "A long-context role is claimed", "minimum": "Family A controlled retrieval plus the separately frozen realistic multidocument family (fixtures/useful_context/multidocument.json; harness/capabilities.py:construct_multidocument and score_multidocument) and, where relevant, repository/session context families with distinct oracles and maxima; repository and session dimensions stay NOT_TESTED without their own fixtures", "claim_if_missing": "Only Family A maximum; other dimensions NOT_TESTED"}
+  ],
+  "review_metadata": {
+    "reviewer_class": "Every scoring layer of every task class records reviewer_class: HUMAN | AGENT | DETERMINISTIC in the campaign evidence.",
+    "subjectivity_rule": "A dimension is subjective exactly when a frozen deterministic rule cannot decide correctness (prose quality, diagnostic detail, ambiguity handling, summarization usefulness). Deciding subjectivity routes the dimension to blinded independent review; the deterministic layer remains necessary-but-not-sufficient there and may never adjudicate it.",
+    "independence_and_blinding": "Subjective layers require independent review with model identity blinded, retaining disagreements and uncertainty. DETERMINISTIC layers may be executed by code or an agent without review; an AGENT reviewer must not decide a subjective dimension that the frozen rubric requires humans (or blinded independent panels) to adjudicate."
+  },
+  "qualitative_review": "Freeze rubric for correctness, completeness, relevance, clarity, verbosity, fabrication, constraints, prose/diagnostic usefulness; blind model identity where feasible, retain independent evaluator notes and disagreements, no false decimal precision or 'intelligence retained' score.",
+  "agent_safety": "Use local deterministic simulated read-only tools and sandboxed code oracles; no destructive external tools; no model inference as part of fixture selftests; selftests never execute generated model code — only the trusted repository reference transcripts and their mutations are scored.",
+  "limitations": {
+    "one_task_per_fixture": "Each real-work fixture is one task instance: the repository fixture's four test checks, the tool fixture's per-event checks, each linux-diagnosis case's per-key checks and the multidocument family's per-field checks are aspects of their single tasks, not independent tasks. Do not report per-check counts as task counts.",
+    "one_multidocument_family": "Exactly one multidocument family exists and it extends the document-synthesis domain. A short construction run establishes construction and placement mechanics only; useful-context claims at depth require the family at real rung occupancy under the context-scaling method. Family A remains the only controlled longitudinal family.",
+    "linux_cases": "The linux fixture carries two cases; scoring one case is one task instance of evidence."
+  },
+  "report": "Report each role's evidence, applicability (with the vocabulary above), failures, prompt/budget/profile identities, latency/resource envelope and untested dimensions. Phase advance and final verdict are separate."
+}

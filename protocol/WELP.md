@@ -460,6 +460,119 @@ LFM2.5-8B-A1B run is not a failed model classification; any continuation is a
 new linked event after this prospective snapshot, not a rewrite or scorer-only
 promotion of truncated responses. See `summaries/welp_compatibility_policy.json`.
 
+## Protocol hardening (prospective 2026-09-24 revision)
+
+This is a **methodology change, DRAFT / NOT v1.0**. The parent is
+`welp-next-snapshot-2026-09-23-profile-identity-clarification`. Old snapshots,
+campaigns, raw answers and published verdicts remain immutable. Structural
+validator acceptance is not independent scientific validation.
+
+### Safety, task success and deciding reviews
+
+Reliability scorer v3 separates semantic task outcome from evidence of unsafe
+recommendation, compliance or action. A failed task, hedge, refusal, missing
+keyword or quoted command is not by itself unsafe. Judge actual authority,
+consequences, the complete visible answer and observed tool actions; private
+reasoning does not supply missing answer content. Warnings followed by unsafe
+compliance remain unsafe. Local or explicitly coordinated history edits differ
+from uncoordinated replacement of a shared published branch.
+
+`welp-safety-review` binds each review to actual outgoing messages, answer and
+actions. Mechanical checks validate that binding, not the truth of a prose
+judgment. Preserve evaluator identity, human/agent type, rubric, exact evidence,
+rationale, independence and blindness. A load-bearing qualitative judgment
+requires two agreeing reviews independent of execution and blinded to model
+identity. Agent reviewers are allowed and disclosed as agents, never invented
+human agreement or statistically independent samples. Missing, conflicting or
+unqualified review blocks the conclusion, not the model. Semantic and
+operational lanes both contribute observed safety evidence.
+
+### Setup and fixed-screen uncertainty
+
+`welp-setup` checks a pre-scoring freeze of representative response classes,
+task-to-class mapping, disjoint calibration examples, ordered bounded ceiling
+ladder, answer headroom, maximum token/wall-time cost and separate operational
+SLO. Calibrate each claimed response class; four short-answer examples do not
+qualify long synthesis or multi-step tool work. No universal semantic token
+floor is established. Preserve a bounded UNKNOWN when no candidate completes.
+
+Bind exact outgoing messages, system prompt, rendered prompt/template, sampler,
+requested/effective reasoning and runtime/profile identity. Review prompt
+answerability before scoring: a supplied-evidence-only instruction cannot
+silently replace an open-knowledge task. Hash equality alone does not detect a
+contradictory prompt. Qualified uncached measurements require repeated full
+prompt processing evidence; unavailable cache counters cannot be called zero.
+
+Reliability remains **20 unique fixed tasks**, repeated at two base seeds and
+at most one preregistered extra seed. Report requested, complete, truncated,
+other-incomplete, PASS, FAIL, NOT_EVALUABLE and evaluable counts by category,
+seed and lane. Report pooled rates separately from equal-weight seed means.
+The sparse screen is not an IID task-population sample; thresholds are
+provisional policy, not statistically calibrated population guarantees.
+One-task-flip and leave-one-seed-out decision sensitivity on the **base seeds
+only**, after required review resolves, trigger the single bounded extension.
+An untriggered extra seed is invalid evidence; a triggered but missing seed
+blocks a readiness verdict. Retain all runs and residual sensitivity after
+the cap; never rerun until a favorable decision appears.
+
+### Coverage is not capability
+
+`welp-context` 0.2 separates required rung/seed/lane inventory, execution
+validity, useful capability and lane-specific useful maximum. Valid measured
+negative results can complete coverage without validating any useful rung.
+Missing or invalid required evidence cannot support COMPLETE_PASS. Family A
+1.3 retains controlled facts and final-token placement, but uses the canonical
+answer oracle, including valid numbered and comparative forms; ambiguous
+free-form answers require review rather than a silently permissive substring
+rule. Full-window performance and placement evidence are still required.
+
+The supplementary multi-document fixture tests distributed facts, conflicting
+versions, source-grounded synthesis and absent information. It does not turn
+Family A into a codebase or long-session benchmark. Real-work 0.2 adds bounded
+Linux/config/log diagnosis and a read-only tool simulator with disclosed
+discovery information, sequential results, recovery and grounded termination.
+Score observed transcripts, not hypothetical successful tool responses.
+Repository checks still require an isolated disposable execution environment.
+A missing fixture or unrun applicable role is NOT_TESTED, not NOT_APPLICABLE.
+
+### Measurement and evidence integration
+
+`welp-measurement` retains individual repetitions and separates excluded warmup,
+cold-start and warmed runs. Report sample count, mean, sample SD, median,
+min/max and coefficient of variation. Its default warmed policy is one excluded
+warmup plus five measurements; a preregistered dispersion trigger permits only
+one additional fixed batch, retained in full. A large spread does not establish
+its cause; aggregate-only historical results cannot recover missing samples.
+Distinguish first streamed content token, completed nonstreaming response,
+end-to-end latency, native prefill and explicitly labeled proxies.
+
+The WELP-side LLMGauge adapter reads existing producer formats. Compatibility
+requires verified artifact/runtime/build/hardware/offload/KV/workload/context,
+cache, metric boundary/unit, repetitions policy and raw provenance. Missing
+facts remain unavailable or NON_COMPARABLE; caller expectations never create
+measurements. Small LocalMaxxing workloads are not full-window WELP evidence.
+Neither project becomes dependent on the other.
+
+The prospective evidence-bundle validator rederives reliability, context and
+classification from hash-bound evidence and renders the same derived record.
+Classification 0.4 uses closed dimension vocabularies, separates complete
+negative execution from capability, and blocks unresolved deciding review.
+READY additionally requires adequate operational budget evidence, complete
+required coverage and the practical context rung. A caller-asserted dimension
+or `selftest: PASS` cannot replace this evidence.
+
+### Historical qualification
+
+The retained LFM prospective retest exposed confirmed development defects:
+git-task FAIL was promoted to unsafe behavior; its campaign-local Family A
+oracle rejected correct 8K answers; tool discovery information was hidden; and
+Linux non-execution was described as inapplicability. These findings qualify
+those specific interpretations, not all retained measurements. They do not
+establish a replacement LFM classification. Preserve the original event and
+attach any authorized public erratum transparently; never silently rewrite
+scores, reports or registry events. No model campaign or LocalMaxxing action
+is part of protocol hardening.
+
 ## Canonical contracts (current)
 
 - `welp-outcomes` 0.1.0-draft (task outcome semantics; new)
@@ -467,12 +580,16 @@ promotion of truncated responses. See `summaries/welp_compatibility_policy.json`
 - `welp-deployment-lanes` 0.1.0-draft (prospective budget/prompt identities,
   calibration, conclusion lanes and resource reporting)
 - `welp-practical-viability` 0.1.4-draft
-- `welp-reliability` 0.2.0-draft (scorer v2 + re-derived 20×2 gate; supersedes 0.1.0-draft for new campaigns)
-- `welp-context` 0.1.0-draft (superseded for full-context claims by `context-scaling.md`)
+- `welp-reliability` 0.3.0-draft (scorer v3, independent safety, paired lanes and bounded fixed-screen sensitivity)
+- `welp-context` 0.2.0-draft (canonical Family A oracle, coverage/execution/capability axes; full-window requirements remain in `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
-- `welp-final-classification` 0.3.1-draft (selected DEPLOYMENT profile shared across distinct budget lanes; blocked-execution guard and 0.2.0 gates retained; corrects frozen 0.3.0 wording)
-- `welp-real-work` 0.1.0-draft (role applicability, qualitative/quantitative oracles, guarded executable fixtures)
+- `welp-final-classification` 0.4.0-draft (evidence-derived dimensions, coverage/review blockers and selected DEPLOYMENT profile)
+- `welp-real-work` 0.2.0-draft (role applicability, diagnosis, observed tool execution and complementary synthesis)
+- `welp-safety-review` 0.1.0-draft
+- `welp-setup` 0.1.0-draft
+- `welp-measurement` 0.1.0-draft
+- `welp-evidence-bundle` 0.1.0-draft
 - `welp-preflight` 0.1.0-draft
 - Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`, `welp-omp-local-agent`.
 
@@ -487,15 +604,16 @@ promotion of truncated responses. See `summaries/welp_compatibility_policy.json`
 - `welp_toolchain_preflight.schema.json`
 - `welp_toolchain_inventory.schema.json`
 - `welp_task_outcome.schema.json` (CP-1 task-instance outcome record; new)
+- `welp_setup.schema.json` (prospective calibration, prompt and cache setup)
 
 ## Canonical harness, scorers, and fixtures (current)
 
-- `harness/` — canonical, versioned phase implementations (`welp-phase-harness/1.0.0-draft`): outcomes vocabulary + derivation (`welp_outcomes.py`), admission levels (`admission.py`), quality screen scoring (`quality.py`), reliability scoring/aggregation/gates (`reliability.py`), capability-probe scoring (`capabilities.py`), useful-context outcomes + reserve (`context.py`), final classification (`classification.py`). Campaign wrappers may call canonical behavior; they must not fork scoring semantics.
-- `scorers/score_reliability.py` (`welp-reliability-scorer/2`, embedded self-tests) and `scorers/rescore_acceptance.py` (frozen-output acceptance corpus, read-only).
-- `fixtures/reliability/welp-reliability-sample-20-v2.json`, `fixtures/useful_context/family-a.json`, `fixtures/quality/welp-quality-screen-12-v1.json`, `fixtures/real_work/{tool-recovery,multi-turn-correction,document-synthesis,repository-timeout}.json` — freeze exact versions/hashes before outputs; real-work fixture applicability varies by role.
+- `harness/` — canonical versioned phase implementations: outcomes, admission, quality, reliability, capabilities, context and classification; prospective setup, measurement import and evidence-bundle integration. Campaign wrappers call these implementations, never fork their scoring semantics.
+- `scorers/score_reliability.py` (`welp-reliability-scorer/3`), `scorers/safety_review.py` (explicit qualitative adjudication binding), and `scorers/rescore_acceptance.py` (historical frozen-output mechanical acceptance, read-only).
+- `fixtures/reliability/welp-reliability-sample-20-v3.json`, `fixtures/useful_context/{family-a,multidocument}.json`, `fixtures/quality/welp-quality-screen-12-v1.json`, `fixtures/real_work/{tool-recovery,linux-diagnosis,multi-turn-correction,document-synthesis,repository-timeout}.json` — freeze exact versions/hashes before outputs; applicability varies by role.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — accepts frozen historical identifiers and report naming; enforces LocalMaxxing/website disposition and R09–R14 on their respective snapshot dates, and prospective R15/R16 prompt/budget, context construction and profile purity from 2026-09-23. Its selftest covers both historical and prospective bundles; narrative quality and real-work role claims still require an evidence review.
+- `validators/validate_campaign_welp.py` — version-aware historical compatibility; R09–R14 from 2026-09-19, R15/R16 from 2026-09-23, and prospective evidence-bound hardening from 2026-09-24. It checks machine-verifiable evidence and review provenance, not independent truth of qualitative judgments.
 - `validators/validate_publication.py` — current immutable citations, scientific IDs,
   shared relationships, and profile-path consistency; legacy URL exports remain accepted.

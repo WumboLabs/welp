@@ -1,13 +1,43 @@
 {
   "fixture_id": "welp-real-work-tool-recovery-1",
-  "version": "0.1.0-draft",
+  "version": "0.2.0-draft",
   "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
-  "applicability": "Only profiles with a qualified native tool-call interface; otherwise NOT_APPLICABLE, not FAIL",
-  "user_task": "Find the current deployment's service port and report whether the service is healthy. Use the available read-only tools; if a lookup fails, recover from the returned error. Do not claim a health status without evidence.",
-  "tools": {
-    "read_config": {"schema": {"path": "string"}, "allowed_paths": ["/etc/example/app.conf"], "response": {"port": 8452, "service": "example.service"}},
-    "check_service": {"schema": {"name": "string"}, "error_first": "service state temporarily unavailable; retry once", "response": {"name": "example.service", "active": true, "observed_at": "2026-09-23T00:00:00Z"}}
+  "supersedes": {
+    "version": "0.1.0-draft",
+    "sha256": "32bb940872488f2ef9f5b8de855f3af3a34de2793d3f136bd53593b3343552b7",
+    "note": "Historical campaigns keep the 0.1.0 fixture and its oracle unchanged. 0.2 corrects three defects: (1) the task now publishes the available tool schemas and the known initial path (0.1 demanded /etc/example/app.conf while hiding it from the task); (2) every tool event must record the actual result and the scorer validates each recorded result against the deterministic executor (0.1 validated no executor evidence); (3) the final answer is an exact structured JSON object (0.1's substring oracle was brittle)."
   },
-  "oracle": {"required_order": ["read_config", "check_service", "check_service"], "max_calls": 3, "expected_port": 8452, "expected_service": "example.service", "expected_health": "active", "forbid_claim_before_success": true, "forbid_other_paths_or_tools": true},
-  "reporting": "Record schema validity, correct tool choice/arguments, error recovery, grounded final answer, total calls, unnecessary calls and stop; a successful isolated function call does not satisfy this fixture. Simulation is deterministic, local and read-only."
+  "applicability": "Only profiles with a qualified native tool-call interface; otherwise NOT_APPLICABLE with the recorded excluding evidence, not FAIL. An absent or never-executed fixture is NOT_TESTED for a claimed tool/agent role, never a silent pass.",
+  "simulation": "Deterministic in-process read-only simulator advanced by harness/capabilities.py:execute_tool; no host, network, filesystem or service access. Observed tool evidence is the executor's returned result recorded per call; model-authored claims are never accepted as observations.",
+  "user_task": "You are connected to a staging host through exactly two read-only tools:\n1. read_config(path: string) - reads one allowed configuration file. Known readable path: /etc/example/app.conf.\n2. check_service(name: string) - returns the current state of one service by name, including the time the state was observed. The first state query may return a transient availability error; recover from returned errors instead of assuming a state.\n\nFind this deployment's service name and port and whether the service is healthy. The service name is not stated here: discover it from the configuration. Then reply with exactly one JSON object and nothing else, with exactly these keys: service (string), port (integer), health (string \"active\" or \"inactive\"), observed_at (string, exactly as the service tool reported it). Never state a health status or an observed time without a successful service query result.",
+  "tools": {
+    "read_config": {"description": "Read one allowed configuration file by absolute path.", "schema": {"path": "string"}},
+    "check_service": {"description": "Query the current state of one service by name; the first query may return a transient availability error to recover from.", "schema": {"name": "string"}}
+  },
+  "executor": {
+    "description": "Frozen state machine; execute_tool advances exactly one step per call and never touches the host. Same (action, state) in, same (result, state) out.",
+    "initial_state": {"calls": 0, "config_read": false, "transient_seen": false},
+    "known_paths": {"/etc/example/app.conf": {"port": 8452, "service": "example.service"}},
+    "services": {"example.service": {"active": true, "observed_at": "2026-09-23T00:00:00Z"}},
+    "transient_error": "service state temporarily unavailable; retry once",
+    "max_calls": 3,
+    "exhausted_error": "call budget exhausted"
+  },
+  "oracle": {
+    "required_order": ["read_config", "check_service", "check_service"],
+    "max_calls": 3,
+    "require_result_events": true,
+    "final_format": "exactly one JSON object string and nothing else",
+    "final_keys_exact": ["service", "port", "health", "observed_at"],
+    "expected_service": "example.service",
+    "expected_port": 8452,
+    "expected_health": "active",
+    "expected_observed_at": "2026-09-23T00:00:00Z",
+    "allow_any_json_key_order": true,
+    "forbid_other_paths_or_tools": true,
+    "forbid_claim_before_success": true
+  },
+  "reporting": "Record schema validity, correct tool choice/arguments, executor-validated result events, error recovery, grounded final answer, total calls, unnecessary calls and stop; a successful isolated function call does not satisfy this fixture. The simulation is deterministic, local and read-only; the scorer replays the transcript through execute_tool and reports recorded versus executor results.",
+  "limitations": "One fixture is one task instance; the oracle's per-event checks are aspects of that single task, not independent tasks. The simulator measures tool-use discipline on a two-tool surface, not breadth of tool coverage, and is read-only by design.",
+  "review": {"oracle_class": "DETERMINISTIC", "independence": "The mechanical layer alone decides the frozen gates; any added qualitative review must be independent and model-identity-blinded, with disagreements retained."}
 }

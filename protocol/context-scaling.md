@@ -199,8 +199,8 @@ and placement errors. All five placements must satisfy:
 - Preferred absolute error: **<=0.25 percentage points**.
 - Hard absolute error: **<=0.50 percentage points**.
 
-The five-depth placement set is checked before inference. For the prospective
-Family A 1.2.0 fixture, call `harness/context.py:construct_family_a` with
+The five-depth placement set is checked before inference. Family A 1.3 retains
+the 1.2 construction geometry; call `harness/context.py:construct_family_a` with
 the intended lane's usable token budget, fixed seed, and a measurement callback
 that applies the pinned template and tokenizes the complete rendered stream
 with identical BOS/special-token behavior to inference. Locate each full target
@@ -231,6 +231,19 @@ generalization to messy multi-document, repository and long-session tasks,
 report separate frozen families with their own tasks/oracles, geometry,
 applicability and limits. If absent, explicitly report NOT_TESTED; never
 promote a Family A maximum to every context role.
+
+From the 2026-09-24 hardening snapshot, score Family A through
+`harness/context.py:score_family_a`, not a campaign-local regex. Numbered
+answers and clear comparative paraphrases count; mentioning a year in a
+question or a negated answer does not. Retain all six individual gates and
+unresolved review status. Scoring qualification does not waive completion,
+placement, occupancy or performance requirements.
+
+`fixtures/useful_context/multidocument.json` is a complementary bounded family:
+distributed operational documents contain current and stale versions,
+conflicting evidence and an absent fact. Its own constructor/oracle require
+source-grounded answers. Report its identity, geometry and outcomes separately;
+it does not establish codebase or session endurance.
 
 ## C4 — Near-full performance and resources
 
@@ -279,6 +292,7 @@ authorize bypassing safety or earlier lifecycle gates.
 | FAILED | Valid near-full measurements fail a frozen performance or useful-context gate; report gate, results, repetitions, and attribution. Not an invalid fixture or unmeasured range. | Yes, a measured negative result, not validation |
 | PARTIAL | Capacity may admit, but required near-full performance/useful-context or other frozen evidence is incomplete. | No |
 | NOT_TESTED | No valid tested or demonstrated limiting disposition yet. | No |
+| BUDGET_LIMITED | Declared lane budget prevented an evaluable answer; retain completion/budget axes and attribution. | No; not semantic failure or validated capability |
 
 `FIT_LIMIT` and `INTEGRATION_BLOCKED` are legitimate completed scientific
 coverage dispositions, not model-quality FAIL. `FAILED` preserves an actual
@@ -321,6 +335,13 @@ seeds into a misleading single value. The table and the ten-question
 [campaign checklist](../docs/reproduction.md#model-card-context-checklist)
 make unanswered ranges visible.
 
-The existing campaign-bundle validator does not mechanically enforce this new
-narrative coverage gate. Operator review of the table and underlying evidence
-is mandatory; a validator exit 0 alone does not establish context completeness.
+From the 2026-09-24 snapshot, `context_summary` checks the exact frozen
+required-rung × seed × lane inventory, duplicates and completed dispositions.
+The evidence-bundle validator checks referenced raw evidence and rederives
+the summary. Report four separate axes: **coverage_complete**,
+**execution_valid**, **capability**, and **useful_context_max** by lane.
+An all-negative but valid measured matrix can complete coverage while useful
+capability is FAILED. A missing or invalid cell cannot be hidden by a maximum
+or a classifier label. Evidence review remains mandatory: neither hashes nor
+validator exit 0 establish the truth of unverified qualitative conclusions.
+Historical bundles retain their pinned narrative-only coverage checks.

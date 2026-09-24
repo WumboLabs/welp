@@ -84,8 +84,8 @@ The canonical new-campaign validator.
     COMPLETE_WITH_GAPS | FAILED_EXECUTION | BLOCKED` (execution outcome is
     independent of the model verdict).
   - **R12** `generation_budget.contract = welp-generation-budget-0.1.0-draft`
-    REQUIRED, and `scorers['welp-reliability-scorer/2'].selftest = "PASS"`
-    REQUIRED before live reliability use.
+    REQUIRED, and the matching scorer selftest REQUIRED before live reliability
+    use: scorer `/2` historically, `/3` from 2026-09-24.
   - **R13** When the context phase executed (`phases_executed`): `context_validation`
     REQUIRED with exact depths `[2, 25, 50, 75, 95]` and placement preflight
     PASS (`max_placement_error_pp <= 0.5`). Pre-2026-09-23 snapshots require
@@ -105,6 +105,18 @@ The canonical new-campaign validator.
   that same deployment profile. Blocked/failed execution has no readiness
   verdict except an independently evidenced integration blocker on a blocked
   campaign.
+- **Prospective hardening (snapshots dated >= 2026-09-24):** scorer v3,
+  Family A 1.3 and classification 0.4; manifest/schema required identity fields
+  align, including model/runtime/requested/effective/publication fields.
+  `hardening_evidence` is a rooted relative path plus SHA-256 to actual setup,
+  paired reliability, context and role evidence. The bundle checker validates
+  hashes, re-scores outputs, enforces the required inventory and derives the
+  classification/report. COMPLETE_PASS cannot hide missing applicable work,
+  invalid execution, pending adaptive sampling or unresolved deciding review.
+  Valid negative completed evidence remains distinct from capability success.
+  A review record proves provenance/binding, not the truth of its judgment.
+  Historical acceptance remains version-aware and does not retroactively apply
+  these stronger checks or certify historical scientific interpretations.
 
 ## LocalMaxxing disposition (`summaries/localmaxxing.json`)
 
@@ -134,9 +146,12 @@ The canonical new-campaign validator.
 
 ```bash
 python3 validators/validate_campaign_welp.py <campaign_dir> # exit 0 valid, 1 invalid
-python3 validators/validate_campaign_welp.py selftest       # embedded 28-fixture suite
+python3 validators/validate_campaign_welp.py selftest       # historical + prospective fixtures
 python3 validators/validate_publication.py selftest
 python3 validators/validate_publication.py EXPORT PROFILE
+python3 harness/setup.py selftest
+python3 harness/bundle.py selftest
+python3 harness/measurement.py selftest
 ```
 
 ## Frozen historical campaigns

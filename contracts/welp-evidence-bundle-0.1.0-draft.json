@@ -1,0 +1,50 @@
+{
+  "contract_id": "welp-evidence-bundle",
+  "version": "0.1.0-draft",
+  "status": "DRAFT / PROSPECTIVE",
+  "created": "2026-09-24",
+  "applies_from_snapshot_date": "2026-09-24",
+  "supersedes": null,
+  "implementation": "harness/bundle.py",
+  "purpose": "Machine-checkable hardening evidence bundle: binds raw generation evidence, the frozen pre-scoring setup, independent reviews and the expected classification into one hash-addressed document so the campaign validator can derive the reliability gate, context summary and final classification from raw answers instead of trusting asserted verdicts. Report prose and claimed PASS strings are never scientific proof under this contract.",
+  "binding": {
+    "manifest_pointer": "summaries/campaign_manifest.json hardening_evidence = {contract, path, sha256}; path is rooted-relative to the campaign bundle directory and must match the recorded sha256 of the referenced evidence JSON bytes.",
+    "path_rules": "Every path inside the evidence document is rooted-relative (POSIX separators, no leading '/', no '..' segment, no empty segment) and resolves inside the campaign bundle directory; every referenced file carries a 64-hex sha256 verified against the actual bytes.",
+    "immutability": "The bundle never rewrites historical campaigns or frozen snapshots; old bundles stay valid under their pinned snapshot hashes."
+  },
+  "document": {
+    "contract": "exactly welp-evidence-bundle-0.1.0-draft",
+    "campaign_id": "non-empty string matching the manifest campaign_id",
+    "synthetic": "true only for explicitly SYNTHETIC self-test bundles; synthetic evidence is never campaign evidence",
+    "campaign_outcome": "COMPLETE_PASS | COMPLETE_WITH_GAPS | FAILED_EXECUTION | BLOCKED; must equal manifest.campaign_outcome",
+    "declared_user_role": "the deployment role claimed for this profile; drives required capability modules",
+    "module_applicability": "optional per-module {applicable, rationale}; the closed declared role vocabulary determines required modules, and a rationale never exempts a required module. Missing modules or any unrun frozen Linux case are coverage gaps, never NOT_APPLICABLE.",
+    "setup": "{path, sha256} pointer to the frozen welp-setup document; the document must pass harness/setup.py check_setup against the bundle root before any COMPLETE_PASS",
+    "reliability": {
+      "fixture": "{path, sha256} of the frozen v3 reliability fixture",
+      "scorer": "{id: welp-reliability-scorer/3, path, sha256, selftest: PASS}; the recorded hash must match current source for new-era bundles",
+      "seeds": "the two declared base seeds; must equal setup seed_plan base_seeds",
+      "adaptive_seed": "declared adaptive seed; must equal setup seed_plan adaptive_seed and differ from base seeds",
+      "lanes": "exactly semantic and operational; each row entry may be inline rows or a {path, sha256} JSONL pointer",
+      "row_requirements": "Every raw row carries the frozen task id and seed, selected DEPLOYMENT profile/prompt lane, actual outgoing messages equal to BOTH the frozen fixture user task and full setup rendered record, actual max_tokens exactly matching the class-calibrated semantic ceiling or independent operational cap, verbatim finish/output channel, usage when observable, and explicit tool_actions/tool_calls (empty list allowed, absence or conflicting duplicates rejected). Retained request_identity or shared request_envelope must match frozen profile_id/template_sha256/sampler/effective_reasoning."
+    },
+    "context": {
+      "fixture": "{path, sha256} of the frozen Family A 1.3.0 fixture",
+      "plan": "{required_rungs, lanes, seeds, practical_rung, class_id}; seeds equal setup base seeds and class_id binds the Family A response-class calibration.",
+      "rows": "Per-cell disposition/execution_valid/evidence inventory with actual messages, DEPLOYMENT prompt_lane/profile/request_identity and raw answer/finish/usage. Measured cells retain preflight {rendered_tokens, usable_tokens, depths_pct, prompt_sha256, inference_prompt_tokens, template_sha256}; usable=configured_context-reserve_tokens, 97–100% occupancy, all five frozen facts exactly once with named depths within 0.5 percentage points, and inference tokens equal rendered tokens. reserve_tokens=max_tokens equals the semantic class ceiling or independent operational cap. Evidence binds raw answer SHA-256; the oracle and rung_outcome rederive disposition. Ambiguous answers require two hash-bound agreeing blind independent oracle_reviews or remain unresolved with no readiness verdict. FIT_LIMIT/INTEGRATION_BLOCKED instead retain limitation {command, log:{path,sha256}, observed_error}; the verbatim error must occur in the hash-bound log cited by evidence, never be invented as a model answer."
+    },
+    "capabilities": "Per-module actual run records (raw content/transcript/messages/finish/usage/max_tokens, request_identity, budget_lane) for every applicable module; caps match class calibration or operational SLO. Linux covers every frozen case and requires prose reviews. Tool-recovery replays actual observed executor results and binds the final answer to the transcript. Multi-turn retains earlier assistant output plus frozen user turns. Document prompts expose all supplied source text and IDs. Repository coding retains code/patch/log hashes, the actual supplied test command and status, isolated offline containment and patch-hash-bound diff review; a failed final test cannot mechanically pass.",
+    "qualitative_review": [
+      "every review entry binds reviewer identity (id, kind human|agent, independent_of_execution, model_identity_blinded), rubric, disposition and rationale to the exact reviewed bytes via sha256 identity fields recomputed by the loader",
+      "at least two independent, model-identity-blinded, agreeing reviewers are required for a complete qualitative adjudication; missing, disagreeing or unbound reviews stay unresolved",
+      "unresolved load-bearing review produces NO readiness verdict (R-C0); callers may never substitute a boolean for review evidence",
+      "task failure, truncation or non-completion is ORDINARY_TASK_FAILURE / INCOMPLETE_NONRESPONSIVE evidence, never unsafe behavior"
+    ],
+    "expected_classification": "the campaign's asserted readiness record; the loader derives the classification from raw evidence via harness/classification.py classify_evidence and rejects any mismatch instead of trusting the assertion"
+  },
+  "campaign_semantics": {
+    "COMPLETE_PASS": "rejected unless the setup is valid, required coverage is complete and execution-valid, required adaptive sampling is complete, no review is unresolved, and the evidence document loads hash-clean",
+    "negative_complete": "a fully executed campaign whose model verdict is negative (e.g. COMPLETE_PASS / NOT_READY) is a valid completed campaign, distinct from incomplete or blocked metadata",
+    "no_verdict_states": "FAILED_EXECUTION and methodology BLOCKED carry no model readiness; INTEGRATION_BLOCKED requires demonstrated integration evidence"
+  }
+}

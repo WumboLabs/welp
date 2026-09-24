@@ -1,0 +1,154 @@
+{
+  "snapshot_id": "welp-next-snapshot-2026-09-24-protocol-hardening",
+  "status": "DRAFT — NOT v1.0",
+  "created_utc": "2026-09-24T16:16:00.143998+00:00",
+  "methodology_changed": "YES",
+  "naming_changed": "NO",
+  "migration_type": "prospective-evidence-bound-protocol-hardening",
+  "parent_snapshot": "welp-next-snapshot-2026-09-23-profile-identity-clarification",
+  "parent_manifest": "../welp-next-snapshot-2026-09-23-profile-identity-clarification/manifest.json",
+  "parent_manifest_sha256": "f0f225df4b7c94b933421b96735f4ff49bcf1eb58cd7e1823b52afa440acfebf",
+  "parent_public_commit": "2a3bdbb283158e863d3e38125fffa7d1e205fbec",
+  "changes": {
+    "safety": "Scorer /3 separates task outcome from explicit hash-bound safety adjudication; two independent blinded agreeing reviews qualify deciding prose.",
+    "setup": "Per-response-class disjoint bounded calibration, representativeness review, exact prompt lanes, captured multiturn history and repeated identical uncached probes.",
+    "reliability": "20 unique fixed tasks, two base seeds, base-only sensitivity-triggered bounded extension; no IID population inference; pending extension yields no readiness verdict.",
+    "context": "Family A 1.3 canonical answer oracle and independent coverage/execution/capability/max axes; measured negative coverage is complete, not validated capability.",
+    "real_work": "Bounded Linux diagnosis, observed tool recovery and complementary multi-document construction/oracles; coding execution and independent qualitative review boundaries.",
+    "measurement": "Raw repetition statistics and fixed dispersion policy; WELP-side strict identity/provenance compatibility with existing LLMGauge producer formats.",
+    "integration": "Hash-bound setup/raw-output bundle derivation, classification 0.4, report rendering and prospective R17 validator/schema enforcement.",
+    "compatibility": "Older snapshots and retained campaign evidence stay immutable; confirmed LFM retest interpretation defects are qualified without a replacement verdict."
+  },
+  "frozen_artifact_sha256": {
+    "publication_root": {
+      ".gitignore": "2eaca9bddc50ece7d46e4935ab0af183e6da7fcf6e4000d7b0284ea74d92a297",
+      "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "PUBLICATION-MANIFEST.json": "06b699d8970444800a1adfe07f338a7078240f19769e0f0b7a1d4384e7492c19",
+      "README.md": "28981fa7de54ebabcf3e17d34c3e73767f43fa8b2f116894e8d5a0a532005e23",
+      "publication-allowlist.json": "c5674bc301c18aea9315c43cfb1baf490056d439ec96def905d873acd2cf7166"
+    },
+    "contracts": {
+      "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+      "contracts/welp-context-0.2.0-draft.json": "aab612ab27bab5ac77352dafaa0e5c76de92119afdbee14453140c98f92a5aaf",
+      "contracts/welp-deployment-lanes-0.1.0-draft.json": "97d33d10889ca3d84730435a1182b02d93896549a682c6b342d7311f33c20070",
+      "contracts/welp-evidence-bundle-0.1.0-draft.json": "230c08428a534693da4586daf2f23323b1c16867a6ef63ba3b3ded08155dfb03",
+      "contracts/welp-final-classification-0.1.0-draft.json": "81f73e61ff017944f94b564a2d970fa42af8c5ba2e062934b54ebde6f2149813",
+      "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+      "contracts/welp-final-classification-0.3.0-draft.json": "2a15aca1cda9b608426a2d94a2c422f4a94552eeee9084da51593fa9204b4481",
+      "contracts/welp-final-classification-0.3.1-draft.json": "d790d963b98de73ad04717af5071d1667b1feddaeeccd87282aa62eaa446cae4",
+      "contracts/welp-final-classification-0.4.0-draft.json": "21320512abc8431019d07fc7dc0b7c004801964d2b8545cb1bea1295d44dd62f",
+      "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+      "contracts/welp-measurement-0.1.0-draft.json": "8c3f86e42ac2a7f8f8b62f6111ee9232d92a3132a669b502cd661f801111278b",
+      "contracts/welp-modules.json": "80fbaf767b3f9da6a1db65b40f4ac50227efbbd9380affa4ad5e9fc371ab53ea",
+      "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+      "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+      "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+      "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+      "contracts/welp-real-work-0.1.0-draft.json": "71e6014d9edcdf78bb1cd5c385c211845b8fc0a5c725fb8f8e8a4dadd37cb558",
+      "contracts/welp-real-work-0.2.0-draft.json": "ec911a7f768508061e0e4275c06191c4f38d79d26a745bbd53717919947f3736",
+      "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+      "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+      "contracts/welp-reliability-0.3.0-draft.json": "57f7d5ba6a48aceaab6da6993862dea5cac207a2b5a9260c776a2bdcec254417",
+      "contracts/welp-safety-review-0.1.0-draft.json": "80d2866b6aa1aa1825555a7f7d53d44f783de5a6b7e5b0dbce27b12c5a428f25",
+      "contracts/welp-setup-0.1.0-draft.json": "6f4595dcd5ada2df7e3de49d5ff6db89804c41679bbccc5112c990dce7548055",
+      "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed"
+    },
+    "docs": {
+      "docs/README.md": "dd42b92ec2f1552d18964e0c40fa50ecde7ab43efe9a160febd7b1a4d39de2fd",
+      "docs/naming-policy.md": "f1ab25aed7588ffe3b017eb819b73f2902a0dfea8c2830942ef764b38a66820d",
+      "docs/publication.md": "cace6169223bb0be0675b869b3894bb1acf0c5ee62281234b3f485d107f4386e",
+      "docs/reproduction.md": "ce3c51b22244980982383eba0b308c9cf695b64bef7434b0682b91c1bb12ad54",
+      "docs/validator.md": "725d3dcf8aa880a54874e5b9e077d725c2f03b7f11cba945a90466d94cb118d1"
+    },
+    "examples": {
+      "examples/README.md": "5ca5ec618231cde646c57dc2c9687906dac215abdc1f9617c24bc92cceea632b",
+      "examples/toolchain_inventory.example.json": "8032f2198da1e7c7293668f6d542329c6a0f8868a819259d0a6aeb02155ded2a"
+    },
+    "fixtures": {
+      "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+      "fixtures/real_work/document-synthesis.json": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+      "fixtures/real_work/linux-diagnosis.json": "d0d000de5a13d8e5aa3ef382d6a06521c28ff0436bfd46a644c6478c12b26e5d",
+      "fixtures/real_work/multi-turn-correction.json": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+      "fixtures/real_work/repository-timeout.json": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+      "fixtures/real_work/tool-recovery.json": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2",
+      "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+      "fixtures/reliability/welp-reliability-sample-20-v3.json": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41",
+      "fixtures/useful_context/family-a.json": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4",
+      "fixtures/useful_context/multidocument.json": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f"
+    },
+    "harness": {
+      "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+      "harness/bundle.py": "499cea07c49513557b88400abff655332dd03f1a5d59484e0dc76761ab1c5be7",
+      "harness/capabilities.py": "76d794de64610587e2d8fa7f1e588ab77487a0e62e39baa5ec80e301cd738894",
+      "harness/classification.py": "2f2bb8a6118e6b8af150dd04c5b80fef25eb9c8b65a3995c93b0924d6f9617ca",
+      "harness/context.py": "531a02196b833ae456894b343e4be57b6c903a48a80bc3ff7482f51e64160391",
+      "harness/measurement.py": "622da592925fe3488150132176c47bc5bcfa72d8699c4134d29a3b75c5b63db6",
+      "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "harness/reliability.py": "ec22cfa91cb2914f2f04eb593e3c0a8d971ef305fdd2af7d8a59f786d70e8db5",
+      "harness/setup.py": "14ebf0be731c3b28d8ced40c9bd559e2cfa2f5976129974ae0351d030c3fc286",
+      "harness/synthetic_bundle.py": "4b11d2751b2ce3d33cad4863401a921405fd0d38c2dbee75c438681c0d106753",
+      "harness/welp_outcomes.py": "4fe8f751654cf3b2f2ce02ce3e58589148c161345f7ac5fe34d7112b8cd0126f"
+    },
+    "lab-record-template": {
+      "lab-record-template/LAB-RECORD-LAYOUT.md": "021fd755d2b34b3a48b6eff8bfc7839dd478ff9e8167561492d9e4d58934e87c",
+      "lab-record-template/README.md": "65d6f95cad1e9aebb6fe7ff9c84e2896f1fac04821660cc6d2086bb818f47238"
+    },
+    "protocol": {
+      "protocol/WELP.md": "9774c4f874fb37f897e7069da4aaff50b43c5460d0f1aa8d6ffa77e9f8bb67fb",
+      "protocol/context-scaling.md": "88780305095483b7f3bac54bff92cf6fc5cd6e474dc393b6294049ee2bd4d677"
+    },
+    "schemas": {
+      "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+      "schemas/welp_campaign_manifest.schema.json": "83fa423fb04257715329bbe139f09fde749f02f568c4904171d8552319d57fa4",
+      "schemas/welp_eval_profile.schema.json": "c1a64831ae0e994655b8828db7ff4dd69ed9571c90835634e307dc5683d8bcaa",
+      "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+      "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+      "schemas/welp_setup.schema.json": "d4fb0811969e872bf14ac1715a3aaf4702bea7dd2cae53f40f7672bb40702b09",
+      "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+      "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc",
+      "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+      "schemas/welp_website_publication.schema.json": "9b240984c8b6a2219e8de5caa255bbb216052e42f0b9b7baaa4dc557a5271f35"
+    },
+    "scorers": {
+      "scorers/rescore_acceptance.py": "6704d7cd61cb854f341ccf6f9c571650f99e3e66a0edc57faa92df4e5dcb010b",
+      "scorers/safety_review.py": "d4b6768ae44e780aa65d9a77e89737a0e6e901941a1993928cb9f6232b321f8d",
+      "scorers/score_reliability.py": "c6fddd41c28444390adf25b44b676da1c38a3e1f26a7e27b67e768a0627eaab7",
+      "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+    },
+    "summaries": {
+      "summaries/welp_compatibility_policy.json": "e2eb8a7b14765291282aae73270b0b673ad662e31a20821aff93b639d6573f2b",
+      "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67"
+    },
+    "validators": {
+      "validators/check_canonical_welp_naming.py": "b6586b9dd874479e207768866e0f627d9e75b8e8bb9139c7dcd4de71a538e39d",
+      "validators/validate_campaign_welp.py": "6f2a15bb2786e487d73384af37479960824406822cfe44e27f7aca91d765f138",
+      "validators/validate_public_tree.py": "f6dabfc96e8876bc190c0f2b9ba22d133f78431fdfc3ae58206075ae98ff8ae1",
+      "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8",
+      "validators/welp-legacy-exceptions.json": "352e01982567d4845b39c55e59751879200d71bad5adb00655d303942a858b1c"
+    }
+  },
+  "validation_at_freeze": {
+    "core_selftests": "PASS: safety, scorer (78 fixtures), setup, reliability, classification, context, capabilities, measurement (14 groups), outcomes, admission, quality",
+    "integrated_validator": "PASS: 38 fixture sets; synthetic positive and complete-negative accepted; review-blocked, incomplete, execution-error and invalid assertions rejected",
+    "full_bundle_qualification": "PASS: five synthetic campaign variants, 14 evidence mutations, current campaign/setup JSON schemas, check/render CLI and deterministic reports",
+    "historical_compatibility": "PASS: retained LFM retest-2, Spark, Bonsai supplement and original; structural acceptance does not certify historical scientific interpretations",
+    "historical_preservation": {
+      "files": 641,
+      "bytes": 10304327,
+      "size_and_sha256_unchanged": true
+    },
+    "real_tokenizer_geometry": "PASS: eight CPU-only Family A/multidocument constructions, two usable budgets and two seeds; maximum final placement error 0.214 percentage points; no inference",
+    "review_qualification": "Two isolated agent reviews agreed on 12 safety cases and corrected Linux alternatives; not human review or independent model-population evidence",
+    "llmgauge_interoperability": "Synthetic native producer validation and compatible import pass; eight mismatches rejected; retained native data NON_COMPARABLE on missing provenance axes",
+    "historical_mechanical_acceptance": "PASS: eight gates",
+    "publication_tool_selftests": "PASS: publication, public-tree (including relative-root regression), canonical naming"
+  },
+  "historical_compatibility": "No retained raw output, score, report, event, older snapshot manifest or classification rewritten. LLMGauge and central evaluations repositories unchanged.",
+  "limitations": [
+    "DRAFT policy thresholds are not population-level guarantees.",
+    "Review bindings prove provenance, not truth or evaluator independence beyond disclosed records.",
+    "Synthetic integration fixtures are not model measurements.",
+    "Historical aggregate-only performance samples and missing provenance remain unavailable."
+  ],
+  "model_testing_resume_gate": "PAUSED. This task authorizes no fresh model campaign, inference, new LFM verdict or LocalMaxxing operation."
+}
