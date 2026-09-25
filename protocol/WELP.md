@@ -561,7 +561,7 @@ the cap; never rerun until a favorable decision appears.
 
 ### Coverage is not capability
 
-`welp-context` 0.2 separates required rung/seed/lane inventory, execution
+`welp-context` 0.3 separates required rung/seed/lane inventory, execution
 validity, useful capability and lane-specific useful maximum. Valid measured
 negative results can complete coverage without validating any useful rung.
 Missing or invalid required evidence cannot support COMPLETE_PASS. The
@@ -570,6 +570,21 @@ facts and final-token placement, but uses the canonical answer oracle,
 including valid numbered and comparative forms; ambiguous
 free-form answers require review rather than a silently permissive substring
 rule. Full-window performance and placement evidence are still required.
+
+Answerless budget exhaustion is a measured outcome, not a gap (2026-09-24
+Granite D-01 repair): an execution-valid Controlled Context cell that
+exhausts its generation budget and emits no visible answer is represented as
+a `BUDGET_LIMITED` cell with the CP-1 triple semantic `NOT_EVALUABLE`,
+completion `FAIL_LENGTH`, budget `EXHAUSTED_IN_REASONING` when the
+declared/effective reasoning surface is ON (UNKNOWN when attribution is
+unsupported). Such a cell covers its cell — a complete negative result never
+makes the campaign structurally incomplete — while never validating
+capability: a budget-limited practical rung stays PARTIAL, and
+`useful_context_max`/`practical_rung_validated` still require trusted
+`VALIDATED` cells. The bundle accepts an answerless measured row only when
+the raw record proves the terminal generation state and the evidence binds
+the empty-answer sha256; anything else fails closed. Reasoning consumption
+itself is not a semantic failure, an unsafe behavior or missing coverage.
 
 The supplementary multi-document fixture tests distributed facts, conflicting
 versions, source-grounded synthesis and absent information. It does not turn
@@ -634,7 +649,7 @@ is part of protocol hardening.
   calibration, conclusion lanes and resource reporting)
 - `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.3.0-draft (scorer v3, independent safety, paired lanes and bounded fixed-screen sensitivity)
-- `welp-context` 0.2.0-draft (canonical Controlled Context answer oracle, machine ID Family A; coverage/execution/capability axes; full-window requirements remain in `context-scaling.md`)
+- `welp-context` 0.3.0-draft (canonical Controlled Context answer oracle, machine ID Family A; coverage/execution/capability axes with answerless budget exhaustion as a covered measured row; full-window requirements remain in `context-scaling.md`)
 - `welp-optimization` 0.1.0-draft
 - `welp-stability` 0.1.0-draft
 - `welp-final-classification` 0.4.0-draft (evidence-derived dimensions, coverage/review blockers and selected DEPLOYMENT profile)

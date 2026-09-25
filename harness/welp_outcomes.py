@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scorers"))
 from score_reliability import (  # noqa: E402,F401
     SCORER_IDENTITY, SEMANTIC_VOCAB, COMPLETION_VOCAB, BUDGET_VOCAB,
     derive_completion, derive_budget, score_row, aggregate,
+    _REASONING_STATES_FALSE as REASONING_STATES_FALSE,
+    _REASONING_STATES_TRUE as REASONING_STATES_TRUE,
 )
 
 HARNESS_IDENTITY = "welp-phase-harness/1.0.0-draft"

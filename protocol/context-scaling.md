@@ -294,7 +294,7 @@ authorize bypassing safety or earlier lifecycle gates.
 | FAILED | Valid near-full measurements fail a frozen performance or useful-context gate; report gate, results, repetitions, and attribution. Not an invalid fixture or unmeasured range. | Yes, a measured negative result, not validation |
 | PARTIAL | Capacity may admit, but required near-full performance/useful-context or other frozen evidence is incomplete. | No |
 | NOT_TESTED | No valid tested or demonstrated limiting disposition yet. | No |
-| BUDGET_LIMITED | Declared lane budget prevented an evaluable answer; retain completion/budget axes and attribution. | No; not semantic failure or validated capability |
+| BUDGET_LIMITED | Declared lane budget prevented an evaluable answer; retain completion/budget axes and attribution. | No for rung capability; the measured cell still covers required-cell coverage (see below) |
 
 `FIT_LIMIT` and `INTEGRATION_BLOCKED` are legitimate completed scientific
 coverage dispositions, not model-quality FAIL. `FAILED` preserves an actual
@@ -347,3 +347,17 @@ capability is FAILED. A missing or invalid cell cannot be hidden by a maximum
 or a classifier label. Evidence review remains mandatory: neither hashes nor
 validator exit 0 establish the truth of unverified qualitative conclusions.
 Historical bundles retain their pinned narrative-only coverage checks.
+
+Since the 0.3.0 context contract (Granite D-01 repair), a trusted
+`BUDGET_LIMITED` cell is a measured row: it answers the coverage question —
+did the campaign validly run the required cell and obtain a legitimate
+terminal disposition — with yes, and the capability question — did the model
+demonstrate the required context behavior — with no. Answerless budget
+exhaustion carries the CP-1 triple semantic `NOT_EVALUABLE`, completion
+`FAIL_LENGTH`, budget `EXHAUSTED_IN_REASONING` under a declared/effective-ON
+reasoning surface; reasoning consumption itself is a deployment/budget
+limitation, never a semantic failure. A mixed rung (for example 3 VALIDATED
++ 1 BUDGET_LIMITED) completes coverage with the rung capability PARTIAL. The
+disposition table above governs rung-level model-card envelope claims: a
+budget-limited rung still cannot claim useful-context validation for that
+rung, and the useful-context maximum never rises on a budget-limited cell.

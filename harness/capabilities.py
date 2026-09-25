@@ -22,6 +22,11 @@ Real-work and context oracles (welp-real-work 0.2.0-draft):
     documents.
   score_multi_turn_final — multi-turn correction fixture (unchanged).
 
+Subprocess selftest oracles resolve a real interpreter via
+resolve_selftest_interpreter (WELP_SELFTEST_PYTHON override, sys.executable,
+PATH python3/python) so agent/AppImage wrapper environments never produce
+phantom fixture failures (Granite finding M-2).
+
 Frozen probe budgets (welp-generation-budget 0.1.0-draft):
   reasoning  frozen lane 1500 total (comparability) + operational lane 4096
              (non-binding ceiling; Qwen3.6 case: frozen FAIL_LENGTH / 4096 PASS)
@@ -32,6 +37,7 @@ Frozen probe budgets (welp-generation-budget 0.1.0-draft):
 Selftest: python3 harness/capabilities.py selftest
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -601,6 +607,48 @@ def score_multidocument(content: str) -> dict:
     return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
 
 
+def resolve_selftest_interpreter(executable=None, override=None,
+                                 search_path=True):
+    """Resolve a real Python interpreter for subprocess selftest oracles.
+
+    sys.executable can name an agent/AppImage wrapper binary rather than a
+    Python interpreter, which breaks `python -m unittest` subprocess oracles
+    with fixture failures that do not exist (Granite finding M-2). Resolution
+    order: explicit override (WELP_SELFTEST_PYTHON at call sites), the
+    running interpreter's executable, then PATH python3/python. Every
+    candidate must actually execute a trivial isolated CPython 3 program;
+    the first candidate that qualifies wins. Raises RuntimeError when none
+    qualifies — the selftest fails clearly instead of reporting phantom
+    fixture failures. Never hardcodes a user-specific path and never falls
+    back to a shell.
+    """
+    import os
+    import shutil
+    import subprocess
+
+    candidates = [override, executable if executable is not None else sys.executable]
+    if search_path:
+        for name in ("python3", "python"):
+            found = shutil.which(name)
+            if found:
+                candidates.append(found)
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            probe = subprocess.run(
+                [candidate, "-I", "-c", "import sys; print(sys.version_info[0])"],
+                capture_output=True, text=True, timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if probe.returncode == 0 and probe.stdout.strip().startswith("3"):
+            return candidate
+    raise RuntimeError(
+        "no working Python interpreter available for selftest subprocess "
+        "oracles (checked sys.executable and PATH python3/python); set "
+        "WELP_SELFTEST_PYTHON to a real interpreter")
+
+
 def selftest_repository_fixture() -> list[str]:
     """Exercise only the trusted frozen baseline/reference, never model code."""
     import subprocess
@@ -608,13 +656,15 @@ def selftest_repository_fixture() -> list[str]:
 
     fixture = json.loads((HERE.parent / "fixtures/real_work/repository-timeout.json").read_text())
     failures = []
+    python = resolve_selftest_interpreter(
+        override=os.environ.get("WELP_SELFTEST_PYTHON"))
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         for name, source in fixture["repository"].items():
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(source)
-        command = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
+        command = [python, "-m", "unittest", "discover", "-s", "tests"]
         baseline = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=10)
         if baseline.returncode == 0 or "test_zero_is_explicit" not in baseline.stderr:
             failures.append("repository fixture baseline must fail at explicit zero")
@@ -919,6 +969,33 @@ def selftest() -> int:
             ("echo", "The current port is 8652 and replicas are 2.")]:
         if score_multidocument(text)["semantic"] != "FAIL":
             fails.append(f"multidocument: {label} must fail")
+    # M-2 regression: wrapper-style sys.executable contamination must not
+    # break subprocess oracles. A non-Python executable is rejected by the
+    # probe and resolution falls through to a real interpreter; with no
+    # qualifying candidate at all the resolver fails clearly instead of
+    # reporting phantom fixture failures.
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        wrapper = Path(td) / "agent-wrapper-binary"
+        wrapper.write_text("#!/bin/sh\nexit 3\n")
+        wrapper.chmod(0o755)
+        resolved = resolve_selftest_interpreter(executable=str(wrapper))
+        probe = subprocess.run([resolved, "-I", "-c", "import sys; print(sys.version_info[0])"],
+                               capture_output=True, text=True, timeout=60)
+        if probe.returncode != 0 or not probe.stdout.strip().startswith("3") \
+                or resolved == str(wrapper):
+            fails.append(f"wrapper sys.executable must fall back to a real interpreter: {resolved}")
+        override_target = resolve_selftest_interpreter(executable=str(wrapper),
+                                                       override=resolved, search_path=False)
+        if override_target != resolved:
+            fails.append(f"explicit interpreter override must win: {override_target}")
+        try:
+            resolve_selftest_interpreter(executable=str(wrapper), override=str(wrapper),
+                                         search_path=False)
+            fails.append("no qualifying interpreter must raise, not return a wrapper")
+        except RuntimeError:
+            pass
     fails.extend(selftest_repository_fixture())
     print(MODULE_ID, "selftest:", "PASS" if not fails else fails)
     return 0 if not fails else 1

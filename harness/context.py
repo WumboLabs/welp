@@ -8,7 +8,13 @@ inference-equivalent final rendered token stream and lane-specific reserves.
 welp-context-0.2.0-draft additions: score_family_a is the canonical Family A
 answer oracle (six gates + review_required; prompt-echo, negation and
 ambiguity safe) and context_summary is the campaign coverage/capability
-summarizer. Exact mappings live in contracts/welp-context-0.2.0-draft.json.
+summarizer. welp-context-0.3.0-draft (Granite D-01 repair): an execution-
+valid answerless budget-exhausted cell is a measured BUDGET_LIMITED row that
+covers coverage and never validates capability; the outcome triple is
+CP-1-aligned (semantic NOT_EVALUABLE for an empty channel, completion
+FAIL_LENGTH, budget EXHAUSTED_IN_REASONING when the declared/effective
+reasoning surface is ON). Exact mappings live in
+contracts/welp-context-0.3.0-draft.json.
 
 Selftest: python3 harness/context.py selftest
 """
@@ -21,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from welp_outcomes import derive_completion, derive_budget  # noqa: E402
 
-MODULE_ID = "welp-harness-context/1.1.0-draft"
+MODULE_ID = "welp-harness-context/1.2.0-draft"
 FIXTURE_FAMILY_A = HERE.parent / "fixtures/useful_context/family-a.json"
 
 REQUIRED_DEPTHS_PCT = [2.0, 25.0, 50.0, 75.0, 95.0]
@@ -183,7 +189,8 @@ def construct_family_a(usable_tokens: int, seed: int, measure, max_attempts: int
 
 
 def rung_outcome(gates: dict, finish, content: str, usage: dict = None,
-                 reserve: int = STANDARD_RESERVE_TOKENS):
+                 reserve: int = STANDARD_RESERVE_TOKENS,
+                 reasoning_declared: bool | None = None):
     """Assemble the CP-1 outcome + rung disposition for one useful-context request.
 
     gates: {"exact_retrieval": bool, "synthesis": bool, "decoy_resistance": bool,
@@ -192,30 +199,46 @@ def rung_outcome(gates: dict, finish, content: str, usage: dict = None,
     review_reasons) are ignored here and never flip a rung. Only the six
     GATE_KEYS are consumed; a gate left None (not evaluated because no answer
     exists) stays None.
+
+    reasoning_declared: the cell's declared/effective reasoning surface
+    (True/False from the retained request identity, None when unknown).
+    A declared-ON surface with an empty final-answer lane at FAIL_LENGTH
+    attributes the exhaustion to reasoning (welp-context 0.3.0, Granite D-01):
+    the answer lane measurably received zero tokens, so the budget was
+    consumed inside the declared-active reasoning lane.
+
+    Every FAIL_LENGTH/EMPTY_ANSWER row is a measured BUDGET_LIMITED rung:
+    execution happened and the budget/channel state prevented an evaluable
+    answer; coverage counts it, capability validation never does. A produced
+    channel keeps its semantic evidence: a forbidden assertion (decoy
+    containment) is FAIL even in a truncated answer, while an empty channel
+    is never a semantic FAIL (CP-1 NOT_EVALUABLE is mandatory).
     """
     completion = derive_completion(finish, content, usage, reserve)
     has_reasoning = bool((usage or {}).get("reasoning_tokens"))
-    budget = derive_budget(finish, completion, content, has_reasoning)
+    if reasoning_declared is True:
+        has_reasoning = True
+    budget = derive_budget(finish, completion, content, has_reasoning,
+                           reasoning_declared=reasoning_declared)
 
     answered = content.strip() != ""
     gate_values = {k: (gates.get(k) if answered else None) for k in GATE_KEYS}
-    evaluated = [v for v in gate_values.values() if v is not None]
 
     if completion == "COMPLETE":
         all_pass = all(gate_values.values())
         rung = "VALIDATED" if all_pass else "FAILED"
         semantic = "PASS" if all_pass else "FAIL"
-    elif completion == "FAIL_LENGTH":
-        # Bonsai 65K rule: strong retrieval/synthesis evidence with a starved
-        # answer is BUDGET_LIMITED, never a retrieval failure; without any
-        # usable answer the gates are simply not evaluable. A forbidden
-        # assertion in the produced channel (decoy containment) keeps the
-        # semantic FAIL evidence — truncation does not unsay it.
-        strong = (gates.get("exact_retrieval") or gates.get("synthesis")) is True and answered
-        rung = "BUDGET_LIMITED" if strong else "NOT_EVALUABLE"
-        semantic = "FAIL" if _forbidden_asserted(gates) else "NOT_EVALUABLE"
-    else:  # EMPTY_ANSWER / INVALID_STOP
-        rung = "BUDGET_LIMITED" if completion == "EMPTY_ANSWER" else "INVALID_REQUEST"
+    elif completion in ("FAIL_LENGTH", "EMPTY_ANSWER"):
+        # Granite D-01 rule: an execution-valid row that exhausted its
+        # generation budget (or consumed the channel answerlessly) is a
+        # measured BUDGET_LIMITED row — covered, never capability-validated.
+        # A forbidden assertion in a produced channel keeps the semantic FAIL
+        # evidence — truncation does not unsay it; an empty channel was never
+        # semantically evaluable, so semantic stays NOT_EVALUABLE there.
+        rung = "BUDGET_LIMITED"
+        semantic = "FAIL" if (answered and _forbidden_asserted(gates)) else "NOT_EVALUABLE"
+    else:  # INVALID_STOP
+        rung = "INVALID_REQUEST"
         semantic = "NOT_EVALUABLE"
 
     return {
@@ -485,8 +508,12 @@ def score_family_a(content: str) -> dict:
 DISPOSITION_VOCAB = ("VALIDATED", "FAILED", "BUDGET_LIMITED", "PARTIAL",
                      "NOT_TESTED", "FIT_LIMIT", "INTEGRATION_BLOCKED")
 LANE_VOCAB = ("semantic", "operational")
+# welp-context 0.3.0 (Granite D-01 repair): a trusted BUDGET_LIMITED row is a
+# measured row — it covers its cell. It never validates capability: the
+# capability mapping keeps budget-limited practical rungs PARTIAL and
+# useful_context_max/practical_rung_validated require trusted VALIDATED rows.
 COVERING_DISPOSITIONS = frozenset(
-    ("VALIDATED", "FAILED", "FIT_LIMIT", "INTEGRATION_BLOCKED"))
+    ("VALIDATED", "FAILED", "BUDGET_LIMITED", "FIT_LIMIT", "INTEGRATION_BLOCKED"))
 MEASURED_DISPOSITIONS = frozenset(
     ("VALIDATED", "FAILED", "BUDGET_LIMITED", "FIT_LIMIT", "INTEGRATION_BLOCKED"))
 
@@ -502,16 +529,21 @@ def _trusted(row: dict) -> bool:
 
 
 def context_summary(plan: dict, rows: list) -> dict:
-    """Summarize planned campaign coverage and capability (welp-context-0.2.0-draft).
+    """Summarize planned campaign coverage and capability (welp-context-0.3.0-draft).
 
     plan: required_rungs (unique positive ints), lanes (semantic/operational),
     seeds (unique ints), practical_rung (a planned rung). rows: one dict per
     observed cell with configured_context/lane/seed/disposition/
     execution_valid/evidence. Duplicates, unplanned cells and malformed
     inputs raise ValueError; missing planned cells are a valid INCOMPLETE
-    summary, never an exception. Required negative (FAILED) rows complete
-    coverage; BUDGET_LIMITED/PARTIAL/NOT_TESTED, invalid execution and empty
-    evidence never do; FIT_LIMIT alone is never a model failure.
+    summary, never an exception. Required measured rows (VALIDATED, FAILED,
+    BUDGET_LIMITED, FIT_LIMIT, INTEGRATION_BLOCKED) with valid execution and
+    non-empty evidence cover their cell; PARTIAL/NOT_TESTED, invalid
+    execution and empty evidence never do. A trusted BUDGET_LIMITED cell is
+    tested-and-covered but never capability-validated: capability stays
+    PARTIAL when a practical cell is budget-limited, and
+    useful_context_max/practical_rung_validated still require trusted
+    VALIDATED cells. FIT_LIMIT alone is never a model failure.
     """
     if not isinstance(plan, dict):
         raise ValueError("plan must be a dict")
@@ -582,8 +614,10 @@ def context_summary(plan: dict, rows: list) -> dict:
     # Capability is judged at the practical rung only. VALIDATED needs every
     # practical cell to pass; INTEGRATION_BLOCKED needs every practical cell
     # blocked; FAILED needs every trusted measured row FAILED with no pass
-    # (missing cells do not soften a fully-negative measured set); FIT_LIMIT
-    # is a harness fit limit, never a model failure by itself.
+    # (missing cells do not soften a fully-negative measured set); a trusted
+    # BUDGET_LIMITED practical cell is measured but not validated, so it
+    # keeps capability PARTIAL; FIT_LIMIT is a harness fit limit, never a
+    # model failure by itself.
     practical_cells = [c for c in required if c[0] == practical]
     measurements = {c: by_cell[c] for c in practical_cells
                     if c in by_cell and by_cell[c]["disposition"] in MEASURED_DISPOSITIONS
@@ -658,10 +692,9 @@ def selftest() -> int:
     r = rung_outcome({"exact_retrieval": None, "synthesis": None, "decoy_resistance": True,
                       "absent_information": None, "retrieval_95": None, "instruction_compliance": None},
                      None, "", {"completion_tokens": 512})
-    if r["completion"] != "FAIL_LENGTH" or r["semantic"] != "NOT_EVALUABLE":
+    if (r["completion"] != "FAIL_LENGTH" or r["semantic"] != "NOT_EVALUABLE"
+            or r["rung"] != "BUDGET_LIMITED"):
         fails.append(f"bonsai empty-truncated shape: {r}")
-    if r["rung"] not in ("BUDGET_LIMITED", "NOT_EVALUABLE"):
-        fails.append(f"bonsai rung must not be FAILED: {r}")
 
     # BUDGET_LIMITED with strong retrieval evidence in a partial answer
     r = rung_outcome({"exact_retrieval": True, "synthesis": True, "decoy_resistance": True,
@@ -669,6 +702,69 @@ def selftest() -> int:
                      "length", "1. TR-8842-QX\n2. 2027", {"completion_tokens": 512})
     if r["rung"] != "BUDGET_LIMITED" or r["semantic"] != "NOT_EVALUABLE":
         fails.append(f"budget-limited rung: {r}")
+
+    # --- welp-context-0.3.0-draft: answerless measured rows (Granite D-01) ---
+    empty_gates = score_family_a("")
+
+    # A. Valid answerless reasoning exhaustion: the full reserve consumed
+    # with a declared/effective-ON reasoning surface and an empty channel.
+    # CP-1 triple NOT_EVALUABLE / FAIL_LENGTH / EXHAUSTED_IN_REASONING;
+    # measured BUDGET_LIMITED rung; never a semantic FAIL.
+    r = rung_outcome(empty_gates, "length", "",
+                     {"completion_tokens": 8192, "reasoning_tokens": None},
+                     reserve=8192, reasoning_declared=True)
+    if (r["rung"] != "BUDGET_LIMITED" or r["semantic"] != "NOT_EVALUABLE"
+            or r["completion"] != "FAIL_LENGTH"
+            or r["budget"] != "EXHAUSTED_IN_REASONING"
+            or any(v is not None for v in r["gates"].values())):
+        fails.append(f"answerless reasoning exhaustion: {r}")
+    # Retained derivation (Granite cell shape) must be derivable verbatim.
+    r2 = rung_outcome(empty_gates, "length", "", {"completion_tokens": 8192},
+                      reserve=8192, reasoning_declared=True)
+    if r2["budget"] != "EXHAUSTED_IN_REASONING":
+        fails.append(f"answerless exhaustion without retained token split: {r2}")
+
+    # Reasoning-budget honesty: an undeclared surface stays UNKNOWN; a
+    # declared-OFF surface attributes the exhaustion to the answer lane
+    # (frozen CP-1 rule); reasoning exhaustion is a budget outcome, never a
+    # semantic failure.
+    r = rung_outcome(empty_gates, "length", "", {"completion_tokens": 8192}, reserve=8192)
+    if r["budget"] != "UNKNOWN" or r["semantic"] != "NOT_EVALUABLE":
+        fails.append(f"undeclared answerless exhaustion stays UNKNOWN: {r}")
+    r = rung_outcome(empty_gates, "length", "", {"completion_tokens": 8192},
+                     reserve=8192, reasoning_declared=False)
+    if r["budget"] != "EXHAUSTED_IN_ANSWER" or r["semantic"] != "NOT_EVALUABLE":
+        fails.append(f"declared-off answerless exhaustion: {r}")
+
+    # C. Empty answer without budget exhaustion: a normal-terminal empty
+    # channel is the distinct EMPTY_ANSWER/WITHIN state, still a measured
+    # BUDGET_LIMITED row, never semantic FAIL; a missing terminal state
+    # (no finish, no usage) is INVALID_REQUEST, never a measured row.
+    r = rung_outcome(empty_gates, "stop", "", {"completion_tokens": 89}, reserve=8192)
+    if (r["rung"] != "BUDGET_LIMITED" or r["completion"] != "EMPTY_ANSWER"
+            or r["budget"] != "WITHIN" or r["semantic"] != "NOT_EVALUABLE"):
+        fails.append(f"answerless normal-terminal empty channel: {r}")
+    r = rung_outcome(empty_gates, None, "", {}, reserve=8192)
+    if r["rung"] != "INVALID_REQUEST" or r["completion"] != "INVALID_STOP":
+        fails.append(f"answerless without terminal state must fail closed: {r}")
+
+    # D. A complete wrong answer is FAILED, never BUDGET_LIMITED.
+    r = rung_outcome(score_family_a("1. TR-8842-QX\n2. 2028\n3. NOT STATED\n"
+                                    "4. 357\n5. END-OF-REPORT"),
+                     "stop", "1. TR-8842-QX\n2. 2028\n3. NOT STATED\n"
+                             "4. 357\n5. END-OF-REPORT",
+                     {"completion_tokens": 60})
+    if r["rung"] != "FAILED" or r["semantic"] != "FAIL":
+        fails.append(f"complete wrong answer must be FAILED: {r}")
+
+    # E. A complete correct answer is VALIDATED.
+    r = rung_outcome(score_family_a("1. TR-8842-QX\n2. 2027\n3. NOT STATED\n"
+                                    "4. 357\n5. END-OF-REPORT"),
+                     "stop", "1. TR-8842-QX\n2. 2027\n3. NOT STATED\n"
+                             "4. 357\n5. END-OF-REPORT",
+                     {"completion_tokens": 60})
+    if r["rung"] != "VALIDATED" or r["semantic"] != "PASS":
+        fails.append(f"complete correct answer must be VALIDATED: {r}")
 
     # Completed answer violating a gate -> FAILED, semantic FAIL
     r = rung_outcome({**all_pass, "absent_information": False}, "stop",
@@ -893,14 +989,67 @@ def selftest() -> int:
             or summ["covered_cells"] != 11):
         fails.append(f"missing practical cell must be PARTIAL: {summ}")
 
-    # Budget-limited practical cell: never covers, capability PARTIAL.
+    # Trusted budget-limited practical cell (welp-context-0.3.0, Granite
+    # D-01): a measured BUDGET_LIMITED row covers its cell and keeps the
+    # campaign structurally complete, but never validates capability.
     rows = matrix("VALIDATED")
     rows.remove(crow(32768, "operational", 314159, "VALIDATED"))
     rows.append(crow(32768, "operational", 314159, "BUDGET_LIMITED"))
     summ = context_summary(plan, rows)
-    if (summ["coverage_complete"] or summ["capability"] != "PARTIAL"
-            or summ["covered_cells"] != 11):
-        fails.append(f"budget-limited cell must not cover: {summ}")
+    if (not summ["coverage_complete"] or summ["covered_cells"] != 12
+            or summ["capability"] != "PARTIAL" or summ["practical_rung_validated"]
+            or summ["useful_context_max"] != {"semantic": 131072,
+                                              "operational": 131072}):
+        fails.append(f"budget-limited cell must cover without validating: {summ}")
+
+    # H. Mixed rung: 3 VALIDATED + 1 BUDGET_LIMITED at the practical rung is
+    # coverage-COMPLETE with the rung not fully validated (PARTIAL).
+    rows = matrix("VALIDATED")
+    for row in rows:
+        if (row["configured_context"], row["lane"], row["seed"]) == (32768, "semantic", 42):
+            row["disposition"] = "BUDGET_LIMITED"
+    summ = context_summary(plan, rows)
+    if (not summ["coverage_complete"] or summ["capability"] != "PARTIAL"
+            or summ["practical_rung_validated"] or summ["missing_cells"] != []):
+        fails.append(f"mixed rung must be covered and PARTIAL: {summ}")
+
+    # A BUDGET_LIMITED cell below the practical rung never demotes practical
+    # capability (the Granite 16384/semantic/seed42 shape): coverage stays
+    # complete, capability VALIDATED, and the useful-context maximum is not
+    # raised or erased by the unvalidated lower rung.
+    rows = matrix("VALIDATED")
+    for row in rows:
+        if (row["configured_context"], row["lane"], row["seed"]) == (8192, "semantic", 42):
+            row["disposition"] = "BUDGET_LIMITED"
+    summ = context_summary(plan, rows)
+    if (not summ["coverage_complete"] or summ["capability"] != "VALIDATED"
+            or not summ["practical_rung_validated"]
+            or summ["useful_context_max"] != {"semantic": 131072,
+                                              "operational": 131072}):
+        fails.append(f"lower-rung budget-limited cell must not demote: {summ}")
+
+    # F. FIT_LIMIT: hash-bound evidence covers the cell as a documented
+    # harness limit, but it is never capability credit; an untrusted
+    # FIT_LIMIT row (invalid execution or empty evidence) never covers.
+    rows = matrix("VALIDATED")
+    for row in rows:
+        if (row["configured_context"], row["lane"], row["seed"]) == (131072, "semantic", 314159):
+            row["disposition"] = "FIT_LIMIT"
+    summ = context_summary(plan, rows)
+    if (not summ["coverage_complete"] or summ["capability"] != "VALIDATED"
+            or summ["useful_context_max"] != {"semantic": 32768,
+                                              "operational": 131072}):
+        fails.append(f"trusted FIT_LIMIT covers as a limit, never capability: {summ}")
+    summ = context_summary(plan, [crow(8192, "semantic", 42, "FIT_LIMIT", ev=False, evd="")])
+    if (summ["covered_cells"] != 0 or summ["coverage_complete"]
+            or "8192/semantic/42" not in summ["missing_cells"]):
+        fails.append(f"untrusted FIT_LIMIT must not cover: {summ}")
+
+    # G. NOT_TESTED never covers, trusted or not.
+    for ev, evd in ((True, "run.json#sha256"), (False, "")):
+        summ = context_summary(plan, [crow(8192, "semantic", 42, "NOT_TESTED", ev=ev, evd=evd)])
+        if (summ["covered_cells"] != 0 or summ["capability"] != "NOT_CHARACTERIZED"):
+            fails.append(f"NOT_TESTED must never cover: {summ}")
 
     # Trusted all-blocked practical rung: blocked capability, coverage kept.
     rows = [{**r, "disposition": "INTEGRATION_BLOCKED"}

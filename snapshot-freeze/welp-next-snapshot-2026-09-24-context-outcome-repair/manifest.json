@@ -1,0 +1,147 @@
+{
+  "snapshot_id": "welp-next-snapshot-2026-09-24-context-outcome-repair",
+  "status": "DRAFT \u2014 NOT v1.0",
+  "created_utc": "2026-09-25T00:59:13.818872+00:00",
+  "methodology_changed": "YES",
+  "naming_changed": "NO",
+  "migration_type": "context-outcome-repair-answerless-budget-exhaustion",
+  "parent_snapshot": "welp-next-snapshot-2026-09-24-review-and-setup-hardening",
+  "parent_manifest": "../welp-next-snapshot-2026-09-24-review-and-setup-hardening/manifest.json",
+  "parent_manifest_sha256": "7623b4980f655e822c871328f87cccbb0460b99e0f61d2670a5fb69be47f1eb7",
+  "parent_public_commit": "c7b5c92b1f22f5b34d65d688e517d7812df0c37c",
+  "changes": {
+    "context_outcome_repair": "welp-context 0.3.0-draft (Granite D-01, METHODOLOGY_DEFECT repaired prospectively): an execution-valid Controlled Context cell that exhausts its generation budget and emits no visible answer is a measured BUDGET_LIMITED row with the CP-1 triple semantic NOT_EVALUABLE / completion FAIL_LENGTH / budget EXHAUSTED_IN_REASONING under a declared/effective-ON reasoning surface (UNKNOWN when attribution is unsupported). It covers required-cell coverage and never validates capability: a budget-limited practical rung stays PARTIAL, useful_context_max and practical_rung_validated still require trusted VALIDATED cells. The evidence bundle accepts an answerless measured row only when the raw record proves the terminal generation state and the evidence binds the empty-answer sha256; invalid empty-answer records fail closed (B_context_missing_raw). The 0.2.0 contract and all historical rows stay frozen and valid for reproduction.",
+    "cp1_alignment": "The context module's outcome triples are CP-1-consistent on every path (Granite M-1): an empty final-answer channel is never semantic FAIL \u2014 the empty-answer gate bag can no longer manufacture decoy-asserted FAIL evidence; reasoning consumption itself is a deployment/budget limitation, never a semantic failure, unsafe behavior or missing coverage.",
+    "m2_selftest_interpreter": "Harness/validator subprocess selftest oracles resolve a real interpreter via resolve_selftest_interpreter (WELP_SELFTEST_PYTHON override, sys.executable, PATH python3/python; each candidate must execute a trivial isolated CPython 3 program), so agent/AppImage wrapper environments can no longer report phantom fixture failures (Granite M-2); a wrapper-style sys.executable regression test and a clear no-interpreter failure were added.",
+    "synthetic_integration": "New synthetic variant context-budget-limited: a complete campaign with one valid answerless BUDGET_LIMITED cell and all other required evidence valid stays structurally valid, coverage complete, capability PARTIAL, execution COMPLETE_PASS with a freshly derived classification; mutated evidence proves invalid empty-answer records fail closed.",
+    "source_attribution": "welp-outcomes re-exports the frozen reasoning-state vocabularies; classification 0.4.0, validator R-rules and report rendering consume the repaired summary unchanged.",
+    "compatibility": "Older snapshots, retained campaign evidence, frozen manifests and historical reports stay immutable. Frozen 0.1.0/0.2.0 context contracts remain valid for reproduction; the retained Granite COMPLETE_WITH_GAPS predecessor event and its bundle stay byte-identical; its linked successor re-derives the affected cell from original raw bytes under this snapshot."
+  },
+  "frozen_artifact_sha256": {
+    "publication_root": {
+      ".gitignore": "2eaca9bddc50ece7d46e4935ab0af183e6da7fcf6e4000d7b0284ea74d92a297",
+      "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "PUBLICATION-MANIFEST.json": "06b699d8970444800a1adfe07f338a7078240f19769e0f0b7a1d4384e7492c19",
+      "README.md": "e4b5e23202be51e9df6f2f0b218cd396affe11fe720d62c43f34078b7c266bef",
+      "publication-allowlist.json": "c5674bc301c18aea9315c43cfb1baf490056d439ec96def905d873acd2cf7166"
+    },
+    "contracts": {
+      "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+      "contracts/welp-context-0.2.0-draft.json": "8b6710c1b7865987b0ba1b131fa8c25f9608d45d11754122518fc57c0cdbf9c2",
+      "contracts/welp-context-0.3.0-draft.json": "e58a073f9c9ec8c7194eebc2d58352adb561a9d8d0b695567050e33b2c383339",
+      "contracts/welp-deployment-lanes-0.1.0-draft.json": "97d33d10889ca3d84730435a1182b02d93896549a682c6b342d7311f33c20070",
+      "contracts/welp-evidence-bundle-0.1.0-draft.json": "230c08428a534693da4586daf2f23323b1c16867a6ef63ba3b3ded08155dfb03",
+      "contracts/welp-final-classification-0.1.0-draft.json": "81f73e61ff017944f94b564a2d970fa42af8c5ba2e062934b54ebde6f2149813",
+      "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+      "contracts/welp-final-classification-0.3.0-draft.json": "2a15aca1cda9b608426a2d94a2c422f4a94552eeee9084da51593fa9204b4481",
+      "contracts/welp-final-classification-0.3.1-draft.json": "d790d963b98de73ad04717af5071d1667b1feddaeeccd87282aa62eaa446cae4",
+      "contracts/welp-final-classification-0.4.0-draft.json": "21320512abc8431019d07fc7dc0b7c004801964d2b8545cb1bea1295d44dd62f",
+      "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+      "contracts/welp-measurement-0.1.0-draft.json": "8c3f86e42ac2a7f8f8b62f6111ee9232d92a3132a669b502cd661f801111278b",
+      "contracts/welp-modules.json": "80fbaf767b3f9da6a1db65b40f4ac50227efbbd9380affa4ad5e9fc371ab53ea",
+      "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+      "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+      "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+      "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+      "contracts/welp-real-work-0.1.0-draft.json": "71e6014d9edcdf78bb1cd5c385c211845b8fc0a5c725fb8f8e8a4dadd37cb558",
+      "contracts/welp-real-work-0.2.0-draft.json": "ec911a7f768508061e0e4275c06191c4f38d79d26a745bbd53717919947f3736",
+      "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+      "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+      "contracts/welp-reliability-0.3.0-draft.json": "57f7d5ba6a48aceaab6da6993862dea5cac207a2b5a9260c776a2bdcec254417",
+      "contracts/welp-review-adjudication-0.1.0-draft.json": "8feaeb78a6f275ecf8ffc92d446d9ec757954539c328d6c4dac27494c3fff445",
+      "contracts/welp-safety-review-0.1.0-draft.json": "80d2866b6aa1aa1825555a7f7d53d44f783de5a6b7e5b0dbce27b12c5a428f25",
+      "contracts/welp-setup-0.1.0-draft.json": "6f4595dcd5ada2df7e3de49d5ff6db89804c41679bbccc5112c990dce7548055",
+      "contracts/welp-setup-0.2.0-draft.json": "73f2b0c5bb4c06b179b4161589888e121134a0c24217fe58c702e4daa62c87b2",
+      "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed"
+    },
+    "docs": {
+      "docs/README.md": "dd42b92ec2f1552d18964e0c40fa50ecde7ab43efe9a160febd7b1a4d39de2fd",
+      "docs/naming-policy.md": "2019745283887e26db90716dde8b64dce9369babb458777eb780f8303c89c06c",
+      "docs/publication.md": "cace6169223bb0be0675b869b3894bb1acf0c5ee62281234b3f485d107f4386e",
+      "docs/reproduction.md": "281c0a497ef5c680653879680a246883a118b3182388415e64e75dee07fd0fa7",
+      "docs/validator.md": "5b4eb6633a56f928fa160f8dd66b2fed53237c54ec70cef115ebe6e66f996c15"
+    },
+    "examples": {
+      "examples/README.md": "5ca5ec618231cde646c57dc2c9687906dac215abdc1f9617c24bc92cceea632b",
+      "examples/toolchain_inventory.example.json": "8032f2198da1e7c7293668f6d542329c6a0f8868a819259d0a6aeb02155ded2a"
+    },
+    "fixtures": {
+      "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+      "fixtures/real_work/document-synthesis.json": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+      "fixtures/real_work/linux-diagnosis.json": "d0d000de5a13d8e5aa3ef382d6a06521c28ff0436bfd46a644c6478c12b26e5d",
+      "fixtures/real_work/multi-turn-correction.json": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+      "fixtures/real_work/repository-timeout.json": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+      "fixtures/real_work/tool-recovery.json": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2",
+      "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+      "fixtures/reliability/welp-reliability-sample-20-v3.json": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41",
+      "fixtures/useful_context/family-a.json": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4",
+      "fixtures/useful_context/multidocument.json": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f"
+    },
+    "harness": {
+      "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+      "harness/bundle.py": "eaeefddeea0d164e55c29ed47ba9bbc3673d4ece3abc22736795f2b21a67669d",
+      "harness/capabilities.py": "7485f750380910a74de89ac13ff7c1a115d7dad19f70916cbd5065d40d1f47c4",
+      "harness/classification.py": "2f2bb8a6118e6b8af150dd04c5b80fef25eb9c8b65a3995c93b0924d6f9617ca",
+      "harness/context.py": "ad944fe5f0c371d07a2303504d9d39d7ea6d0e49ebd6c05ca100924bc4883c16",
+      "harness/measurement.py": "622da592925fe3488150132176c47bc5bcfa72d8699c4134d29a3b75c5b63db6",
+      "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "harness/reliability.py": "ec22cfa91cb2914f2f04eb593e3c0a8d971ef305fdd2af7d8a59f786d70e8db5",
+      "harness/setup.py": "6e3923d80215bfac6730b3cb0467f7b94ff6daab40b2af274579cec651af653e",
+      "harness/synthetic_bundle.py": "63dd7abdba1bf72e5a9f16cff0ce48b06acde993d70c7e712f903011d76c7e55",
+      "harness/welp_outcomes.py": "8b58c8cf9f08c2602b7fa683843229562201a52cfa1369c3383c0f97e86c7cf7"
+    },
+    "lab-record-template": {
+      "lab-record-template/LAB-RECORD-LAYOUT.md": "021fd755d2b34b3a48b6eff8bfc7839dd478ff9e8167561492d9e4d58934e87c",
+      "lab-record-template/README.md": "65d6f95cad1e9aebb6fe7ff9c84e2896f1fac04821660cc6d2086bb818f47238"
+    },
+    "protocol": {
+      "protocol/WELP.md": "25c3a2c1fe66ac1832db1df3ba5d7d9510a0ff42d61acd6464f13b2d78e79381",
+      "protocol/context-scaling.md": "8f28ade68bbbaaa68defd207bc1b6b8264ff98c71a22fc32aadb846316e6528a"
+    },
+    "schemas": {
+      "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+      "schemas/welp_campaign_manifest.schema.json": "83fa423fb04257715329bbe139f09fde749f02f568c4904171d8552319d57fa4",
+      "schemas/welp_eval_profile.schema.json": "c1a64831ae0e994655b8828db7ff4dd69ed9571c90835634e307dc5683d8bcaa",
+      "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+      "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+      "schemas/welp_setup.schema.json": "449e64e1cfebc7df7399a77797e2eae5a43e6eff754cfa639034539669ba89aa",
+      "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+      "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc",
+      "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+      "schemas/welp_website_publication.schema.json": "9b240984c8b6a2219e8de5caa255bbb216052e42f0b9b7baaa4dc557a5271f35"
+    },
+    "scorers": {
+      "scorers/rescore_acceptance.py": "6704d7cd61cb854f341ccf6f9c571650f99e3e66a0edc57faa92df4e5dcb010b",
+      "scorers/safety_review.py": "6d8e5b504416fddd87a8c9edc5a879063e165154657979d42786e093ed5dbdf5",
+      "scorers/score_reliability.py": "c6fddd41c28444390adf25b44b676da1c38a3e1f26a7e27b67e768a0627eaab7",
+      "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+    },
+    "summaries": {
+      "summaries/welp_compatibility_policy.json": "dc9252708b92a83fe4f9e95fa4b874350b218bf6f7b5c8dbab49bad4118670ab",
+      "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67"
+    },
+    "validators": {
+      "validators/check_canonical_welp_naming.py": "b6586b9dd874479e207768866e0f627d9e75b8e8bb9139c7dcd4de71a538e39d",
+      "validators/validate_campaign_welp.py": "6f2a15bb2786e487d73384af37479960824406822cfe44e27f7aca91d765f138",
+      "validators/validate_public_tree.py": "f6dabfc96e8876bc190c0f2b9ba22d133f78431fdfc3ae58206075ae98ff8ae1",
+      "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8",
+      "validators/welp-legacy-exceptions.json": "352e01982567d4845b39c55e59751879200d71bad5adb00655d303942a858b1c"
+    }
+  },
+  "validation_at_freeze": {
+    "core_selftests": "PASS: context (with Granite D-01 answerless-exhaustion, declared/off/undeclared budget attribution, EMPTY_ANSWER/INVALID_REQUEST fail-closed, mixed-rung, FIT_LIMIT/NOT_TESTED and lower-rung regression cases), bundle (6 synthetic variants including context-budget-limited + 16 adjudication regression cases + 5 answerless fail-closed mutations), classification, capabilities (with M-2 wrapper regression cases), outcomes, measurement, reliability, quality, admission, setup, scorer v3 (78 fixtures), safety review",
+    "naming": "PASS: canonical naming validator current-facing (12 files) and full (115 approved) modes",
+    "bundle_qualification": "PASS: synthetic positive/complete-negative/context-budget-limited accepted; review-blocked, incomplete, execution-error rejected; context-budget-limited mutations (missing terminal state, asserted-VALIDATED empty answer, unbound empty evidence, abnormal stop) rejected; normal-terminal empty answer stays a measured row; deterministic reports",
+    "historical_compatibility": "Retained older-snapshot evidence untouched; frozen 0.1.0/0.2.0 context contracts retained byte-identical; retained Granite predecessor campaign bundle byte-identical; validator version-aware historical modes selftest PASS",
+    "post_freeze_independent_verification": "recorded in the task report after commit"
+  },
+  "historical_compatibility": "No retained raw output, score, report, event, older snapshot manifest or classification rewritten. Machine IDs and frozen provenance unchanged; the context repair is prospective and the 0.2.0 vocabulary remains exactly as frozen for reproducing historical campaigns.",
+  "limitations": [
+    "DRAFT policy thresholds are not population-level guarantees.",
+    "EXHAUSTED_IN_REASONING attribution from a declared/effective-ON surface without retained reasoning bytes is a derivation from measured token accounting (empty answer lane, positive completion tokens) plus the verified reasoning surface, never a fabricated token split; undeclared surfaces stay UNKNOWN.",
+    "A trusted BUDGET_LIMITED cell proves coverage, not capability; profile-level budget guidance for reasoning-heavy models must come from the recorded completion/budget axes.",
+    "Synthetic integration fixtures are not model measurements.",
+    "The retained Granite predecessor's runs/assemble-findings.json referenced by its report was not present on disk at repair time; the D-01 structural error was re-derived from the retained raw cell bytes against the frozen 0.2.0 harness instead."
+  ],
+  "model_testing_resume_gate": "This snapshot itself authorizes no fresh model campaign, inference, new model verdict or LocalMaxxing operation; the linked Granite successor campaign runs under the standing human authorization recorded in the task handoff."
+}

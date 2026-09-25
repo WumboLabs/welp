@@ -1,0 +1,134 @@
+{
+ "contract_id": "welp-context",
+ "version": "0.3.0-draft",
+ "status": "READY_DRAFT",
+ "created": "2026-09-24",
+ "supersedes": {
+  "contract_id": "welp-context",
+  "version": "0.2.0-draft",
+  "migration_type": "additive",
+  "note": "The 0.1.0/0.2.0 ladder/midpoint/seed policy, the five-depth placement gate, the 512-token comparator reserve, the canonical score_family_a answer oracle and the CP-1 outcome semantics are unchanged. 0.3.0 (Granite D-01 repair) extends BUDGET_LIMITED to carry execution-valid answerless budget-exhausted measured rows, makes those rows cover coverage without validating capability, and aligns every context outcome triple with welp-outcomes CP-1 (semantic NOT_EVALUABLE is mandatory for an empty final-answer channel). welp-context-0.2.0-draft.json stays valid for reproducing historical campaigns; historical rows are never relabeled."
+ },
+ "purpose": "Score Controlled Context (machine ID: Family A, fixture welp-useful-context-family-a) useful-context answers against a frozen oracle and summarize campaign coverage/capability without ever upgrading ambiguity into a pass. An execution-valid cell that exhausts its generation budget answerlessly is a legitimate measured result the protocol must represent (Granite D-01): it is covered evidence of a deployment/budget limitation, never missing coverage and never a semantic failure.",
+ "module": "welp-harness-context/1.2.0-draft",
+ "fixture": {
+  "fixture_id": "welp-useful-context-family-a",
+  "version": "1.3.0-draft",
+  "scope": "Controlled Context (Family A) only: a controlled longitudinal retrieval/synthesis diagnostic. Multi-Document Context, codebase and session/conversation context usefulness are out of scope; supplementary families answer distinct questions and never replace Controlled Context."
+ },
+ "score_family_a": {
+  "signature": "score_family_a(content: str) -> dict",
+  "errors": {
+   "TypeError": "content is not a str"
+  },
+  "returns": {
+   "exact_retrieval": "bool",
+   "synthesis": "bool",
+   "decoy_resistance": "bool",
+   "absent_information": "bool",
+   "retrieval_95": "bool",
+   "instruction_compliance": "bool",
+   "review_required": "bool",
+   "review_reasons": "list[str]"
+  },
+  "item_answers": {
+   "1": "TR-8842-QX (maintenance tunnel access code)",
+   "2": "2027 (year only; the counts 412/388 are never demanded)",
+   "3": "NOT STATED (visitor center code is absent from the notes)",
+   "4": "357 (containers shipped in 2029, the 95%-depth fact)",
+   "5": "END-OF-REPORT (required tail marker, nothing after it)"
+  },
+  "canonical_accepted_answers": [
+   "1. TR-8842-QX\n2. 2027\n3. NOT STATED\n4. 357\n5. END-OF-REPORT",
+   "Maintenance tunnel access code is TR-8842-QX. 2027 had more Ridgeline shipments than 2028. NOT STATED. 357. END-OF-REPORT"
+  ],
+  "structure_modes": [
+   "numbered: unique ascending item markers 1-4 (5 optional); the last occurrence of each number wins so echoed numbering cannot take item slots",
+   "lines: 4-5 non-empty lines map to items 1-4 in order",
+   "slots: 4-6 comma/semicolon/pipe separated slots on a single line map to items 1-4 in order",
+   "unstructured: none of the above; the historical whole-answer containment semantics apply per gate"
+  ],
+  "gate_semantics": {
+   "exact_retrieval": "item-1 answer contains TR-8842-QX and the whole answer never contains the decoy TR-3319-WD; the historical decoy clause is kept, so this gate is deliberately coupled to decoy_resistance, not an independent task. A sentence denying or hedging the code, a quoted code inside prose (bare quotes around the code alone still answer), or the correct code claimed alongside another code is review-required with the gate false; a denied other code is not a claim",
+   "synthesis": "item-2 answer names 2027; bare '2027' decides directly, explicit comparatives ('2027 had more ... than 2028') decide on the claimed ordering",
+   "decoy_resistance": "the whole answer never contains TR-3319-WD; a decoy containment in a produced channel is positive evidence of a wrong answer even when truncated (consumed by rung_outcome). The empty-answer gate bag reports decoy_resistance false because no produced channel exists to assert the decoy; rung_outcome consumes it as evidence only when a channel was actually produced",
+   "absent_information": "item-3 answer uses the marker NOT STATED; paraphrases and fabricated codes fail. In structured answers the item must contain only this requested marker (case-insensitive, optional terminal period/exclamation); additional text requires review with the gate false. Unstructured prose checks the marker's own sentence for contradictory code/count claims, without confusing legitimate values belonging to other items",
+   "retrieval_95": "item-4 answer contains the standalone number 357. Denying or hedging 357, or an additional non-negated different count anywhere in the structured item, is review-required with the gate false; years and code-like tokens are excluded from the count scan",
+   "instruction_compliance": "the produced content ends with the exact marker END-OF-REPORT (trailing whitespace ignored)"
+  },
+  "echo_policy": "frozen question-block sentences are removed before segmentation and matching; echoing the prompt can never satisfy a gate, and echo without an answer is review-required with the affected gates false",
+  "review_policy": "review_required is true, with the affected gate false, whenever evidence is ambiguous rather than decisive: no item answer after echo removal, negation or hedging inside a sentence carrying the claimed code, year or count, quoted code or year mentions inside prose, contradictory claimed codes at item 1 or counts at item 4, fabricated claims beside the item-3 refusal marker or elsewhere in a structured item-3 answer, both candidate years without an ordering claim, or interrogative echo text at item 3. The item-3 refusal marker NOT STATED never counts as item-2 hedging in whole-answer prose, and a denied other code or count is not a claim. Decisive wrong answers (wrong year, wrong or decoy code, missing marker or count, dropped tail marker) are hard gate failures without review. An inferred safe PASS never exists; guards are mechanical, never free natural-language truth claims.",
+  "blank_answer": "an empty/whitespace content returns all six gates false with review_required false and review_reasons ['empty answer']; rung_outcome separately treats an unanswered request as not evaluable"
+ },
+ "rung_outcome": {
+  "signature": "rung_outcome(gates: dict, finish, content: str, usage: dict = None, reserve: int = STANDARD_RESERVE_TOKENS, reasoning_declared: bool | None = None) -> dict",
+  "reasoning_declared": "the cell's declared/effective reasoning surface from the retained request identity (True/False, None when unknown). Declared-ON with an empty final-answer lane at FAIL_LENGTH attributes the exhaustion to reasoning: the answer lane measurably received zero tokens, so the budget was consumed inside the declared-active reasoning lane (CP-1 EXHAUSTED_IN_REASONING). Declared-OFF keeps the frozen answer-lane attribution. Undeclared with no retained reasoning accounting stays UNKNOWN - guessing is prohibited.",
+  "outcome_mapping": {
+   "COMPLETE": "rung VALIDATED when all six gates pass, else FAILED; semantic PASS/FAIL accordingly",
+   "FAIL_LENGTH": "rung BUDGET_LIMITED (a measured row); semantic FAIL only when a produced channel asserted a forbidden value (decoy containment - truncation does not unsay it), else NOT_EVALUABLE; budget per CP-1 (EXHAUSTED_IN_ANSWER with a partial answer or a declared-off surface, EXHAUSTED_IN_REASONING with reasoning evidence or a declared-on surface, UNKNOWN when attribution is unsupported)",
+   "EMPTY_ANSWER": "rung BUDGET_LIMITED (a measured row; content consumed without an answer is the distinct completion/budget state COMPLETE/WITHIN inside the triple); semantic NOT_EVALUABLE",
+   "INVALID_STOP": "rung INVALID_REQUEST (not a measured row); semantic NOT_EVALUABLE"
+  },
+  "cp1_alignment": "An empty final-answer channel is never semantic FAIL (M-1/CP-1): the empty-answer gate bag's false decoy_resistance is consumed as semantic-FAIL evidence only when a channel was actually produced."
+ },
+ "context_summary": {
+  "signature": "context_summary(plan: dict, rows: list) -> dict",
+  "plan": {
+   "required_rungs": "non-empty list of unique positive ints",
+   "lanes": "non-empty unique list drawn from ['semantic', 'operational']",
+   "seeds": "non-empty list of unique ints",
+   "practical_rung": "positive int that must appear in required_rungs"
+  },
+  "row": {
+   "configured_context": "int planned rung",
+   "lane": "planned lane",
+   "seed": "planned seed",
+   "disposition": "one of VALIDATED | FAILED | BUDGET_LIMITED | PARTIAL | NOT_TESTED | FIT_LIMIT | INTEGRATION_BLOCKED",
+   "execution_valid": "strict bool",
+   "evidence": "string; trusted measurement requires execution_valid true and non-empty evidence; an answerless BUDGET_LIMITED row additionally binds sha256 of the empty answer"
+  },
+  "errors": {
+   "ValueError": "malformed plan or rows, unplanned cells, duplicate cells, invalid disposition vocabulary, non-bool execution_valid; missing planned cells are a valid incomplete summary, never an exception"
+  },
+  "returns": {
+   "coverage_complete": "bool; every planned cell covered",
+   "execution_valid": "bool; logical AND over all supplied rows (vacuously true with no rows)",
+   "required_cells": "int; len(required_rungs) x len(lanes) x len(seeds)",
+   "covered_cells": "int",
+   "missing_cells": "sorted list of 'rung/lane/seed' strings for uncovered planned cells",
+   "capability": "NOT_CHARACTERIZED | PARTIAL | VALIDATED | FAILED | INTEGRATION_BLOCKED",
+   "useful_context_max": "object keyed by planned lane; highest rung where every seed is a trusted VALIDATED cell, else null",
+   "practical_rung_validated": "bool; every practical-rung cell is a trusted VALIDATED measurement"
+  },
+  "capability_mapping": {
+   "VALIDATED": "every practical-rung cell is a trusted VALIDATED measurement",
+   "FAILED": "not validated or blocked, and every trusted measured practical cell is FAILED; a fully negative measured set is a real negative result and missing cells do not soften it",
+   "INTEGRATION_BLOCKED": "every practical-rung cell is a trusted INTEGRATION_BLOCKED measurement",
+   "PARTIAL": "some trusted practical measurement exists but the outcome is mixed, or practical cells are missing or budget-limited; a trusted BUDGET_LIMITED practical cell is measured, covered and never capability-validated",
+   "NOT_CHARACTERIZED": "no trusted measured practical cell exists"
+  },
+  "coverage_vs_capability": {
+   "coverage_question": "Did the campaign validly run the required test cell and obtain a legitimate terminal disposition from retained raw evidence?",
+   "capability_question": "Did the model demonstrate the required context behavior?",
+   "rules": [
+    "A trusted BUDGET_LIMITED row answers the coverage question YES and the capability question NO.",
+    "A complete negative result (BUDGET_LIMITED cell among valid measured rows) therefore never makes a campaign structurally incomplete.",
+    "BUDGET_LIMITED can never contribute capability PASS, useful_context_max or practical_rung_validated."
+   ]
+  },
+  "coverage_rules": [
+   "VALIDATED, FAILED, BUDGET_LIMITED, FIT_LIMIT and INTEGRATION_BLOCKED rows with valid execution and non-empty evidence cover their cell",
+   "PARTIAL and NOT_TESTED rows, invalid execution and empty evidence never cover",
+   "a full negative (all-FAILED) valid matrix therefore completes coverage while capability stays FAILED, never VALIDATED",
+   "a mixed rung (for example 3 VALIDATED + 1 BUDGET_LIMITED) completes coverage while the rung capability stays PARTIAL and the rung is not validated",
+   "FIT_LIMIT alone is a harness fit limit, never a model failure, and never capability credit"
+  ]
+ },
+ "preserved_historical": {
+  "reserve": "standardized_reserve() = max(512, 2 x gate answer budget); GATE_ANSWER_BUDGET 256, STANDARD_RESERVE_TOKENS 512 (welp-generation-budget-0.1.0-draft)",
+  "placement": "REQUIRED_DEPTHS_PCT [2.0, 25.0, 50.0, 75.0, 95.0]; preferred error 0.25pp, hard 0.50pp; occupancy preferred 99%, hard 97%",
+  "construction": "construct_family_a places facts against the final rendered token stream before any inference; the fixture 1.3.0 geometry, word pool, facts and question block are byte-identical to 1.2.0",
+  "rung_outcome": "CP-1 outcome assembly since 0.2.0; consumes only the six GATE_KEYS from score_family_a and ignores review_required/review_reasons, which never flip a rung",
+  "historical_rows": "Frozen historical campaigns keep their recorded cell dispositions and outcome triples; the 0.2.0 vocabulary and coverage rules remain exactly as frozen for reproducing them. Never reinterpret old campaigns silently."
+ }
+}

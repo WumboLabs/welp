@@ -14,7 +14,10 @@ Core discipline (this module never trusts asserted verdicts):
     completion control (max_tokens) matching the class/lane setup.
   - Context cells are rechecked from the retained raw answer via
     context.score_family_a + context.rung_outcome; asserted dispositions alone
-    never establish an oracle outcome.
+    never establish an oracle outcome. Answerless measured rows are
+    representable only as BUDGET_LIMITED with the raw record proving the
+    terminal generation state (welp-context 0.3.0, Granite D-01); anything
+    else fails closed.
   - Capability modules are rescored with the canonical scorers; a mechanical
     PASS on free-prose role detail is provisional and never completes a module:
     a hash-bound, independent, model-identity-blinded qualitative adjudication
@@ -52,6 +55,7 @@ import classification as C                 # noqa: E402
 import context as CX                       # noqa: E402
 import capabilities as CAP                 # noqa: E402
 import setup as SETUP                      # noqa: E402
+import welp_outcomes as OW                 # noqa: E402
 from safety_review import digest as _digest  # noqa: E402
 
 MODULE_ID = "welp-harness-bundle/1.0.0-draft"
@@ -940,6 +944,22 @@ def derive_context(root: Path, evidence, setup_doc, findings):
     question_present = bool(question_block)
     adjusted = []
     pending_review_targets = []
+
+    def cell_reasoning_declared(cell):
+        """Declared/effective reasoning tri-state from the retained request
+        identity (welp-context 0.3.0: feeds the CP-1 budget attribution)."""
+        identity = cell.get("request_identity")
+        effective = (identity or {}).get("effective_reasoning") \
+            if isinstance(identity, dict) else None
+        mode = (effective or {}).get("mode") if isinstance(effective, dict) else None
+        if isinstance(mode, str):
+            u = mode.upper()
+            if u in OW.REASONING_STATES_TRUE:
+                return True
+            if u in OW.REASONING_STATES_FALSE:
+                return False
+        return None
+
     for index, cell in enumerate(rows):
         cell = dict(cell)
         raw = cell.get("raw") if isinstance(cell.get("raw"), dict) else {}
@@ -1015,62 +1035,88 @@ def derive_context(root: Path, evidence, setup_doc, findings):
                                f"completion_tokens {ctoks!r} must be a positive count inside "
                                f"the configured rung {rung_tokens!r}")
                 cell["execution_valid"] = False
-            if not (isinstance(answer, str) and answer.strip()):
+        # welp-context 0.3.0 (Granite D-01 repair): every measured cell is
+        # re-derived from the retained raw bytes, including answerless rows.
+        # score_family_a returns the frozen empty-answer gate bag there, so
+        # the derivation never sees asserted values. An answerless row is
+        # representable only as BUDGET_LIMITED with the raw record proving a
+        # terminal generation state and the evidence binding the empty-answer
+        # sha256; anything else fails closed (asserted dispositions never
+        # substitute for the oracle).
+        outcome = None
+        derived = None
+        oracle_bound = False
+        scored_answer = answer if isinstance(answer, str) else ""
+        try:
+            gates = CX.score_family_a(scored_answer)
+            reserve = (cell.get("reserve_tokens")
+                       or ((setup_doc or {}).get("context_reserves") or {})
+                            .get(cell.get("lane")))
+            outcome = CX.rung_outcome(gates, finish, scored_answer, usage, reserve=reserve,
+                                      reasoning_declared=cell_reasoning_declared(cell))
+            derived = outcome["rung"]
+            oracle_bound = not gates.get("review_required")
+        except Exception as exc:
+            findings.error("B_context_oracle_crash", f"{label}: {type(exc).__name__}: {exc}")
+        answerless = not (isinstance(answer, str) and answer.strip())
+        if measured and answerless:
+            empty_sha = hashlib.sha256(b"").hexdigest()
+            bound = isinstance(evidence_note, str) and f"sha256:{empty_sha}" in evidence_note
+            if disposition != "BUDGET_LIMITED" or derived != "BUDGET_LIMITED" or not bound \
+                    or not oracle_bound:
                 findings.error("B_context_missing_raw",
-                               f"{label}: measured cell is missing the retained raw answer; "
-                               "asserted dispositions never substitute for the oracle")
+                               f"{label}: measured cell is missing the retained raw answer; an "
+                               "answerless row is representable only as a BUDGET_LIMITED cell "
+                               "whose raw record proves the terminal generation state and "
+                               "whose evidence binds the empty-answer sha256")
                 cell["execution_valid"] = False
                 measured = False
-        if isinstance(answer, str) and answer.strip():
-            try:
-                gates = CX.score_family_a(answer)
-                reserve = (cell.get("reserve_tokens")
-                           or ((setup_doc or {}).get("context_reserves") or {})
-                                .get(cell.get("lane")))
-                outcome = CX.rung_outcome(gates, finish, answer, usage, reserve=reserve)
-            except Exception as exc:
-                findings.error("B_context_oracle_crash", f"{label}: {type(exc).__name__}: {exc}")
-                outcome = None
-            if outcome is not None:
-                derived = outcome["rung"]
-                oracle_bound = not gates.get("review_required")
-                if gates.get("review_required"):
-                    resolution = _resolve_oracle_reviews(root, cell, answer, prompt_text,
-                                                         findings, label)
-                    if resolution is None:
-                        pending_review_targets.append(
-                            {"kind": "family_a_cell", "label": label,
-                             "answer_sha256": hashlib.sha256(answer.encode()).hexdigest(),
-                             "prompt_sha256": hashlib.sha256(prompt_text.encode()).hexdigest()
-                             if isinstance(prompt_text, str) else None,
-                             "reasons": gates.get("review_reasons") or []})
-                        findings.warn("B_context_oracle_pending",
-                                      f"{label}: oracle ambiguity unresolved; fail-closed "
-                                      "pending review — never coerced into a measured "
-                                      "disposition")
-                    else:
-                        derived = resolution
-                        oracle_bound = True
-                if oracle_bound:
-                    if disposition == "VALIDATED" and derived != "VALIDATED":
-                        findings.error("B_context_oracle_mismatch",
-                                       f"{label}: asserted VALIDATED but the raw answer oracle "
-                                       f"yields {derived}; the derived outcome governs")
-                        cell["disposition"] = derived if derived in CONTEXT_DISPOSITIONS else "FAILED"
-                        if derived in ("NOT_EVALUABLE", "INVALID_REQUEST", "BUDGET_LIMITED"):
-                            cell["execution_valid"] = False
-                    elif disposition in TRUSTED_CONTEXT_DISPOSITIONS and derived == "VALIDATED" \
-                            and disposition not in ("VALIDATED", "FIT_LIMIT", "INTEGRATION_BLOCKED"):
-                        findings.error("B_context_oracle_mismatch",
-                                       f"{label}: asserted {disposition} but the raw answer oracle "
-                                       "yields VALIDATED; the derived outcome governs")
-                        cell["disposition"] = "VALIDATED"
-                    elif disposition in TRUSTED_CONTEXT_DISPOSITIONS and derived == "FAILED" \
-                            and disposition != "FAILED":
-                        findings.error("B_context_oracle_mismatch",
-                                       f"{label}: asserted {disposition} but the raw answer "
-                                       "oracle yields FAILED; the derived outcome governs")
-                        cell["disposition"] = "FAILED"
+        if not answerless and outcome is not None:
+            if gates.get("review_required"):
+                resolution = _resolve_oracle_reviews(root, cell, answer, prompt_text,
+                                                     findings, label)
+                if resolution is None:
+                    pending_review_targets.append(
+                        {"kind": "family_a_cell", "label": label,
+                         "answer_sha256": hashlib.sha256(answer.encode()).hexdigest(),
+                         "prompt_sha256": hashlib.sha256(prompt_text.encode()).hexdigest()
+                         if isinstance(prompt_text, str) else None,
+                         "reasons": gates.get("review_reasons") or []})
+                    findings.warn("B_context_oracle_pending",
+                                  f"{label}: oracle ambiguity unresolved; fail-closed "
+                                  "pending review — never coerced into a measured "
+                                  "disposition")
+                else:
+                    derived = resolution
+                    oracle_bound = True
+            if oracle_bound:
+                if disposition == "VALIDATED" and derived != "VALIDATED":
+                    findings.error("B_context_oracle_mismatch",
+                                   f"{label}: asserted VALIDATED but the raw answer oracle "
+                                   f"yields {derived}; the derived outcome governs")
+                    cell["disposition"] = derived if derived in CONTEXT_DISPOSITIONS else "FAILED"
+                    if derived not in ("BUDGET_LIMITED",):
+                        # an INVALID_REQUEST derivation is an invalid execution
+                        cell["execution_valid"] = False
+                elif disposition in TRUSTED_CONTEXT_DISPOSITIONS and derived == "VALIDATED" \
+                        and disposition not in ("VALIDATED", "FIT_LIMIT", "INTEGRATION_BLOCKED"):
+                    findings.error("B_context_oracle_mismatch",
+                                   f"{label}: asserted {disposition} but the raw answer oracle "
+                                   "yields VALIDATED; the derived outcome governs")
+                    cell["disposition"] = "VALIDATED"
+                elif disposition in TRUSTED_CONTEXT_DISPOSITIONS and derived == "FAILED" \
+                        and disposition != "FAILED":
+                    findings.error("B_context_oracle_mismatch",
+                                   f"{label}: asserted {disposition} but the raw answer "
+                                   "oracle yields FAILED; the derived outcome governs")
+                    cell["disposition"] = "FAILED"
+                elif disposition in TRUSTED_CONTEXT_DISPOSITIONS and derived == "BUDGET_LIMITED" \
+                        and disposition not in ("VALIDATED", "FIT_LIMIT", "INTEGRATION_BLOCKED",
+                                                "BUDGET_LIMITED"):
+                    findings.error("B_context_oracle_mismatch",
+                                   f"{label}: asserted {disposition} but the raw answer oracle "
+                                   "yields BUDGET_LIMITED; the derived outcome governs")
+                    cell["disposition"] = "BUDGET_LIMITED"
         if disposition is not None and disposition not in CONTEXT_DISPOSITIONS:
             findings.error("B_context_invalid",
                            f"{label}: invalid disposition {disposition!r} "
@@ -1900,15 +1946,103 @@ def _adjudication_selftest_failures(temp_root: Path) -> list:
     return failures
 
 
+def _rewrite_hardening_evidence(root: Path, mutate_fn):
+    """Selftest helper: rewrite the frozen hardening evidence with mutate_fn
+    applied and re-pin its sha256 in the campaign manifest."""
+    import synthetic_bundle as SB
+    ev_path = root / SB.EVIDENCE_REF
+    evidence = json.loads(ev_path.read_text())
+    mutate_fn(evidence)
+    data = SB._freeze_bytes(evidence)
+    ev_path.write_bytes(data)
+    man_path = root / "summaries/campaign_manifest.json"
+    man = json.loads(man_path.read_text())
+    man["hardening_evidence"]["sha256"] = hashlib.sha256(data).hexdigest()
+    man_path.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")
+
+
+def _budget_limited_selftest_failures(temp_root: Path) -> list:
+    """Granite D-01 integration regressions (welp-context 0.3.0-draft).
+
+    The context-budget-limited synthetic campaign carries one execution-valid
+    answerless reasoning-exhaustion cell with all other required evidence
+    valid: the bundle must stay structurally valid and COMPLETE_PASS with
+    complete coverage, the practical rung correctly unvalidated, and a
+    freshly derived classification. Mutated evidence proves invalid
+    empty-answer records fail closed.
+    """
+    import shutil
+    failures = []
+    root = make_synthetic_bundle(temp_root / "context-budget-limited",
+                                 "context-budget-limited")
+    result = evaluate_bundle(root)
+    summary = ((result.get("context") or {}).get("summary") or {})
+    record = result.get("classification") or {}
+    if not result.get("valid") or result.get("campaign_outcome") != "COMPLETE_PASS":
+        failures.append({"case": "budget-limited-valid",
+                         "findings": result.get("findings")})
+    if not (summary.get("coverage_complete") and summary.get("capability") == "PARTIAL"
+            and summary.get("practical_rung_validated") is False
+            and summary.get("covered_cells") == summary.get("required_cells")):
+        failures.append({"case": "budget-limited-summary", "summary": summary})
+    if record.get("readiness") != "READY_WITH_GUARDRAILS" or \
+            "context capability PARTIAL, separate from coverage" not in (
+                record.get("guardrails") or []):
+        failures.append({"case": "budget-limited-classification", "record": record})
+    if render_report(result) != render_report(evaluate_bundle(root)):
+        failures.append({"case": "budget-limited-report-nondeterministic"})
+
+    def first_cell(evidence):
+        return evidence["context"]["rows"][0]
+
+    mutations = (
+        ("missing-terminal-state",
+         lambda ev: first_cell(ev).update(
+             raw={"answer": "", "usage": {}}),
+         "B_context_missing_raw"),
+        ("asserted-validated-empty-answer",
+         lambda ev: first_cell(ev).update(disposition="VALIDATED"),
+         "B_context_missing_raw"),
+        ("unbound-empty-evidence",
+         lambda ev: first_cell(ev).update(
+             evidence="synthetic family-a raw answer (unbound)"),
+         "B_context_missing_raw"),
+        ("abnormal-stop-empty-answer",
+         lambda ev: first_cell(ev).update(
+             raw={"answer": "", "finish": "error",
+                  "usage": {"completion_tokens": 512, "reasoning_tokens": None}}),
+         "B_context_missing_raw"),
+        ("normal-terminal-empty-answer-stays-measured",
+         lambda ev: first_cell(ev).update(
+             raw={"answer": "", "finish": "stop",
+                  "usage": {"completion_tokens": 89, "reasoning_tokens": None}}),
+         None),
+    )
+    for name, mutate_fn, want_code in mutations:
+        mutated_root = temp_root / f"mutation-{name}"
+        shutil.copytree(root, mutated_root)
+        _rewrite_hardening_evidence(mutated_root, mutate_fn)
+        mutated = evaluate_bundle(mutated_root)
+        codes = {code for _sev, code, _detail in mutated.get("findings") or []}
+        if want_code is None:
+            if not mutated.get("valid"):
+                failures.append({"case": name, "findings": mutated.get("findings")})
+        elif mutated.get("valid") or want_code not in codes:
+            failures.append({"case": name, "valid": mutated.get("valid"),
+                             "codes": sorted(codes)})
+    return failures
+
+
 def selftest():
     import tempfile
     failures = []
     with tempfile.TemporaryDirectory() as td:
-        for variant in ("positive", "complete-negative", "review-blocked",
-                        "incomplete", "execution-error"):
+        for variant in ("positive", "complete-negative", "context-budget-limited",
+                        "review-blocked", "incomplete", "execution-error"):
             root = make_synthetic_bundle(Path(td) / variant, variant)
             result = evaluate_bundle(root)
-            expected_valid = variant in ("positive", "complete-negative")
+            expected_valid = variant in ("positive", "complete-negative",
+                                         "context-budget-limited")
             if result["valid"] != expected_valid:
                 failures.append({"variant": variant, "findings": result["findings"]})
             if variant == "positive" and (result.get("classification") or {}).get(
@@ -1921,6 +2055,7 @@ def selftest():
             if report != render_report(evaluate_bundle(root)):
                 failures.append({"variant": variant, "error": "nondeterministic report"})
         failures.extend(_adjudication_selftest_failures(Path(td) / "adjudication"))
+        failures.extend(_budget_limited_selftest_failures(Path(td) / "budget-limited"))
     print(json.dumps({"pass": not failures, "failures": failures}, indent=2))
     return int(bool(failures))
 
@@ -1930,7 +2065,8 @@ def main(argv=None):
     parser.add_argument("command", choices=("check", "render", "synthetic", "selftest"))
     parser.add_argument("root", nargs="?")
     parser.add_argument("variant", nargs="?", default="positive",
-                        choices=("positive", "complete-negative", "review-blocked",
+                        choices=("positive", "complete-negative",
+                                 "context-budget-limited", "review-blocked",
                                  "incomplete", "execution-error"))
     args = parser.parse_args(argv)
     if args.command == "selftest":

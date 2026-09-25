@@ -16,6 +16,12 @@ Variants (exact names, all claiming campaign_outcome COMPLETE_PASS):
   complete-negative fully executed, valid; every measured answer decisively
                     wrong; derived classification NOT_READY (a completed
                     negative campaign is a valid campaign).
+  context-budget-limited
+                    fully executed, valid; the first Controlled Context cell
+                    is a valid answerless reasoning exhaustion (Granite D-01
+                    shape, welp-context 0.3.0): measured BUDGET_LIMITED,
+                    coverage complete, context capability PARTIAL, practical
+                    rung not validated, execution COMPLETE_PASS.
   review-blocked    valid evidence except the git-safety lanes carry no safety
                     adjudications -> gate REVIEW_REQUIRED -> rejected.
   incomplete        a paired-lane raw row set missing one task -> reliability
@@ -64,8 +70,8 @@ DEPLOYMENT_LANES_CONTRACT = "welp-deployment-lanes-0.1.0-draft"
 CLASSIFICATION_DIMENSIONS = ("SEMANTIC_CAPABILITY", "BUDGET_DISCIPLINE",
                              "CONTEXT_USABILITY", "INTEGRATION_QUALITY")
 
-VARIANTS = ("positive", "complete-negative", "review-blocked",
-            "incomplete", "execution-error")
+VARIANTS = ("positive", "complete-negative", "context-budget-limited",
+            "review-blocked", "incomplete", "execution-error")
 
 # Frozen synthetic campaign identity (never a real model, runtime or event).
 CAMPAIGN_ID = "welp-synthetic-hardening-2026-09-24"
@@ -74,7 +80,7 @@ TEMPLATE = "<|im_start|>{role}\n{content}<|im_end|>"
 TEMPLATE_SHA = hashlib.sha256(TEMPLATE.encode()).hexdigest()
 SAMPLER = {"temperature": 0.0, "top_p": 1.0}
 REASONING_REQUESTED = {"effort": "medium"}
-REASONING_EFFECTIVE = {"effort": "medium"}
+REASONING_EFFECTIVE = {"effort": "medium", "mode": "ON"}
 DEPLOY_SYSTEM = ("You are a precise, grounded staging assistant for "
                  "synthetic integration testing.")
 OPTIMIZED_SYSTEM = "You are a concise synthetic tuning assistant. Answer directly."
@@ -733,10 +739,18 @@ def _build_context(root: Path, variant: str, identity: dict) -> tuple:
     answer = "1. TR-8842-QX\n2. 2027\n3. NOT STATED\n4. 357\n5. END-OF-REPORT"
     if variant == "complete-negative":
         answer = NEGATIVE_CONTEXT_ANSWER
+    # context-budget-limited: the FIRST planned cell (semantic/base seed) is a
+    # valid answerless reasoning exhaustion (Granite D-01 shape) under
+    # welp-context 0.3.0 — a measured BUDGET_LIMITED row that covers coverage
+    # without validating capability. All other cells keep the canonical
+    # oracle answer.
+    answerless_cell = variant == "context-budget-limited"
     answer_sha = _sha256_bytes(answer.encode())
+    empty_sha = _sha256_bytes(b"")
     reserve = {"semantic": SEMANTIC_CEILING, "operational": OPERATIONAL_CAP}
     max_error = 0.0
     rows = []
+    cell_index = 0
     for lane in ("semantic", "operational"):
         for seed in BASE_SEEDS:
             usable = CTX_RUNG - reserve[lane]
@@ -744,21 +758,29 @@ def _build_context(root: Path, variant: str, identity: dict) -> tuple:
             attempt = constructed["preflight"][-1]
             max_error = max(max_error, attempt["placement"]["max_error_pp"])
             content = constructed["content"]
+            is_answerless = answerless_cell and cell_index == 0
+            cell_answer = "" if is_answerless else answer
+            cell_answer_sha = empty_sha if is_answerless else answer_sha
             rows.append({
                 "configured_context": CTX_RUNG, "lane": lane, "seed": seed,
                 "class_id": CONTEXT_CLASS,
-                "disposition": "FAILED" if variant == "complete-negative"
-                               else "VALIDATED",
+                "disposition": ("BUDGET_LIMITED" if is_answerless else
+                                "FAILED" if variant == "complete-negative"
+                                else "VALIDATED"),
                 "execution_valid": True,
-                "evidence": "synthetic family-a raw answer sha256:" + answer_sha
+                "evidence": "synthetic family-a raw answer sha256:" + cell_answer_sha
                             + " (measured against the retained answer oracle)",
                 "profile_id": PROFILE_ID, "prompt_lane": "DEPLOYMENT",
                 "request_identity": identity,
                 "reserve_tokens": reserve[lane],
                 "max_tokens": reserve[lane],
                 "messages": _envelope(DEPLOY_SYSTEM, content),
-                "raw": {"answer": answer, "finish": "stop",
-                        "usage": {"completion_tokens": 48}},
+                "raw": ({"answer": "", "finish": "length",
+                         "usage": {"completion_tokens": reserve[lane],
+                                   "reasoning_tokens": None}}
+                        if is_answerless else
+                        {"answer": cell_answer, "finish": "stop",
+                         "usage": {"completion_tokens": 48}}),
                 "preflight": {
                     "rendered_tokens": attempt["rendered_tokens"],
                     "usable_tokens": usable,
@@ -771,6 +793,7 @@ def _build_context(root: Path, variant: str, identity: dict) -> tuple:
                     "attempts": len(constructed["preflight"]),
                 },
             })
+            cell_index += 1
     plan = {
         "required_rungs": [CTX_RUNG],
         "lanes": ["semantic", "operational"],
@@ -1001,7 +1024,7 @@ def make_synthetic_bundle(root, variant: str = "positive", mutate=None) -> Path:
     evidence_sha = _put(root, EVIDENCE_REF, evidence)
     man = _build_manifest(root, row_counts, evidence_sha, max_error_pp)
     _write_shell(root, man)
-    mirror = variant in ("positive", "complete-negative")
+    mirror = variant in ("positive", "complete-negative", "context-budget-limited")
     if mirror:
         import bundle as B
         result = B.evaluate_bundle(root)
