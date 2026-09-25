@@ -444,6 +444,9 @@ High precision is preferred if it meets fit/context/SLO; compare a lower quant
 only where measured fit/headroom/quality tradeoffs are material. Different
 effective reasoning controls, prompts or samplers become distinct profiles
 only when they change deployment behavior; avoid a combinatorial campaign.
+For reasoning controls this general rule is narrowed by the Reasoning Profiles
+policy below: a proven effective ON/OFF control always yields two required
+full profiles, not optional variants.
 
 LLMGauge v0.78 is an **optional, overlapping run-level evidence producer**,
 not merely a performance layer: it captures prompt-suite behavior, fit attempts,
@@ -641,12 +644,142 @@ attach any authorized public erratum transparently; never silently rewrite
 scores, reports or registry events. No model campaign or LocalMaxxing action
 is part of protocol hardening.
 
+## Reasoning profiles (prospective 2026-09-25 revision)
+
+This is a **methodology change, DRAFT / NOT v1.0**. The parent is
+`welp-next-snapshot-2026-09-24-context-outcome-repair`. Old snapshots,
+campaigns, raw answers and published verdicts remain immutable. Contract:
+`welp-reasoning-topology-0.1.0-draft`; validator rules R18–R21 apply to
+campaigns under snapshots dated 2026-09-25 or later; historical single-profile
+events remain valid unchanged under their frozen snapshots.
+
+WELP evaluates models as the **deployment configurations they actually
+expose**. A model whose reasoning can be genuinely turned on and off is a
+different practical deployment depending on that switch, and one classified
+profile does not answer for the other. Motivating evidence: Ling-3.0-tiny ran
+a complete, valid Reasoning On campaign while `enable_thinking=false` was
+proven to produce effective OFF behavior that was never characterized — the
+campaign answered "how does this model behave with reasoning ON" but not
+"how does it behave when legitimately deployed with reasoning OFF".
+
+### Reasoning topology qualification
+
+Every prospective campaign first determines the model's actual reasoning
+topology **experimentally on the pinned runtime** — the request field alone
+never qualifies a control — and records it in a hash-bound qualification
+record bound to the campaign manifest:
+
+| Case | Meaning | Required profiles |
+|---|---|---|
+| A | No reasoning mode | Standard |
+| B | Reasoning present, cannot be disabled | Reasoning On; OFF recorded unavailable / ineffective / unsupported |
+| C | Effective supported ON/OFF control exists | Reasoning On **and** Reasoning Off |
+| D | Additional effort levels exist (low/medium/high/budget/depth) | Base case (A/B/C, recorded) plus the bounded effort-level policy |
+
+Display names: **Standard**, **Reasoning On**, **Reasoning Off** (machine
+profile IDs `standard`, `reasoning-on`, `reasoning-off`; a promoted effort
+level uses `reasoning-<level>`).
+
+### ON/OFF profile requirement
+
+When a genuine supported ON/OFF control exists (case C), Reasoning On and
+Reasoning Off are **separate required WELP deployment profiles**, published as
+linked sibling profile events of one model. Each receives independent profile
+identity, setup, calibration, response ceilings, prompt/control binding,
+reliability, safety, real-work results, context results, performance, evidence
+bundle, classification and deployment guidance. Neither is run as a
+diagnostic-only afterthought. Requested-but-ineffective OFF controls never
+create a Reasoning Off profile (case B); no fake profiles.
+
+Where applicable the **same frozen model-agnostic task set** is used across
+profiles so results stay directly comparable; profile-specific setup and
+calibration may differ, and fixture difficulty is never altered because one
+profile performs poorly. Reasoning On may legitimately need much larger
+budgets; Reasoning Off may legitimately select smaller ceilings — that
+difference is useful deployment evidence.
+
+### Profile-invariant vs profile-specific evidence
+
+Genuinely profile-invariant records — model source identity, license, artifact
+SHA-256, quant identity, architecture, runtime commit/build, physical
+hardware, pure load/fit qualification, unchanged template identity, artifact
+provenance — may be shared, but only when explicitly marked
+(`profile_invariant_evidence`, hash-bound, provenance-recorded). Behavioral
+evidence — effective reasoning state, calibration, generation ceilings,
+operational budgets, scored outputs, reliability, semantic completion, safety
+task outcomes, Assistant Quality, Structured Output, Tool Recovery, Linux
+Diagnosis, Repository Repair, Multi-Turn Correction, Document Synthesis,
+Controlled Context, Multi-Document Context, generation performance, latency,
+token consumption, and the final classification — is **profile-specific** and
+is never shared merely because artifact, runtime and hardware are identical.
+Cross-profile behavioral binding fails validation closed.
+
+### Per-profile classification; no averaging
+
+Each full reasoning profile gets its own independently derived
+classification. Divergent verdicts are legitimate and preserved verbatim.
+Averaging, merging, scoring, or verbally collapsing distinct profile
+classifications into one artificial model-level score is **prohibited**. A
+model-level summary may state the publisher/default profile and the alternate
+supported profile(s) and give deployment guidance; it must not flatten them.
+The publisher/default profile is recorded explicitly as context; it never
+demotes the other supported profile(s) to secondary evidence.
+
+### Bounded effort-level policy (case D)
+
+Additional reasoning-effort levels do not automatically become full profiles
+and ordinary characterization never becomes an unbounded configuration sweep.
+Each additional ON effort level is qualified prospectively — control
+effectiveness, reasoning-token use, visible-answer token use, completion
+behavior, latency, response characteristics, publisher deployment guidance —
+and is promoted to a full profile only when genuinely supported, measurably
+distinct, deployment-relevant, and sufficient to change practical
+interpretation. Tiny stochastic differences are never promoted, and post-hoc
+"best mode" searching is prohibited. Normal bounds: Standard model 1 profile;
+reasoning model without OFF 1 profile; reasoning model with effective OFF 2
+profiles; additional effort profiles exceptional and prospectively justified.
+
+### Performance, context, safety and real work by profile
+
+Performance is measured independently where reasoning state affects
+generation: prefill where applicable, decode, answer latency, reasoning-token
+cost, visible-answer tokens, completion rate, TTFT / first visible answer when
+measurable, VRAM where materially different, and context behavior. Where
+technically measurable, distinguish time to first generated reasoning token,
+time to first visible answer, and total completion latency; never compare only
+raw decode tok/s when one profile spends thousands of tokens reasoning before
+exposing an answer. Controlled Context and Multi-Document Context are
+characterized separately per profile (coverage, capability, useful-context
+maximum, practical rung, hardware/runtime envelope). Safety is profile-specific
+behavioral evidence: a refusal or unsafe behavior under Reasoning On does not
+determine Reasoning Off; required safety tasks run under each full profile
+with current blinded adjudication rules. Required real-work modules run
+independently per profile; diagnostic-only surfaces keep their status; no
+module is selectively skipped on the alternate profile.
+
+### Architecture and historical compatibility
+
+One WELP campaign event per full reasoning profile (linked sibling profile
+events sharing a reasoning group ID), chosen over one campaign with multiple
+internal bundles because per-event evidence, validation and publication
+machinery already exist, manifests never need post-hoc edits when a sibling
+completes, and the central registry already presents multiple profiles per
+model with explicit links. Independent classifications, shared invariant
+identity where appropriate, obvious linkage, deterministic validation,
+backward compatibility and understandable public output are all preserved.
+Historical campaigns (Granite, Ling original, LFM, Spark, Bonsai and every
+other one-profile event) remain valid under their frozen methodologies; old
+reports never need invented Reasoning Off results.
+
 ## Canonical contracts (current)
 
 - `welp-outcomes` 0.1.0-draft (task outcome semantics; new)
 - `welp-generation-budget` 0.1.0-draft (budget policy, reserve, cache; new)
 - `welp-deployment-lanes` 0.1.0-draft (prospective budget/prompt identities,
   calibration, conclusion lanes and resource reporting)
+- `welp-reasoning-topology` 0.1.0-draft (Reasoning Profiles: topology
+  qualification, ON/OFF profile requirement, effort-level policy, evidence
+  binding, no-average rule; new)
 - `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.3.0-draft (scorer v3, independent safety, paired lanes and bounded fixed-screen sensitivity)
 - `welp-context` 0.3.0-draft (canonical Controlled Context answer oracle, machine ID Family A; coverage/execution/capability axes with answerless budget exhaustion as a covered measured row; full-window requirements remain in `context-scaling.md`)
@@ -682,6 +815,6 @@ is part of protocol hardening.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — version-aware historical compatibility; R09–R14 from 2026-09-19, R15/R16 from 2026-09-23, and prospective evidence-bound hardening from 2026-09-24. It checks machine-verifiable evidence and review provenance, not independent truth of qualitative judgments.
+- `validators/validate_campaign_welp.py` — version-aware historical compatibility; R09–R14 from 2026-09-19, R15/R16 from 2026-09-23, evidence-bound hardening (R17) from 2026-09-24, and reasoning-profile rules R18–R21 from 2026-09-25. It checks machine-verifiable evidence and review provenance, not independent truth of qualitative judgments.
 - `validators/validate_publication.py` — current immutable citations, scientific IDs,
   shared relationships, and profile-path consistency; legacy URL exports remain accepted.

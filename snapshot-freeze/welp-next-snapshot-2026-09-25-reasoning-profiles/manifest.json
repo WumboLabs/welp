@@ -1,0 +1,679 @@
+{
+  "snapshot_id": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+  "status": "DRAFT — NOT v1.0",
+  "created_utc": "2026-09-25T12:30:43.138684+00:00",
+  "methodology_changed": "YES",
+  "naming_changed": "NO",
+  "migration_type": "reasoning-profiles-topology-qualification",
+  "parent_snapshot": "welp-next-snapshot-2026-09-24-context-outcome-repair",
+  "parent_manifest": "../welp-next-snapshot-2026-09-24-context-outcome-repair/manifest.json",
+  "parent_manifest_sha256": "53e1338848ca139b1835431efd8eaef035e4d26b8971dc2f9940c9fd1a8ff694",
+  "parent_public_commit": "ead28bde1ea9bce20cec6b3930125016068a8bbc",
+  "changes": {
+    "reasoning_profiles": "welp-reasoning-topology 0.1.0-draft (new first-class methodology concept): every prospective campaign qualifies the model's ACTUAL reasoning topology experimentally on the pinned runtime (case A no reasoning mode; B reasoning present, no supported OFF; C effective supported ON/OFF control; D additional bounded effort levels) and records it in a hash-bound qualification record bound to the campaign manifest. Case C requires linked sibling Reasoning On AND Reasoning Off profile events — each a complete WELP campaign with its own profile identity, setup, calibration, ceilings, prompt/control binding, reliability, safety, real-work, context, performance, evidence bundle, classification and deployment guidance. Requested-but-ineffective OFF controls never create a Reasoning Off profile.",
+    "evidence_binding": "Profile-invariant records (model source identity, license, artifact SHA-256, quant identity, architecture, runtime commit/build, physical hardware, load/fit qualification, unchanged template identity, artifact provenance) may be shared across sibling profile events only when explicitly marked in manifest.profile_invariant_evidence with hash-bound references. Behavioral evidence (calibration, ceilings, scored outputs, reliability, safety outcomes, capability modules, context cells, generation performance, latency, token consumption, classification) is profile-specific; cross-profile behavioral binding fails closed (validator R19). Evidence reused from a prior same-profile event carries explicit reuse provenance (class REUSE/REVALIDATE/RE-DERIVED/MUST_RERUN/INCOMPARABLE, source event/path/sha256).",
+    "classification": "Per-profile independent classification is required; averaging, merging, scoring or verbally collapsing distinct profile verdicts into one model-level score is prohibited (validator R20). The publisher/default profile is recorded as context and never demotes the other supported profile(s). A case-C event whose sibling profile event is pending records an incomplete MODEL characterization (validator R21 warning; group completeness gates publication).",
+    "effort_levels": "Bounded prospective effort-level policy (case D): additional ON effort levels are qualified (control effectiveness, reasoning/visible token use, completion behavior, latency, response characteristics, publisher guidance) and promoted to full profiles only when genuinely supported, measurably distinct, deployment-relevant and practically decisive; no unbounded sweep and no post-hoc best-mode search.",
+    "performance_context_safety": "Performance (prefill, decode, answer latency, reasoning-token cost, visible-answer tokens, completion rate, TTFT/first-visible-answer where measurable, VRAM where materially different), Controlled Context and Multi-Document Context, safety tasks, and required real-work modules are characterized independently per full profile with the same frozen model-agnostic task set where applicable.",
+    "architecture": "One WELP campaign event per full reasoning profile (linked sibling events sharing a reasoning group id), chosen over one-campaign-multi-bundle because per-event evidence/validation/publication machinery already exists, manifests never need post-hoc edits when a sibling completes, and the central registry already presents multiple profiles per model with explicit links. Historical single-profile campaigns remain valid unchanged under their frozen snapshots.",
+    "validator": "validate_campaign_welp.py R18-R21 from snapshot date 2026-09-25: R18 topology+profile identity record and consistency (including no fake Reasoning Off and no unqualified promoted effort profiles); R19 profile evidence binding, invariant-only sharing and reuse provenance; R20 no model-level averaging in the publication export; R21 case-C group completeness. Frozen historical bundles are untouched and keep validating under their pinned snapshot hashes.",
+    "schemas": "Additive optional properties: campaign manifest (reasoning_topology, reasoning_profile, profile_invariant_evidence), setup document (reasoning_profile), eval-profile descriptor (reasoning_profile, publisher_default_profile), website publication export (reasoning_profiles per-profile summaries).",
+    "compatibility": "Older snapshots, retained campaign evidence, frozen manifests and historical reports stay immutable. Pre-2026-09-25 campaigns validate unchanged (era-gated rules; verified against the retained Ling and Granite hardening-era bundles at freeze)."
+  },
+  "frozen_artifact_sha256": {
+    "publication_root": {
+      ".gitignore": "2eaca9bddc50ece7d46e4935ab0af183e6da7fcf6e4000d7b0284ea74d92a297",
+      "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "PUBLICATION-MANIFEST.json": "06b699d8970444800a1adfe07f338a7078240f19769e0f0b7a1d4384e7492c19",
+      "README.md": "f2e2d9d73a4664724dc532dce2164664933f40c3267500919f8db23240f7e99b",
+      "publication-allowlist.json": "c5674bc301c18aea9315c43cfb1baf490056d439ec96def905d873acd2cf7166"
+    },
+    "contracts": {
+      "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+      "contracts/welp-context-0.2.0-draft.json": "8b6710c1b7865987b0ba1b131fa8c25f9608d45d11754122518fc57c0cdbf9c2",
+      "contracts/welp-context-0.3.0-draft.json": "e58a073f9c9ec8c7194eebc2d58352adb561a9d8d0b695567050e33b2c383339",
+      "contracts/welp-deployment-lanes-0.1.0-draft.json": "97d33d10889ca3d84730435a1182b02d93896549a682c6b342d7311f33c20070",
+      "contracts/welp-evidence-bundle-0.1.0-draft.json": "230c08428a534693da4586daf2f23323b1c16867a6ef63ba3b3ded08155dfb03",
+      "contracts/welp-final-classification-0.1.0-draft.json": "81f73e61ff017944f94b564a2d970fa42af8c5ba2e062934b54ebde6f2149813",
+      "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+      "contracts/welp-final-classification-0.3.0-draft.json": "2a15aca1cda9b608426a2d94a2c422f4a94552eeee9084da51593fa9204b4481",
+      "contracts/welp-final-classification-0.3.1-draft.json": "d790d963b98de73ad04717af5071d1667b1feddaeeccd87282aa62eaa446cae4",
+      "contracts/welp-final-classification-0.4.0-draft.json": "21320512abc8431019d07fc7dc0b7c004801964d2b8545cb1bea1295d44dd62f",
+      "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+      "contracts/welp-measurement-0.1.0-draft.json": "8c3f86e42ac2a7f8f8b62f6111ee9232d92a3132a669b502cd661f801111278b",
+      "contracts/welp-modules.json": "80fbaf767b3f9da6a1db65b40f4ac50227efbbd9380affa4ad5e9fc371ab53ea",
+      "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+      "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+      "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+      "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+      "contracts/welp-real-work-0.1.0-draft.json": "71e6014d9edcdf78bb1cd5c385c211845b8fc0a5c725fb8f8e8a4dadd37cb558",
+      "contracts/welp-real-work-0.2.0-draft.json": "ec911a7f768508061e0e4275c06191c4f38d79d26a745bbd53717919947f3736",
+      "contracts/welp-reasoning-topology-0.1.0-draft.json": "0ba790872c727c0fac29a2839dd363e8d305b86d5fb1f13cf6f7cc05fe699094",
+      "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+      "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+      "contracts/welp-reliability-0.3.0-draft.json": "57f7d5ba6a48aceaab6da6993862dea5cac207a2b5a9260c776a2bdcec254417",
+      "contracts/welp-review-adjudication-0.1.0-draft.json": "8feaeb78a6f275ecf8ffc92d446d9ec757954539c328d6c4dac27494c3fff445",
+      "contracts/welp-safety-review-0.1.0-draft.json": "80d2866b6aa1aa1825555a7f7d53d44f783de5a6b7e5b0dbce27b12c5a428f25",
+      "contracts/welp-setup-0.1.0-draft.json": "6f4595dcd5ada2df7e3de49d5ff6db89804c41679bbccc5112c990dce7548055",
+      "contracts/welp-setup-0.2.0-draft.json": "73f2b0c5bb4c06b179b4161589888e121134a0c24217fe58c702e4daa62c87b2",
+      "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed"
+    },
+    "docs": {
+      "docs/README.md": "dd42b92ec2f1552d18964e0c40fa50ecde7ab43efe9a160febd7b1a4d39de2fd",
+      "docs/naming-policy.md": "28610acdc351d983aee48c9447c1a930dd49ef18712dfc0d88f2ee65d2138e91",
+      "docs/publication.md": "cace6169223bb0be0675b869b3894bb1acf0c5ee62281234b3f485d107f4386e",
+      "docs/reproduction.md": "281c0a497ef5c680653879680a246883a118b3182388415e64e75dee07fd0fa7",
+      "docs/validator.md": "5b4eb6633a56f928fa160f8dd66b2fed53237c54ec70cef115ebe6e66f996c15"
+    },
+    "examples": {
+      "examples/README.md": "5ca5ec618231cde646c57dc2c9687906dac215abdc1f9617c24bc92cceea632b",
+      "examples/toolchain_inventory.example.json": "8032f2198da1e7c7293668f6d542329c6a0f8868a819259d0a6aeb02155ded2a"
+    },
+    "fixtures": {
+      "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+      "fixtures/real_work/document-synthesis.json": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+      "fixtures/real_work/linux-diagnosis.json": "d0d000de5a13d8e5aa3ef382d6a06521c28ff0436bfd46a644c6478c12b26e5d",
+      "fixtures/real_work/multi-turn-correction.json": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+      "fixtures/real_work/repository-timeout.json": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+      "fixtures/real_work/tool-recovery.json": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2",
+      "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+      "fixtures/reliability/welp-reliability-sample-20-v3.json": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41",
+      "fixtures/useful_context/family-a.json": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4",
+      "fixtures/useful_context/multidocument.json": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f"
+    },
+    "harness": {
+      "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+      "harness/bundle.py": "eaeefddeea0d164e55c29ed47ba9bbc3673d4ece3abc22736795f2b21a67669d",
+      "harness/capabilities.py": "7485f750380910a74de89ac13ff7c1a115d7dad19f70916cbd5065d40d1f47c4",
+      "harness/classification.py": "2f2bb8a6118e6b8af150dd04c5b80fef25eb9c8b65a3995c93b0924d6f9617ca",
+      "harness/context.py": "ad944fe5f0c371d07a2303504d9d39d7ea6d0e49ebd6c05ca100924bc4883c16",
+      "harness/measurement.py": "622da592925fe3488150132176c47bc5bcfa72d8699c4134d29a3b75c5b63db6",
+      "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "harness/reliability.py": "ec22cfa91cb2914f2f04eb593e3c0a8d971ef305fdd2af7d8a59f786d70e8db5",
+      "harness/setup.py": "6e3923d80215bfac6730b3cb0467f7b94ff6daab40b2af274579cec651af653e",
+      "harness/synthetic_bundle.py": "2ec0a50feb1fbc066c670ec26b072f5f310355df4097517f3f98cf602c6bbb53",
+      "harness/welp_outcomes.py": "8b58c8cf9f08c2602b7fa683843229562201a52cfa1369c3383c0f97e86c7cf7"
+    },
+    "lab-record-template": {
+      "lab-record-template/LAB-RECORD-LAYOUT.md": "021fd755d2b34b3a48b6eff8bfc7839dd478ff9e8167561492d9e4d58934e87c",
+      "lab-record-template/README.md": "65d6f95cad1e9aebb6fe7ff9c84e2896f1fac04821660cc6d2086bb818f47238"
+    },
+    "protocol": {
+      "protocol/WELP.md": "9df712fb226a233086760f99a88170488a1adcd878d6da6dd827a7164722e813",
+      "protocol/context-scaling.md": "8f28ade68bbbaaa68defd207bc1b6b8264ff98c71a22fc32aadb846316e6528a"
+    },
+    "schemas": {
+      "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+      "schemas/welp_campaign_manifest.schema.json": "fc31a19ca7b3aeacfbbee65cfdc87a1ff1e287a2cfa6f6fb612e344de47ecec1",
+      "schemas/welp_eval_profile.schema.json": "81f19c61edd5900b00f38f962a91c2a01d2883d17ba0c73fca672a6b8699dc01",
+      "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+      "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+      "schemas/welp_setup.schema.json": "cb01225aa62988ff4c1f3a0b4bb7571d3b960a0d7e84f2981c18b93480c17c8f",
+      "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+      "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc",
+      "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+      "schemas/welp_website_publication.schema.json": "f505e026ca6cdacd69c7158f597ca084e3bd910b2dd0c46b638ab21f1ec8ce6f"
+    },
+    "scorers": {
+      "scorers/rescore_acceptance.py": "6704d7cd61cb854f341ccf6f9c571650f99e3e66a0edc57faa92df4e5dcb010b",
+      "scorers/safety_review.py": "6d8e5b504416fddd87a8c9edc5a879063e165154657979d42786e093ed5dbdf5",
+      "scorers/score_reliability.py": "c6fddd41c28444390adf25b44b676da1c38a3e1f26a7e27b67e768a0627eaab7",
+      "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+    },
+    "summaries": {
+      "summaries/welp_compatibility_policy.json": "f63acfea12d235ae38253ae11460a69dc13cf544985d26fa3be2451d1adee04d",
+      "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67"
+    },
+    "validators": {
+      "validators/check_canonical_welp_naming.py": "b6586b9dd874479e207768866e0f627d9e75b8e8bb9139c7dcd4de71a538e39d",
+      "validators/validate_campaign_welp.py": "38d44cd889fc5eb58736638f97a310f3bcfacc81db593031791335662e177946",
+      "validators/validate_public_tree.py": "f6dabfc96e8876bc190c0f2b9ba22d133f78431fdfc3ae58206075ae98ff8ae1",
+      "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8",
+      "validators/welp-legacy-exceptions.json": "352e01982567d4845b39c55e59751879200d71bad5adb00655d303942a858b1c"
+    }
+  },
+  "validation_at_freeze": {
+    "all_selftests_pass": true,
+    "campaign_validator_selftest": {
+      "exit": 0,
+      "result": {
+        "fixture_sets": 38,
+        "accepted_legacy_wlep": true,
+        "accepted_current_welp": true,
+        "accepted_welp_with_legacy_evidence": true,
+        "accepted_new_hierarchy": true,
+        "accepted_new_format_localmaxxing": true,
+        "accepted_new_format_website": true,
+        "accepted_historical_pre_hierarchy_pair": true,
+        "accepted_methodology_revision": true,
+        "accepted_methodology_revision_context_deferred": true,
+        "accepted_retained_realwork_2026_09_23": true,
+        "accepted_hardening_positive": true,
+        "accepted_hardening_complete_negative": true,
+        "rejected_new_format_missing_localmaxxing": true,
+        "rejected_invalid_localmaxxing_status": true,
+        "rejected_new_format_missing_website": true,
+        "rejected_invalid_website_disposition": true,
+        "rejected_unknown_prefix": true,
+        "improperly_rewritten_legacy_passed": false,
+        "rejected_ambiguous_report_pair": true,
+        "new_hierarchy_without_lab_record_valid_with_warning": true,
+        "rejected_revision_missing_outcomes": true,
+        "rejected_revision_finish_accounting": true,
+        "rejected_revision_hash_mismatch": true,
+        "rejected_revision_context_depths": true,
+        "rejected_revision_cache_policy": true,
+        "rejected_hardening_review_blocked": true,
+        "rejected_hardening_incomplete": true,
+        "rejected_hardening_execution_error": true,
+        "rejected_hardening_pointer_absolute": true,
+        "rejected_hardening_pointer_hash": true,
+        "rejected_hardening_bare_asserted_classification": true,
+        "failures": [],
+        "pass": true
+      }
+    },
+    "bundle_selftest": {
+      "exit": 0,
+      "result": {
+        "pass": true,
+        "failures": []
+      }
+    },
+    "classification_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "welp-harness-classification/1.1.0-draft selftest: PASS\n"
+      }
+    },
+    "setup_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "welp-harness-setup/1.1.0-draft selftest: PASS\n"
+      }
+    },
+    "reliability_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "welp-harness-reliability/1.1.0-draft selftest: PASS\n"
+      }
+    },
+    "context_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "welp-harness-context/1.2.0-draft selftest: PASS\n"
+      }
+    },
+    "capabilities_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "welp-harness-capabilities/1.1.0-draft selftest: PASS\n"
+      }
+    },
+    "measurement_selftest": {
+      "exit": 0,
+      "result": {
+        "raw": "fiable sidecar\nPASS import: bounded llmgauge.result.v0 (full identity, raw hashes, transcript digest, availability)\n\nselftest PASS (welp-harness-measurement/1.0.0-draft, welp-measurement-0.1.0-draft)\n"
+      }
+    },
+    "publication_validator_selftest": {
+      "exit": 0,
+      "result": {
+        "pass": true,
+        "cases": [
+          {
+            "case": "current immutable citation",
+            "pass": true
+          },
+          {
+            "case": "historical URL without identity",
+            "pass": true
+          },
+          {
+            "case": "short SHA",
+            "pass": true
+          },
+          {
+            "case": "branch instead of SHA",
+            "pass": true
+          },
+          {
+            "case": "wrong repo",
+            "pass": true
+          },
+          {
+            "case": "absolute path",
+            "pass": true
+          },
+          {
+            "case": "traversal",
+            "pass": true
+          },
+          {
+            "case": "encoded traversal",
+            "pass": true
+          },
+          {
+            "case": "URL mismatch",
+            "pass": true
+          },
+          {
+            "case": "missing identity",
+            "pass": true
+          },
+          {
+            "case": "shared comparison",
+            "pass": true
+          },
+          {
+            "case": "duplicate related model",
+            "pass": true
+          },
+          {
+            "case": "pending published citation",
+            "pass": true
+          },
+          {
+            "case": "pending current identity",
+            "pass": true
+          },
+          {
+            "case": "pending current missing identity",
+            "pass": true
+          },
+          {
+            "case": "historical pending without identity",
+            "pass": true
+          }
+        ]
+      }
+    },
+    "naming_validator_selftest": {
+      "exit": 0,
+      "result": {
+        "selftest": [
+          {
+            "name": "PASS_CURRENT_WELP_ONLY",
+            "ok": true,
+            "status": "PASS"
+          },
+          {
+            "name": "PASS_APPROVED_FROZEN_IDENTIFIER",
+            "ok": true,
+            "status": "PASS"
+          },
+          {
+            "name": "PASS_FUNCTIONAL_COMPATIBILITY",
+            "ok": true,
+            "status": "PASS"
+          },
+          {
+            "name": "FAIL_NEW_WLEP_PROSE",
+            "ok": true,
+            "status": "FAIL"
+          },
+          {
+            "name": "FAIL_NEW_WLEP_FILENAME_OR_ID",
+            "ok": true,
+            "status": "FAIL"
+          }
+        ]
+      }
+    },
+    "historical_ling_validation": {
+      "exit": 0,
+      "result": {
+        "valid": true,
+        "findings": [
+          [
+            "info",
+            "required:protocol-findings.md",
+            ""
+          ],
+          [
+            "info",
+            "R01_primary_report",
+            "REPORT.md"
+          ],
+          [
+            "info",
+            "R03_lab_record",
+            "WELP-LAB-RECORD.md"
+          ],
+          [
+            "info",
+            "N01_snapshot_id",
+            "welp-next-snapshot-2026-09-24-context-outcome-repair"
+          ],
+          [
+            "info",
+            "N02_preflight_const",
+            "welp-preflight"
+          ],
+          [
+            "info",
+            "welp_status",
+            "DRAFT"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-evidence-bundle"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-setup"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-review-adjudication"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-reliability"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-final-classification"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-deployment-lanes"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-context"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-real-work"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-measurement"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-safety-review"
+          ],
+          [
+            "info",
+            "R06_localmaxxing_status",
+            "SUBMITTED"
+          ],
+          [
+            "info",
+            "R06_localmaxxing_reference",
+            "https://localmaxxing.com/speed-tests/cmugffasg0dohlq01bekesaf0"
+          ],
+          [
+            "info",
+            "R08_website_disposition",
+            "WEBSITE_PUBLISHED"
+          ],
+          [
+            "info",
+            "R08_website_evidence_state",
+            "PUBLISHED"
+          ],
+          [
+            "info",
+            "R08_website_identity",
+            "ling-3.0-tiny / ling-3.0-tiny-q8-0-llamacpp-b10999-rtx5070-deployment / ling-3-0-tiny-rtx5070-welp-characterization-20260924"
+          ],
+          [
+            "info",
+            "M05_gate_reasoning_state",
+            "ON"
+          ],
+          [
+            "info",
+            "M06_requested_effective_recorded",
+            ""
+          ],
+          [
+            "info",
+            "M07_phase2_harness_version",
+            "welp-phase-harness/1.0.0-draft"
+          ],
+          [
+            "info",
+            "R17_hardening_evidence",
+            "ling30-characterization-evidence.json"
+          ],
+          [
+            "info",
+            "R17_bundle_B_capability_mechanical_failure",
+            "capabilities.linux_diagnosis[0]: strict JSON failed (Expecting value: line 1 column 1 (char 0))"
+          ],
+          [
+            "info",
+            "R17_bundle_B_capability_mechanical_failure",
+            "capabilities.linux_diagnosis[1]: strict JSON failed (Expecting value: line 1 column 1 (char 0))"
+          ],
+          [
+            "info",
+            "R17_bundle_B_capability_mechanical_failure",
+            "capabilities.multi_turn[0]: exact object keys"
+          ],
+          [
+            "info",
+            "R17_bundle_B_capability_mechanical_failure",
+            "capabilities.multi_turn[0]: strict JSON"
+          ],
+          [
+            "info",
+            "R17_bundle_B_capability_mechanical_failure",
+            "capabilities.multidocument[0]: strict JSON failed (Expecting value: line 1 column 1 (char 0))"
+          ],
+          [
+            "info",
+            "R17_bundle_B_context_capability",
+            "VALIDATED"
+          ],
+          [
+            "info",
+            "R17_bundle_B_context_fixture_version",
+            "1.3.0-draft"
+          ],
+          [
+            "info",
+            "R17_bundle_B_gate_decision",
+            "DO_NOT_ADVANCE"
+          ],
+          [
+            "info",
+            "R17_bundle_B_setup_valid",
+            "check_setup returned no blockers"
+          ],
+          [
+            "info",
+            "R17_context_family_a_version",
+            "1.3.0-draft"
+          ],
+          [
+            "info",
+            "R17_context_family_a_version_declared",
+            "1.3.0-draft"
+          ],
+          [
+            "info",
+            "R17_identity_fields",
+            "ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24"
+          ],
+          [
+            "info",
+            "R17_campaign_outcome",
+            "COMPLETE_PASS"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-real-work-document-synthesis"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-real-work-linux-diagnosis"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-real-work-multi-turn-correction"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-real-work-repository-timeout"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-real-work-tool-recovery"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-reliability-sample-20-v3"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-useful-context-family-a"
+          ],
+          [
+            "info",
+            "R17_fixtures_hash_verified",
+            "welp-useful-context-multidocument"
+          ],
+          [
+            "info",
+            "R17_scorers_hash_verified",
+            "welp-reliability-scorer/3"
+          ],
+          [
+            "info",
+            "N03_welp_with_welp_contracts",
+            "10 contracts; prefix=welp"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-evidence-bundle"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-setup"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-review-adjudication"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-reliability"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-final-classification"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-deployment-lanes"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-context"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-real-work"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-measurement"
+          ],
+          [
+            "info",
+            "contract_id_prefix",
+            "welp-safety-review"
+          ],
+          [
+            "info",
+            "M08_cache_metric_probe_present",
+            ""
+          ],
+          [
+            "info",
+            "M09_absolute_evidence_path",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/semantic-seed42.jsonl"
+          ],
+          [
+            "info",
+            "M10_hash_count_recorded",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/semantic-seed42.jsonl"
+          ],
+          [
+            "info",
+            "M09_absolute_evidence_path",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/semantic-seed314159.jsonl"
+          ],
+          [
+            "info",
+            "M10_hash_count_recorded",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/semantic-seed314159.jsonl"
+          ],
+          [
+            "info",
+            "M09_absolute_evidence_path",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/operational-seed42.jsonl"
+          ],
+          [
+            "info",
+            "M10_hash_count_recorded",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/operational-seed42.jsonl"
+          ],
+          [
+            "info",
+            "M09_absolute_evidence_path",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/operational-seed314159.jsonl"
+          ],
+          [
+            "info",
+            "M10_hash_count_recorded",
+            "/home/cheez/Projects/local-llm/research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-characterization-2026-09-24/evidence/reliability/operational-seed314159.jsonl"
+          ]
+        ]
+      }
+    },
+    "synthetic_dual_profile_qualification": {
+      "record": "tmp/welp-reasoning-profiles/synthetic-dual-profile-qualification.json",
+      "record_sha256": "61efff77e97e040d173c261438a9e5c468516e44f93f9bd3096c33d62a475d91",
+      "pass": true
+    }
+  },
+  "historical_compatibility": "No retained raw output, score, report, event, older snapshot manifest or classification rewritten. Machine IDs and frozen provenance unchanged; the reasoning-profiles policy is prospective and applies only to campaigns under snapshots dated 2026-09-25 or later. Historical one-profile events (including the original Ling-3.0-tiny COMPLETE_PASS / NOT_READY event) remain exactly as published.",
+  "limitations": [
+    "DRAFT / NOT v1.0: thresholds and the effort-level promotion rule remain under empirical validation; the first real dual-profile validation is the linked Ling Reasoning On + Reasoning Off campaign.",
+    "The synthetic dual-profile qualification proves structural/validation/linkage behavior, never model facts.",
+    "Validator R21 group completeness is an event-level warning; hard group completeness gates publication (central registry / website render), not the first sibling's closure."
+  ],
+  "model_testing_resume_gate": "This snapshot itself authorizes no fresh model inference beyond the explicitly authorized Ling Reasoning On (reuse/re-derive) + Reasoning Off (full profile) validation campaign named in the task handoff; the next queued model is not started by this snapshot."
+}

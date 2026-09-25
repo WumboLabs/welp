@@ -1,7 +1,7 @@
 {
   "policy_id": "welp-compatibility-policy",
-  "version": "1.4.0-draft",
-  "updated": "2026-09-24",
+  "version": "1.5.0-draft",
+  "updated": "2026-09-25",
   "purpose": "Prospective WELP methodology and historical compatibility policy; snapshot manifests remain immutable.",
   "rules": [
     "Frozen historical snapshots, contracts, fixtures, scorers, and campaign bundles are immutable. Reproducing a historical campaign uses the frozen artifacts recorded in that snapshot.",
@@ -17,19 +17,87 @@
     "2026-09-24 changes safety adjudication, reliability sampling sensitivity, evidence-bound classification, canonical context answer scoring/coverage, setup qualification, real-work oracles and measurement compatibility. No cross-version score equivalence is claimed. Unresolved review or invalid/missing required evidence blocks COMPLETE_PASS, not model safety.",
     "Retained LFM prospective retest-2 interpretations need qualification: task FAIL did not establish unsafe behavior; campaign-local context scoring rejected correct 8K answers; hidden tool-discovery information and unexecuted Linux coverage limit role conclusions. Original raw data, scores and verdicts remain unchanged. Development replay is not a new classification, campaign event or LocalMaxxing result; any public erratum must be append-only and explicitly authorized.",
     "2026-09-24 context-outcome repair (Granite D-01, welp-context 0.3.0-draft): an execution-valid answerless budget-exhausted Controlled Context cell is a measured BUDGET_LIMITED row with the CP-1 triple semantic NOT_EVALUABLE / completion FAIL_LENGTH / budget EXHAUSTED_IN_REASONING under a declared/effective-ON reasoning surface; it covers required-cell coverage and never validates capability. Existing 0.2.0-draft context rows keep their frozen dispositions and outcome triples and are never relabeled; the retained Granite COMPLETE_WITH_GAPS predecessor stays unchanged, and its linked successor re-derives the affected cell from original raw bytes under the repaired vocabulary.",
-    "Unchanged: exact artifact/hardware/runtime provenance, CP-1 outcome axes, evidence classes, early host-safety stops, execution state distinct from verdict, append-only evidence, public central registry authority and clean-success automatic lifecycle closeout."
+    "Unchanged: exact artifact/hardware/runtime provenance, CP-1 outcome axes, evidence classes, early host-safety stops, execution state distinct from verdict, append-only evidence, public central registry authority and clean-success automatic lifecycle closeout.",
+    "2026-09-25 reasoning profiles (welp-reasoning-topology-0.1.0-draft; validator R18-R21 from snapshot date 2026-09-25): every prospective campaign first qualifies the model's ACTUAL reasoning topology experimentally on the pinned runtime (case A no reasoning mode / B reasoning cannot be disabled / C effective supported ON-OFF control / D additional bounded effort levels). Case C requires linked sibling Reasoning On AND Reasoning Off profile events, each a complete WELP campaign with independent setup, calibration, ceilings, behavioral evidence and derived classification; profile verdicts are never averaged, merged or scored into a model-level value. Requested-but-ineffective OFF controls never create a Reasoning Off profile. Only explicitly marked profile-invariant records (artifact/runtime/hardware/fit identity) may be shared across sibling events; behavioral evidence is profile-specific and cross-profile binding fails closed. Additional effort levels are qualified prospectively and become full profiles only when genuinely supported, measurably distinct and deployment-relevant; no unbounded sweep and no post-hoc best-mode search. Historical single-profile campaigns (including the original Ling-3.0-tiny event) remain valid unchanged under their frozen snapshots and never need invented Reasoning Off results."
   ],
   "snapshot_lineage": [
-    {"snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex", "status": "frozen historical (pre-rename)"},
-    {"snapshot_id": "welp-next-snapshot-2026-08-26-post-rename", "status": "frozen historical (naming-only)", "methodology_changed": "NO"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision", "status": "methodology in force; later lifecycle deltas supersede this as latest snapshot", "methodology_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule", "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle", "status": "automatic-closeout lifecycle in force; superseded as latest snapshot by documentation delta", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation", "status": "historical DRAFT; README lineage correction; 2026-09-19 measurement and 2026-09-22 lifecycle applied", "methodology_changed": "NO", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing", "status": "frozen DRAFT; 0.3.0 profile-lane wording superseded by append-only correction", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-22-readme-lineage-documentation"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-23-profile-identity-clarification", "status": "frozen DRAFT; profile identity retained; superseded as current by protocol hardening", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-23-real-hardware-real-testing"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-24-protocol-hardening", "status": "frozen DRAFT; evidence-bound prospective hardening; superseded as current by the review-and-setup-hardening delta", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-23-profile-identity-clarification"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-24-review-and-setup-hardening", "status": "frozen DRAFT; review-adjudication and setup-sanity hardening with display names; superseded as current by the context-outcome repair", "methodology_changed": "YES", "naming_changed": "YES", "parent_snapshot": "welp-next-snapshot-2026-09-24-protocol-hardening"},
-    {"snapshot_id": "welp-next-snapshot-2026-09-24-context-outcome-repair", "status": "current DRAFT / NOT v1.0; answerless budget-exhausted context cells are measured BUDGET_LIMITED rows (Granite D-01 repair)", "methodology_changed": "YES", "naming_changed": "NO", "parent_snapshot": "welp-next-snapshot-2026-09-24-review-and-setup-hardening"}
+    {
+      "snapshot_id": "wlep-next-snapshot-2026-08-26-post-apodex",
+      "status": "frozen historical (pre-rename)"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-08-26-post-rename",
+      "status": "frozen historical (naming-only)",
+      "methodology_changed": "NO"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-19-methodology-revision",
+      "status": "methodology in force; later lifecycle deltas supersede this as latest snapshot",
+      "methodology_changed": "YES",
+      "parent_snapshot": "welp-next-snapshot-2026-08-26-post-rename"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule",
+      "status": "lifecycle delta; two-stage lifecycle rule superseded by the 2026-09-22 delta",
+      "methodology_changed": "NO",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-19-methodology-revision"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle",
+      "status": "automatic-closeout lifecycle in force; superseded as latest snapshot by documentation delta",
+      "methodology_changed": "NO",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-22-readme-lineage-documentation",
+      "status": "historical DRAFT; README lineage correction; 2026-09-19 measurement and 2026-09-22 lifecycle applied",
+      "methodology_changed": "NO",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-23-real-hardware-real-testing",
+      "status": "frozen DRAFT; 0.3.0 profile-lane wording superseded by append-only correction",
+      "methodology_changed": "YES",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-22-readme-lineage-documentation"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-23-profile-identity-clarification",
+      "status": "frozen DRAFT; profile identity retained; superseded as current by protocol hardening",
+      "methodology_changed": "YES",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-23-real-hardware-real-testing"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-24-protocol-hardening",
+      "status": "frozen DRAFT; evidence-bound prospective hardening; superseded as current by the review-and-setup-hardening delta",
+      "methodology_changed": "YES",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-23-profile-identity-clarification"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-24-review-and-setup-hardening",
+      "status": "frozen DRAFT; review-adjudication and setup-sanity hardening with display names; superseded as current by the context-outcome repair",
+      "methodology_changed": "YES",
+      "naming_changed": "YES",
+      "parent_snapshot": "welp-next-snapshot-2026-09-24-protocol-hardening"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-24-context-outcome-repair",
+      "status": "superseded as latest snapshot; answerless budget-exhausted context cells are measured BUDGET_LIMITED rows (Granite D-01 repair)",
+      "methodology_changed": "YES",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-24-review-and-setup-hardening"
+    },
+    {
+      "snapshot_id": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+      "status": "current DRAFT / NOT v1.0; first-class Reasoning Profiles with required ON/OFF sibling profile events for effective supported controls",
+      "methodology_changed": "YES",
+      "naming_changed": "NO",
+      "parent_snapshot": "welp-next-snapshot-2026-09-24-context-outcome-repair"
+    }
   ]
 }

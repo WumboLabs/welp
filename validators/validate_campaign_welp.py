@@ -121,6 +121,44 @@ PROFILE_STATUSES = {"current", "current-alternate", "historical", "superseded", 
 METHODOLOGY_REVISION_FROM = "2026-09-19"  # CP-1..CP-12 outcome/budget semantics from this snapshot date on
 REAL_WORK_REVISION_FROM = "2026-09-23"
 HARDENING_FROM = "2026-09-24"  # evidence-bound hardening era (R17) from this snapshot date on
+REASONING_PROFILES_FROM = "2026-09-25"  # reasoning-profile rules (R18-R21) from this snapshot date on
+REASONING_TOPOLOGY_CONTRACT = "welp-reasoning-topology-0.1.0-draft"
+REASONING_CASES = {"A", "B", "C", "D"}
+REASONING_BASE_CASES = {"A", "B", "C"}
+REASONING_OFF_STATUSES = {"effective", "unavailable", "ineffective", "unsupported", "not_applicable"}
+REASONING_PROFILE_IDS = {"standard", "reasoning-on", "reasoning-off"}
+REASONING_DISPLAY_NAMES = {"standard": "Standard", "reasoning-on": "Reasoning On",
+                           "reasoning-off": "Reasoning Off"}
+EFFORT_QUALIFICATION_STATUSES = {"distinct_deployment_relevant", "not_distinct", "unqualified"}
+INCOMPLETE_OFF_STATUSES = {"unavailable", "ineffective", "unsupported"}
+# Behavioral evidence kinds that may NEVER be shared across reasoning profiles
+# (welp-reasoning-topology-0.1.0-draft, profile-specific evidence list).
+BEHAVIORAL_EVIDENCE_KINDS = {
+    "effective_reasoning_state", "calibration", "generation_ceiling",
+    "operational_budget", "scored_outputs", "reliability", "semantic_completion",
+    "safety_task_outcomes", "assistant_quality", "structured_output",
+    "tool_recovery", "linux_diagnosis", "repository_repair",
+    "multi_turn_correction", "document_synthesis", "controlled_context",
+    "multi_document_context", "generation_performance", "latency",
+    "token_consumption", "classification",
+}
+# Genuinely profile-invariant record kinds that MAY be shared when explicitly
+# marked (welp-reasoning-topology-0.1.0-draft, profile-invariant list).
+PROFILE_INVARIANT_KINDS = {
+    "model_source_identity", "license", "artifact_sha256", "quant_identity",
+    "architecture", "runtime_commit_build", "physical_hardware",
+    "load_fit_qualification", "template_identity", "artifact_provenance",
+    "context_rung_geometry",
+}
+# Effort-level profile ids must extend the base vocabulary mechanically:
+# reasoning-<level> where <level> matches this pattern.
+EFFORT_PROFILE_ID_RE = re.compile(r"^reasoning-[a-z0-9][a-z0-9-]*$")
+
+
+def _reasoning_profile_id_ok(pid) -> bool:
+    return pid in REASONING_PROFILE_IDS or (
+        isinstance(pid, str) and EFFORT_PROFILE_ID_RE.match(pid) is not None
+        and pid not in REASONING_PROFILE_IDS)
 DEPLOYMENT_LANES_CONTRACT = "welp-deployment-lanes-0.1.0-draft"
 EVIDENCE_BUNDLE_CONTRACT = "welp-evidence-bundle-0.1.0-draft"
 CLASSIFICATION_040 = "welp-final-classification-0.4.0-draft"
@@ -358,6 +396,351 @@ def _check_hardening(root: Path, m: dict, bad, warn, ok):
                     f"{name}: recorded sha256 does not match current {path} bytes")
             else:
                 ok(f"R17_{section}_hash_verified", name)
+
+
+def _check_reasoning_profiles(root: Path, m: dict, web, bad, warn, ok):
+    """R18-R21 — reasoning-profile rules (welp-reasoning-topology-0.1.0-draft).
+
+    R18  Reasoning topology + profile identity record: every new-era manifest
+         carries a hash-bound reasoning_topology qualification and the event's
+         reasoning_profile identity. Topology/profile consistency: case A =>
+         standard; case B => reasoning-on with an explicit incomplete-OFF
+         record; case C => reasoning-on or reasoning-off with both profiles
+         required in the group; case D => base_case + additional_effort_levels
+         and no unqualified promoted profile. A Reasoning Off profile under a
+         case-B topology (requested OFF measured ineffective) is rejected —
+         no fake Reasoning Off profile.
+    R19  Profile evidence binding + invariant-only sharing: the setup document
+         and the hardening evidence document carry the event's reasoning
+         profile identity; explicitly marked profile_invariant_evidence entries
+         are validated as hash-bound and genuinely profile-invariant; a
+         behavioral-evidence kind in profile_invariant_evidence is rejected
+         (cross-profile contamination fails closed); reuse provenance entries
+         carry class/source identity/hash.
+    R20  No model-level averaging: the website publication export of a
+         multi-profile group never carries a flattened model-level verdict
+         field; per-profile entries keep independent readiness values.
+    R21  Group completeness: a case-C event whose required sibling profile
+         event is pending records an incomplete MODEL characterization
+         (warning — the event itself may still be a validly completed
+         campaign; the group completeness gate applies at publication).
+    """
+    top = m.get("reasoning_topology")
+    prof = m.get("reasoning_profile")
+
+    # ---- R18 topology + profile identity ----
+    if not isinstance(top, dict):
+        bad("R18_reasoning_topology_required",
+            f"manifest.reasoning_topology ({REASONING_TOPOLOGY_CONTRACT} qualification) required "
+            "for campaigns under snapshots dated "
+            f"{REASONING_PROFILES_FROM} or later")
+    else:
+        if top.get("contract") != REASONING_TOPOLOGY_CONTRACT:
+            bad("R18_topology_contract",
+                f"reasoning_topology.contract must be {REASONING_TOPOLOGY_CONTRACT!r}, "
+                f"got {top.get('contract')!r}")
+        case = top.get("case")
+        if case not in REASONING_CASES:
+            bad("R18_topology_case", f"reasoning_topology.case must be one of "
+                f"{sorted(REASONING_CASES)}, got {case!r}")
+            case = None
+        off_status = top.get("off_control_status")
+        if off_status not in REASONING_OFF_STATUSES:
+            bad("R18_off_control_status",
+                f"reasoning_topology.off_control_status must be one of "
+                f"{sorted(REASONING_OFF_STATUSES)}, got {off_status!r}")
+        ev = top.get("evidence")
+        if (not isinstance(ev, dict)
+                or not _is_rooted_rel(ev.get("path"))
+                or not HASH.match(str(ev.get("sha256", "")))):
+            bad("R18_topology_evidence_reference",
+                "reasoning_topology.evidence must be a rooted {path, sha256} pointer to the "
+                "frozen qualification record")
+        else:
+            target = root / ev["path"]
+            if not target.is_file():
+                bad("R18_topology_evidence_missing",
+                    f"reasoning_topology evidence file missing: {ev['path']}")
+            else:
+                actual = hashlib.sha256(target.read_bytes()).hexdigest()
+                if actual != ev["sha256"]:
+                    bad("R18_topology_evidence_hash",
+                        f"reasoning_topology evidence sha256 does not match {ev['path']} bytes")
+                else:
+                    ok("R18_topology_evidence", ev["path"])
+                    try:
+                        record = json.loads(target.read_text())
+                    except Exception as exc:
+                        record = None
+                        bad("R18_topology_evidence_parse", str(exc))
+                    if isinstance(record, dict):
+                        if record.get("case") != case:
+                            bad("R18_topology_case_mismatch",
+                                f"qualification record case {record.get('case')!r} differs from "
+                                f"manifest case {case!r}")
+                        if isinstance(record.get("off_control"), dict) and \
+                                record["off_control"].get("status") not in REASONING_OFF_STATUSES:
+                            bad("R18_topology_off_control_record",
+                                "qualification record off_control.status invalid")
+        if case == "D":
+            if top.get("base_case") not in REASONING_BASE_CASES:
+                bad("R18_topology_base_case",
+                    "reasoning_topology.base_case (A|B|C) required when case is D")
+            levels = top.get("additional_effort_levels")
+            if not isinstance(levels, list) or not levels:
+                bad("R18_topology_effort_levels",
+                    "reasoning_topology.additional_effort_levels required when case is D")
+            else:
+                for entry in levels:
+                    q = entry.get("qualification") if isinstance(entry, dict) else None
+                    status = q.get("status") if isinstance(q, dict) else None
+                    if status not in EFFORT_QUALIFICATION_STATUSES:
+                        bad("R18_effort_qualification",
+                            f"effort level entry lacks a valid qualification status: {entry!r}")
+                    elif status == "distinct_deployment_relevant":
+                        ok("R18_effort_qualification", str(entry.get("level")))
+        if case is not None and off_status in REASONING_OFF_STATUSES:
+            # topology/profile consistency
+            if case == "A" and off_status != "not_applicable":
+                bad("R18_topology_off_consistency",
+                    "case A (no reasoning mode) requires off_control_status not_applicable")
+            if case == "B" and off_status not in INCOMPLETE_OFF_STATUSES:
+                bad("R18_topology_off_consistency",
+                    "case B requires off_control_status unavailable|ineffective|unsupported")
+            if case in ("C", "D") and off_status == "not_applicable":
+                bad("R18_topology_off_consistency",
+                    f"case {case} requires a recorded OFF-control status, not not_applicable")
+    if not isinstance(prof, dict):
+        bad("R18_reasoning_profile_required",
+            "manifest.reasoning_profile (this event's Reasoning Profile identity) required "
+            f"for campaigns under snapshots dated {REASONING_PROFILES_FROM} or later")
+    else:
+        pid = prof.get("profile")
+        if not _reasoning_profile_id_ok(pid):
+            bad("R18_profile_id",
+                f"reasoning_profile.profile must be standard|reasoning-on|reasoning-off "
+                f"(or a qualified reasoning-<level>), got {pid!r}")
+        dname = prof.get("display_name")
+        if not isinstance(dname, str) or not dname.strip():
+            bad("R18_profile_display_name", "reasoning_profile.display_name required")
+        elif pid in REASONING_DISPLAY_NAMES and dname != REASONING_DISPLAY_NAMES[pid]:
+            bad("R18_profile_display_name",
+                f"display_name for {pid!r} must be {REASONING_DISPLAY_NAMES[pid]!r}")
+        if prof.get("publisher_default") not in (True, False):
+            bad("R18_profile_publisher_default",
+                "reasoning_profile.publisher_default must be a boolean")
+        group = prof.get("group")
+        if not isinstance(group, dict) or not str(group.get("group_id") or "").strip():
+            bad("R18_profile_group",
+                "reasoning_profile.group {group_id, required_profiles} required")
+        else:
+            req = group.get("required_profiles")
+            if not isinstance(req, list) or not req or not all(
+                    isinstance(x, str) and _reasoning_profile_id_ok(x) for x in req):
+                bad("R18_profile_group_required_profiles",
+                    "group.required_profiles must list valid profile ids")
+            else:
+                if isinstance(top, dict) and top.get("case") == "C" and \
+                        set(req) != {"reasoning-on", "reasoning-off"}:
+                    bad("R18_group_case_c",
+                        "a case-C reasoning group requires exactly the two profiles "
+                        "reasoning-on and reasoning-off")
+                if pid in req:
+                    ok("R18_profile_group", f"{group.get('group_id')} / {pid}")
+                else:
+                    bad("R18_profile_group_membership",
+                        f"this event's profile {pid!r} is not in its group.required_profiles")
+        # no fake Reasoning Off under an ineffective/unavailable/unsupported OFF control
+        if isinstance(top, dict) and pid == "reasoning-off" and \
+                top.get("off_control_status") in INCOMPLETE_OFF_STATUSES | {"not_applicable"}:
+            bad("R19_fake_reasoning_off",
+                f"reasoning-off profile declared but topology OFF control is "
+                f"{top.get('off_control_status')!r}: a requested-but-ineffective OFF control "
+                "never creates a Reasoning Off profile")
+        # topology/profile direction consistency
+        if isinstance(top, dict):
+            if top.get("case") == "A" and pid != "standard":
+                bad("R18_topology_profile_consistency",
+                    f"case A requires the standard profile, got {pid!r}")
+            if top.get("case") == "B" and pid != "reasoning-on":
+                bad("R18_topology_profile_consistency",
+                    f"case B requires the reasoning-on profile, got {pid!r}")
+            if top.get("case") == "C" and pid not in ("reasoning-on", "reasoning-off"):
+                bad("R18_topology_profile_consistency",
+                    f"case C requires reasoning-on or reasoning-off, got {pid!r}")
+        # an effort-level profile must be prospectively qualified (case D)
+        if pid not in REASONING_PROFILE_IDS:
+            if not isinstance(top, dict) or top.get("case") != "D":
+                bad("R18_effort_profile_unqualified",
+                    f"effort-level profile {pid!r} requires topology case D with a "
+                    "prospective qualification record")
+            else:
+                qualified = [
+                    e for e in top.get("additional_effort_levels") or []
+                    if isinstance(e, dict)
+                    and _reasoning_profile_id_ok("reasoning-" + str(e.get("level", "")).lower())
+                    and "reasoning-" + str(e.get("level", "")).lower() == pid
+                    and isinstance(e.get("qualification"), dict)
+                    and e["qualification"].get("status") == "distinct_deployment_relevant"]
+                if not qualified:
+                    bad("R18_effort_profile_unqualified",
+                        f"effort-level profile {pid!r} has no qualified "
+                        "distinct_deployment_relevant qualification record; unqualified "
+                        "levels never become full profiles")
+        # publisher default consistency
+        if isinstance(top, dict) and prof.get("publisher_default") is True and \
+                isinstance(top.get("publisher_default_profile"), str) and \
+                top["publisher_default_profile"] and \
+                top["publisher_default_profile"] != pid:
+            bad("R18_publisher_default_mismatch",
+                f"reasoning_profile.publisher_default true but topology "
+                f"publisher_default_profile is {top['publisher_default_profile']!r}")
+
+    # ---- R19 profile evidence binding + invariant-only sharing ----
+    bind = None  # (where, doc) pairs to bind-check
+    setup_ref = None
+    if isinstance(prof, dict) and isinstance(prof.get("profile"), str):
+        bind = prof["profile"]
+    # setup document binding
+    he = m.get("hardening_evidence")
+    if isinstance(bind, str) and isinstance(he, dict) and _is_rooted_rel(he.get("path")):
+        try:
+            evdoc = json.loads((root / he["path"]).read_text())
+        except Exception:
+            evdoc = None
+        if isinstance(evdoc, dict):
+            setup_ptr = evdoc.get("setup")
+            if isinstance(setup_ptr, dict) and _is_rooted_rel(setup_ptr.get("path")):
+                try:
+                    setup_doc = json.loads((root / setup_ptr["path"]).read_text())
+                except Exception:
+                    setup_doc = None
+                if isinstance(setup_doc, dict):
+                    s_rp = setup_doc.get("reasoning_profile")
+                    if not isinstance(s_rp, dict) or s_rp.get("profile") != bind:
+                        bad("R19_setup_reasoning_profile",
+                            f"setup document must bind this event's reasoning profile "
+                            f"{bind!r} (setup.reasoning_profile.profile)")
+                    else:
+                        ok("R19_setup_reasoning_profile", bind)
+                # evidence document identity binding
+                e_rp = evdoc.get("reasoning_profile")
+                if not isinstance(e_rp, dict) or e_rp.get("profile") != bind:
+                    bad("R19_evidence_reasoning_profile",
+                        f"hardening evidence document must bind this event's reasoning "
+                        f"profile {bind!r} (evidence.reasoning_profile.profile)")
+                else:
+                    ok("R19_evidence_reasoning_profile", bind)
+                # reuse provenance records, when present
+                for entry in evdoc.get("evidence_reuse") or []:
+                    if not isinstance(entry, dict):
+                        bad("R19_reuse_provenance", f"malformed reuse entry: {entry!r}")
+                        continue
+                    missing = [k for k in ("class", "source_event_id", "source_path",
+                                           "source_sha256", "target")
+                               if not str(entry.get(k) or "").strip()]
+                    if entry.get("class") not in ("REUSE", "REVALIDATE", "RE-DERIVED",
+                                                  "MUST_RERUN", "INCOMPARABLE"):
+                        bad("R19_reuse_provenance",
+                            f"reuse entry class must be REUSE|REVALIDATE|RE-DERIVED|MUST_RERUN|"
+                            f"INCOMPARABLE, got {entry.get('class')!r}")
+                    elif missing:
+                        bad("R19_reuse_provenance",
+                            f"reuse entry missing {', '.join(missing)}: {entry.get('target')!r}")
+                    elif not HASH.match(str(entry.get("source_sha256"))):
+                        bad("R19_reuse_provenance",
+                            f"reuse entry source_sha256 must be 64-hex: {entry.get('target')!r}")
+                    else:
+                        ok("R19_reuse_provenance", str(entry.get("target")))
+    # profile-invariant evidence list
+    inv = m.get("profile_invariant_evidence")
+    if inv is not None:
+        if not isinstance(inv, list):
+            bad("R19_profile_invariant_list",
+                "profile_invariant_evidence must be a list when present")
+        else:
+            for entry in inv:
+                if not isinstance(entry, dict):
+                    bad("R19_profile_invariant_entry", f"malformed entry: {entry!r}")
+                    continue
+                kind = entry.get("kind")
+                if entry.get("shared_across_profiles") is not True:
+                    bad("R19_profile_invariant_marking",
+                        f"{kind!r}: shared_invariant entries must set shared_across_profiles=true")
+                if kind in BEHAVIORAL_EVIDENCE_KINDS:
+                    bad("R19_cross_profile_contamination",
+                        f"{kind!r} is behavioral evidence and can never be shared across "
+                        "reasoning profiles")
+                elif kind not in PROFILE_INVARIANT_KINDS:
+                    bad("R19_profile_invariant_kind",
+                        f"{kind!r} is not a declared profile-invariant evidence kind")
+                path, sha = entry.get("path"), entry.get("sha256")
+                if not _is_rooted_rel(path) or not HASH.match(str(sha or "")):
+                    bad("R19_profile_invariant_reference",
+                        f"{kind!r}: rooted {{path, sha256}} reference required")
+                else:
+                    target = root / path
+                    if not target.is_file():
+                        bad("R19_profile_invariant_reference",
+                            f"{kind!r}: referenced file missing: {path}")
+                    else:
+                        actual = hashlib.sha256(target.read_bytes()).hexdigest()
+                        if actual != sha:
+                            bad("R19_profile_invariant_hash",
+                                f"{kind!r}: sha256 does not match {path} bytes")
+                        else:
+                            ok("R19_profile_invariant_evidence", str(kind))
+
+    # ---- R20 no model-level averaging ----
+    if isinstance(web, dict):
+        for key in ("model_level_verdict", "model_level_readiness", "averaged_verdict",
+                    "combined_score", "average_score"):
+            if key in web:
+                bad("R20_model_level_averaging",
+                    f"website publication export carries prohibited flattened field "
+                    f"{key!r}: reasoning-profile verdicts are never averaged or merged")
+        rp_entries = web.get("reasoning_profiles")
+        if rp_entries is not None:
+            if not isinstance(rp_entries, list) or not rp_entries or not all(
+                    isinstance(e, dict) and str(e.get("profile") or "").strip()
+                    and str(e.get("display_name") or "").strip()
+                    and str(e.get("event_id") or "").strip()
+                    for e in rp_entries):
+                bad("R20_reasoning_profiles_entries",
+                    "reasoning_profiles entries must each carry profile, display_name, "
+                    "event_id and this profile's readiness")
+            else:
+                verdicts = {e.get("profile"): e.get("readiness") for e in rp_entries}
+                ok("R20_independent_verdicts",
+                   f"{len(verdicts)} per-profile verdicts preserved without averaging"
+                   + ("" if len(set(verdicts.values())) > 1
+                      else " (identical values remain independently recorded)"))
+                if isinstance(prof, dict) and prof.get("profile") not in verdicts \
+                        and verdicts:
+                    warn("R20_own_profile_absent",
+                         f"reasoning_profiles summary does not list this event's profile "
+                         f"{prof.get('profile')!r}")
+
+    # ---- R21 group completeness (case C sibling pending) ----
+    if isinstance(prof, dict) and isinstance(top, dict) and top.get("case") == "C":
+        group = prof.get("group") or {}
+        siblings = group.get("sibling_events") or []
+        pending = [s for s in siblings if isinstance(s, dict) and s.get("state") == "pending"]
+        required = set(group.get("required_profiles") or [])
+        covered = {prof.get("profile")} | {
+            s.get("profile") for s in siblings if isinstance(s, dict)}
+        if required and not required.issubset(covered):
+            bad("R21_group_declaration_incomplete",
+                f"case-C group must declare every required profile; missing "
+                f"{sorted(required - covered)}")
+        elif pending:
+            warn("R21_model_characterization_incomplete",
+                 f"case-C sibling profile event(s) pending: "
+                 f"{[s.get('profile') for s in pending]}; the MODEL characterization is "
+                 "incomplete under the reasoning-profiles methodology until the linked "
+                 "sibling profile event completes (publication gate)")
+        else:
+            ok("R21_group_complete", "case-C group fully covered by completed events")
 
 
 def check(root: Path):
@@ -809,6 +1192,10 @@ def check(root: Path):
     # ---- Hardening era R17 (snapshot date >= 2026-09-24): evidence-bound ----
     if hardening_era:
         _check_hardening(root, m, bad, warn, ok)
+
+    # ---- Reasoning-profile rules R18-R21 (snapshot date >= 2026-09-25) ----
+    if mdate and mdate.group(1) >= REASONING_PROFILES_FROM:
+        _check_reasoning_profiles(root, m, web, bad, warn, ok)
 
     # ---- N03 improper-rewrite detection ----
     # A welp-* campaign whose contract IDs are ALL wlep-* (with no welp-* counterpart)
@@ -1497,6 +1884,72 @@ def _mutated_synthetic_bundle(td, variant, mutate):
     return g
 
 
+def _reasoning_mutated_bundle(td, base_variant, name, manifest_mut=None,
+                              docs_mut=None, web_mut=None, sibling_pending=False):
+    """Reasoning-profile synthetic sibling with controlled post-build edits.
+
+    Builds the base sibling, then applies optional mutations to the manifest,
+    the frozen documents (topology record / setup / evidence — re-binding every
+    affected hash in dependency order), or the website export. Selftest-only:
+    real campaigns freeze these documents once and never edit them.
+    """
+    g = _synthetic_hardening_bundle(td, base_variant)
+    man_path = g / "summaries/campaign_manifest.json"
+    man = json.loads(man_path.read_text())
+    ev_path = g / man["hardening_evidence"]["path"]
+    ev = json.loads(ev_path.read_text())
+    setup_path = g / ev["setup"]["path"]
+    setup_doc = json.loads(setup_path.read_text())
+    top_ref = (man.get("reasoning_topology") or {}).get("evidence")
+    top_path = g / top_ref["path"] if top_ref else None
+    top = json.loads(top_path.read_text()) if top_path and top_path.is_file() else None
+    if docs_mut is not None:
+        docs_mut(man, setup_doc, ev, top)
+        if top_path is not None and top is not None:
+            top_path.write_text(json.dumps(top, indent=2, sort_keys=True))
+            top_ref["sha256"] = hashlib.sha256(top_path.read_bytes()).hexdigest()
+        setup_path.write_text(json.dumps(setup_doc, indent=2, sort_keys=True))
+        ev["setup"]["sha256"] = hashlib.sha256(setup_path.read_bytes()).hexdigest()
+        ev_path.write_text(json.dumps(ev, indent=2, sort_keys=True))
+        man["hardening_evidence"]["sha256"] = \
+            hashlib.sha256(ev_path.read_bytes()).hexdigest()
+    if web_mut is not None:
+        web_path = g / "summaries/website-publication.json"
+        web = json.loads(web_path.read_text())
+        web_mut(web)
+        web_path.write_text(json.dumps(web, indent=2, sort_keys=True))
+    if manifest_mut is not None:
+        manifest_mut(man)
+    if sibling_pending:
+        for s in man["reasoning_profile"]["group"]["sibling_events"]:
+            s["state"] = "pending"
+    man_path.write_text(json.dumps(man, indent=2, sort_keys=True))
+    return g
+
+
+def _set_standard_topology(man, setup_doc, ev, top):
+    """Rewrite the sibling into a complete case-A Standard-profile event."""
+    top.update({"case": "A",
+                "off_control_status": "not_applicable",
+                "off_control": {"status": "not_applicable", "control": None,
+                                "evidence": None},
+                "publisher_default_profile": "standard"})
+    man["reasoning_topology"] = {
+        **man["reasoning_topology"],
+        "case": "A", "off_control_status": "not_applicable",
+        "publisher_default_profile": "standard",
+    }
+    man["reasoning_profile"] = {
+        "profile": "standard", "display_name": "Standard",
+        "publisher_default": True,
+        "group": {"group_id": man["reasoning_profile"]["group"]["group_id"],
+                  "required_profiles": ["standard"], "sibling_events": []}}
+    setup_doc["reasoning_profile"] = {"profile": "standard",
+                                      "display_name": "Standard",
+                                      "group_id": man["reasoning_profile"]["group"]["group_id"]}
+    ev["reasoning_profile"] = {"profile": "standard", "display_name": "Standard"}
+
+
 def _bad_pointer_absolute(td):
     """hardening_evidence.path outside the campaign bundle: R17 path error."""
     return _mutated_synthetic_bundle(
@@ -1666,6 +2119,186 @@ def selftest():
                 f[0] == "error" and f[1] == "R17_classification_mismatch"
                 for f in rb_asserted["findings"]):
             fails.append("bare_asserted_classification_missing_R17_mismatch_error")
+
+        # ---- R18-R21 reasoning-profile era: sibling pairs + mutations ----
+        rg_ron = rg_roff = rg_roffneg = rg_standard = rg_case_b = None
+        rg_invariant = rg_pending = rg_effort_ok = rg_web_profiles = None
+        rb_fake_off = rb_contam = rb_missing_top = rb_effort_bad = None
+        rb_averaging = None
+        try:
+            rg_ron = check(_synthetic_hardening_bundle(td, "reasoning-on-positive"))
+            rg_roff = check(_synthetic_hardening_bundle(td, "reasoning-off-positive"))
+            rg_roffneg = check(_synthetic_hardening_bundle(td, "reasoning-off-negative"))
+            rg_standard = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "case_a_standard",
+                docs_mut=_set_standard_topology))
+            rg_case_b = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "case_b_no_off",
+                docs_mut=lambda m, s, e, t: (
+                    t.update({"case": "B", "off_control_status": "ineffective",
+                              "off_control": {"status": "ineffective",
+                                              "control": "enable_thinking=false",
+                                              "evidence": None}}),
+                    m["reasoning_topology"].update(
+                        {"case": "B", "off_control_status": "ineffective"}),
+                    m["reasoning_profile"].update({"publisher_default": True}),
+                    m["reasoning_profile"]["group"].update(
+                        {"required_profiles": ["reasoning-on"], "sibling_events": []}),
+                    s["reasoning_profile"].update({"profile": "reasoning-on"}),
+                    e["reasoning_profile"].update({"profile": "reasoning-on"}))))
+            rg_invariant = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "invariant_shared",
+                manifest_mut=lambda m: m["profile_invariant_evidence"].append({
+                    "kind": "license", "shared_across_profiles": True,
+                    "note": "MIT license text shared across sibling profiles",
+                    "path": "evidence/profile-invariant/artifact-identity.json",
+                    "sha256": hashlib.sha256(
+                        (_synthetic_hardening_bundle(
+                            td, "reasoning-on-positive")
+                         / "evidence/profile-invariant/artifact-identity.json")
+                        .read_bytes()).hexdigest()})))
+            rg_pending = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "sibling_pending",
+                sibling_pending=True))
+            rg_effort_ok = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "effort_unqualified_level",
+                manifest_mut=lambda m: m["reasoning_topology"].update({
+                    "case": "D", "base_case": "C",
+                    "additional_effort_levels": [
+                        {"level": "high", "control": "reasoning_effort",
+                         "qualification": {"status": "unqualified",
+                                           "evidence": None,
+                                           "measured_differences": {}}}]})))
+            rg_web_profiles = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "web_profiles",
+                web_mut=lambda w: w.update({"reasoning_profiles": [
+                    {"profile": "reasoning-on", "display_name": "Reasoning On",
+                     "publisher_default": True,
+                     "event_id": "welp-synthetic-reasoning-on-2026-09-25",
+                     "readiness": "READY"},
+                    {"profile": "reasoning-off", "display_name": "Reasoning Off",
+                     "publisher_default": False,
+                     "event_id": "welp-synthetic-reasoning-off-2026-09-25",
+                     "readiness": "NOT_READY"}]})))
+            rb_fake_off = check(_reasoning_mutated_bundle(
+                td, "reasoning-off-positive", "fake_reasoning_off",
+                manifest_mut=lambda m: m["reasoning_topology"].update({
+                    "case": "B", "off_control_status": "ineffective"})))
+            rb_contam = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "cross_profile_contamination",
+                manifest_mut=lambda m: m["profile_invariant_evidence"].append({
+                    "kind": "reliability", "shared_across_profiles": True,
+                    "note": "illegitimate behavioral sharing",
+                    "path": "evidence/profile-invariant/artifact-identity.json",
+                    "sha256": "0" * 64})))
+            rb_missing_top = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "missing_topology",
+                manifest_mut=lambda m: m.pop("reasoning_topology")))
+            rb_effort_bad = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "effort_unpromoted",
+                manifest_mut=lambda m: (
+                    m["reasoning_topology"].update({
+                        "case": "D", "base_case": "C",
+                        "additional_effort_levels": [
+                            {"level": "high", "control": "reasoning_effort",
+                             "qualification": {"status": "not_distinct",
+                                               "evidence": None,
+                                               "measured_differences": {}}}]}),
+                    m["reasoning_profile"].update({"profile": "reasoning-high"}),
+                    m["reasoning_profile"].update({"display_name": "Reasoning High"}),
+                    m["reasoning_profile"]["group"].update(
+                        {"required_profiles": ["reasoning-on", "reasoning-off",
+                                               "reasoning-high"]}))))
+            rb_averaging = check(_reasoning_mutated_bundle(
+                td, "reasoning-on-positive", "averaged_verdict",
+                web_mut=lambda w: w.update({"model_level_verdict": "READY_WITH_GUARDRAILS"})))
+        except Exception as exc:
+            fails.append(f"reasoning-profile synthetic bundles unavailable: "
+                         f"{type(exc).__name__}: {exc}")
+
+        # A/C: topology-consistent events accepted (Standard, Reasoning On, Reasoning Off)
+        for label, r in [("reasoning_on_rejected", rg_ron),
+                         ("reasoning_off_rejected", rg_roff),
+                         ("reasoning_off_negative_rejected", rg_roffneg),
+                         ("case_a_standard_rejected", rg_standard),
+                         ("case_b_reasoning_on_rejected", rg_case_b),
+                         ("invariant_shared_rejected", rg_invariant),
+                         ("web_two_profiles_rejected", rg_web_profiles)]:
+            if r is not None and not r["valid"]:
+                fails.append(label + ": " + str(
+                    [x for x in r["findings"] if x[0] == "error"]))
+        # D: requested-OFF-but-effective-ON never yields a fake Reasoning Off
+        if rb_fake_off is not None and not any(
+                f[0] == "error" and f[1] == "R19_fake_reasoning_off"
+                for f in rb_fake_off["findings"]):
+            fails.append("fake_reasoning_off_not_rejected")
+        # F: behavioral evidence in the invariant list is contamination
+        if rb_contam is not None and not any(
+                f[0] == "error" and f[1] == "R19_cross_profile_contamination"
+                for f in rb_contam["findings"]):
+            fails.append("cross_profile_contamination_not_rejected")
+        # J: a new-era manifest without the topology record is rejected
+        if rb_missing_top is not None and not any(
+                f[0] == "error" and f[1] == "R18_reasoning_topology_required"
+                for f in rb_missing_top["findings"]):
+            fails.append("missing_topology_not_rejected")
+        # I: unqualified effort levels never become full profiles; qualification first
+        if rg_effort_ok is not None and any(
+                f[0] == "error" and f[1].startswith("R18_effort")
+                for f in rg_effort_ok["findings"]):
+            fails.append("unqualified_but_unpromoted_effort_level_rejected")
+        if rb_effort_bad is not None and not any(
+                f[0] == "error" and f[1] == "R18_effort_profile_unqualified"
+                for f in rb_effort_bad["findings"]):
+            fails.append("unqualified_promoted_effort_profile_not_rejected")
+        # H: differing sibling verdicts are preserved (no averaging)
+        ron_ready = (rg_ron is not None and
+                     (rg_ron.get("classification") or {}).get("readiness"))
+        if rg_ron is not None:
+            man_ron = json.loads((
+                Path(td) / "synthetic_reasoning_on_positive"
+                / "summaries/campaign_manifest.json").read_text())
+            man_roffneg = json.loads((
+                Path(td) / "synthetic_reasoning_off_negative"
+                / "summaries/campaign_manifest.json").read_text())
+            verdicts = (man_ron["classification"].get("readiness"),
+                        man_roffneg["classification"].get("readiness"))
+            if verdicts[0] == verdicts[1]:
+                fails.append(f"differing_verdicts_expected_got_{verdicts}")
+        # E: independent calibration — sibling setups are distinct documents
+        if rg_ron is not None and rg_roff is not None:
+            on_man = json.loads((Path(td) / "synthetic_reasoning_on_positive"
+                                 / "summaries/campaign_manifest.json").read_text())
+            off_man = json.loads((Path(td) / "synthetic_reasoning_off_positive"
+                                  / "summaries/campaign_manifest.json").read_text())
+            on_b = on_man["deployment_lanes"]["budgets"]
+            off_b = off_man["deployment_lanes"]["budgets"]
+            if on_b == off_b:
+                fails.append("sibling_calibration_not_independent")
+            if on_man["reasoning_profile"]["group"]["group_id"] != \
+                    off_man["reasoning_profile"]["group"]["group_id"]:
+                fails.append("sibling_group_ids_differ")
+        # J: pending sibling keeps the event valid but records model
+        # characterization incompleteness (warning, never silent)
+        if rg_pending is None or not rg_pending["valid"]:
+            fails.append("pending_sibling_event_invalidated")
+        elif not any(f[0] == "warning" and f[1] == "R21_model_characterization_incomplete"
+                     for f in rg_pending["findings"]):
+            fails.append("pending_sibling_missing_R21_warning")
+        # H/K: averaging is rejected; per-profile entries accepted
+        if rb_averaging is not None and not any(
+                f[0] == "error" and f[1] == "R20_model_level_averaging"
+                for f in rb_averaging["findings"]):
+            fails.append("model_level_averaging_not_rejected")
+        if rg_web_profiles is not None and any(
+                f[0] == "error" and f[1].startswith("R20")
+                for f in rg_web_profiles["findings"]):
+            fails.append("two_profile_website_export_rejected")
+        # L: historical one-profile events carry no R18 findings
+        if rg_pos is not None and any(
+                f[1].startswith(("R18_", "R19_", "R20_", "R21_"))
+                for f in rg_pos["findings"]):
+            fails.append("historical_bundle_hit_reasoning_profile_rules")
         if not any(f[0] == "error" and f[1] == "R02_ambiguous_report_pair" for f in rb_ambig["findings"]):
             fails.append("ambiguous_pair_missing_R02_error")
         if not any(f[0] == "warning" and f[1] == "R02_historical_report_pair" for f in rg_hist_pair["findings"]):

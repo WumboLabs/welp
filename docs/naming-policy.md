@@ -67,6 +67,10 @@ Canonical display-name map (machine ID -> display name):
 | `PUBLISHER` prompt lane | Publisher Prompt |
 | `OPTIMIZED` prompt lane | Optimized Prompt |
 | semantic / operational budget lanes | Semantic Budget / Operational Budget |
+| `standard` reasoning profile | Standard |
+| `reasoning-on` reasoning profile | Reasoning On |
+| `reasoning-off` reasoning profile | Reasoning Off |
+| `reasoning-<level>` qualified effort profile | Reasoning <Level> (e.g. Reasoning High) |
 
 Names not on this map follow the rule of thumb: 2–4 clear words, plain English
 over jargon, no abstract letter/number-only labels.

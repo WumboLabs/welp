@@ -63,15 +63,25 @@
       ],
       "properties": {
         "gate_baseline_reasoning_state": {
-          "enum": ["REASONING_OFF", "ON", "NOT_APPLICABLE"],
+          "enum": [
+            "REASONING_OFF",
+            "ON",
+            "NOT_APPLICABLE"
+          ],
           "description": "Explicit gate reasoning state; required by the validator (M05) before any Phase-3 generation."
         },
         "reasoning_requested": {
-          "type": ["string", "object"],
+          "type": [
+            "string",
+            "object"
+          ],
           "description": "Reasoning control requested from the runtime (validator M06); string label or structured control object."
         },
         "reasoning_effective": {
-          "type": ["string", "object"],
+          "type": [
+            "string",
+            "object"
+          ],
           "description": "Reasoning control measured effective on the pinned runtime (validator M06); a requested-but-ignored control is recorded here as MEASURED-ineffective, never assumed effective."
         },
         "requested": {
@@ -88,8 +98,12 @@
       "type": "object",
       "description": "CP-1 record (methodology-revision era, validator R09): declares the outcome contract and per-task triples.",
       "properties": {
-        "contract": {"type": "string"},
-        "task_outcome_triples": {"type": "boolean"}
+        "contract": {
+          "type": "string"
+        },
+        "task_outcome_triples": {
+          "type": "boolean"
+        }
       }
     },
     "phase_finish_accounting": {
@@ -97,44 +111,88 @@
       "description": "Per-phase finish_reason accounting (validator R09): COMPLETE rows with missing/unknown finish are an error.",
       "items": {
         "type": "object",
-        "required": ["phase"],
+        "required": [
+          "phase"
+        ],
         "properties": {
-          "phase": {"type": "string"},
-          "complete_rows": {"type": "integer", "minimum": 0},
-          "complete_missing_finish": {"type": "integer", "minimum": 0},
-          "truncated_rows": {"type": "integer", "minimum": 0},
-          "empty_answer_rows": {"type": "integer", "minimum": 0},
-          "budget_exhausted_in_reasoning": {"type": "integer", "minimum": 0},
-          "budget_exhausted_in_answer": {"type": "integer", "minimum": 0},
-          "budget_unknown": {"type": "integer", "minimum": 0}
+          "phase": {
+            "type": "string"
+          },
+          "complete_rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "complete_missing_finish": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "truncated_rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "empty_answer_rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "budget_exhausted_in_reasoning": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "budget_exhausted_in_answer": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "budget_unknown": {
+            "type": "integer",
+            "minimum": 0
+          }
         }
       }
     },
     "campaign_outcome": {
-      "enum": ["COMPLETE_PASS", "COMPLETE_WITH_GAPS", "FAILED_EXECUTION", "BLOCKED"],
+      "enum": [
+        "COMPLETE_PASS",
+        "COMPLETE_WITH_GAPS",
+        "FAILED_EXECUTION",
+        "BLOCKED"
+      ],
       "description": "Campaign execution outcome (validator R11); independent of the model readiness verdict."
     },
     "generation_budget": {
       "type": "object",
       "description": "Generation-budget policy record (validator R12; historical era pre-2026-09-24 — the hardening era records calibration in the frozen setup instead).",
       "properties": {
-        "contract": {"type": "string"},
-        "lanes_declared": {"type": "boolean"}
+        "contract": {
+          "type": "string"
+        },
+        "lanes_declared": {
+          "type": "boolean"
+        }
       }
     },
     "deployment_lanes": {
       "type": "object",
       "description": "Historical-era record (R15, the 2026-09-23 snapshot generation): prompt/profile hashes and bounded global semantic/operational ceilings. From the 2026-09-24 hardening era the pre-scoring setup's per-class calibration inside the hash-bound hardening evidence governs instead; a global-cap record is no longer required.",
       "properties": {
-        "contract": {"const": "welp-deployment-lanes-0.1.0-draft"},
-        "prompt_lanes": {"type": "object"},
-        "budgets": {"type": "object"}
+        "contract": {
+          "const": "welp-deployment-lanes-0.1.0-draft"
+        },
+        "prompt_lanes": {
+          "type": "object"
+        },
+        "budgets": {
+          "type": "object"
+        }
       }
     },
     "hardening_evidence": {
       "type": "object",
       "description": "R17 hash-bound pointer (required for campaign snapshot dates >= 2026-09-24): binds the welp-evidence-bundle-0.1.0-draft evidence document; the validator re-derives gate/context/classification from it via harness/bundle.py evaluate_bundle.",
-      "required": ["contract", "path", "sha256"],
+      "required": [
+        "contract",
+        "path",
+        "sha256"
+      ],
       "additionalProperties": false,
       "properties": {
         "contract": {
@@ -156,12 +214,24 @@
       "type": "object",
       "description": "Readiness record. Historical eras pin welp-final-classification 0.2.0/0.3.x with profile-pure dimensions (R16); from 2026-09-24 the contract is welp-final-classification-0.4.0-draft and any asserted readiness/dimensions are closed-vocabulary and must equal the classification derived from the hardening evidence bundle.",
       "properties": {
-        "contract": {"type": "string"},
-        "profile_id": {"type": "string"},
-        "dimension_profile_ids": {"type": "object"},
+        "contract": {
+          "type": "string"
+        },
+        "profile_id": {
+          "type": "string"
+        },
+        "dimension_profile_ids": {
+          "type": "object"
+        },
         "readiness": {
-          "enum": ["READY", "READY_WITH_GUARDRAILS", "LIMITED_ROLE_ONLY", "NOT_READY",
-                   "INTEGRATION_BLOCKED", null],
+          "enum": [
+            "READY",
+            "READY_WITH_GUARDRAILS",
+            "LIMITED_ROLE_ONLY",
+            "NOT_READY",
+            "INTEGRATION_BLOCKED",
+            null
+          ],
           "description": "Closed headline readiness vocabulary (welp-final-classification); blocked/failed execution carries no verdict."
         },
         "dimensions": {
@@ -169,42 +239,112 @@
           "description": "Closed per-dimension classification vocabulary; the bundle-derived values govern.",
           "additionalProperties": false,
           "properties": {
-            "SEMANTIC_CAPABILITY": {"enum": ["STRONG", "ACCEPTABLE", "WEAK", "UNKNOWN"]},
-            "BUDGET_DISCIPLINE": {"enum": ["GOOD", "FAIR", "POOR", "UNKNOWN"]},
-            "CONTEXT_USABILITY": {"enum": ["VALIDATED", "PARTIAL", "FAILED", "NOT_CHARACTERIZED", "INTEGRATION_BLOCKED"]},
-            "INTEGRATION_QUALITY": {"enum": ["CLEAN", "NOTES", "CONSTRAINTS", "BLOCKED"]}
+            "SEMANTIC_CAPABILITY": {
+              "enum": [
+                "STRONG",
+                "ACCEPTABLE",
+                "WEAK",
+                "UNKNOWN"
+              ]
+            },
+            "BUDGET_DISCIPLINE": {
+              "enum": [
+                "GOOD",
+                "FAIR",
+                "POOR",
+                "UNKNOWN"
+              ]
+            },
+            "CONTEXT_USABILITY": {
+              "enum": [
+                "VALIDATED",
+                "PARTIAL",
+                "FAILED",
+                "NOT_CHARACTERIZED",
+                "INTEGRATION_BLOCKED"
+              ]
+            },
+            "INTEGRATION_QUALITY": {
+              "enum": [
+                "CLEAN",
+                "NOTES",
+                "CONSTRAINTS",
+                "BLOCKED"
+              ]
+            }
           }
         },
-        "integration_evidence": {"type": "string"}
+        "integration_evidence": {
+          "type": "string"
+        }
       }
     },
     "cache_policy": {
       "type": "object",
       "description": "Measurement cache policy (validator R14; historical era pre-2026-09-24 — hardening-era cache state is measured in the frozen pre-scoring setup).",
       "properties": {
-        "scientific_arms": {"type": "string"},
-        "verification": {"type": "string"},
-        "cached_arms_declared": {"type": "boolean"}
+        "scientific_arms": {
+          "type": "string"
+        },
+        "verification": {
+          "type": "string"
+        },
+        "cached_arms_declared": {
+          "type": "boolean"
+        }
       }
     },
     "phases_executed": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "context_validation": {
       "type": "object",
       "description": "Historical R13/R16 useful-context evidence: final-token placement, reserve 512 (pre-2026-09-23) or lane-specific reserves and Family A 1.2.0-draft (2026-09-23). From 2026-09-24 context execution is re-derived from the hardening evidence bundle (Family A 1.3.0-draft); a manifest record is optional.",
       "properties": {
-        "depths_pct": {"type": "array", "items": {"type": "number"}},
-        "placement_preflight_pass": {"type": "boolean"},
-        "max_placement_error_pp": {"type": "number"},
-        "reserve_tokens": {"type": "integer"},
-        "useful_context_max_operational": {"type": ["string", "integer", "null"]},
-        "useful_context_max_semantic": {"type": ["string", "integer", "null"]},
-        "lane_reserves": {"type": "object"},
-        "family_a_version": {"type": "string"},
-        "construction": {"type": "string"},
-        "inference_tokens_match_preflight": {"type": "boolean"}
+        "depths_pct": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "placement_preflight_pass": {
+          "type": "boolean"
+        },
+        "max_placement_error_pp": {
+          "type": "number"
+        },
+        "reserve_tokens": {
+          "type": "integer"
+        },
+        "useful_context_max_operational": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "useful_context_max_semantic": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "lane_reserves": {
+          "type": "object"
+        },
+        "family_a_version": {
+          "type": "string"
+        },
+        "construction": {
+          "type": "string"
+        },
+        "inference_tokens_match_preflight": {
+          "type": "boolean"
+        }
       }
     },
     "phase5_applicability": {
@@ -217,19 +357,27 @@
       "type": "object",
       "description": "Contract acceptance records; welp-* for current campaigns, wlep-* retained for frozen historical campaigns.",
       "patternProperties": {
-        "^welp-[a-z0-9-]+$": {"type": "object"},
-        "^wlep-[a-z0-9-]+$": {"type": "object"}
+        "^welp-[a-z0-9-]+$": {
+          "type": "object"
+        },
+        "^wlep-[a-z0-9-]+$": {
+          "type": "object"
+        }
       }
     },
     "scorers": {
       "type": "object",
       "description": "Scorer identity records: name -> {path, sha256, selftest}. 64-hex sha256 required (R10/R17); scorer welp-reliability-scorer/2 historically, /3 from 2026-09-24. Hardening-era path records are rooted relative and verified against current source bytes.",
-      "additionalProperties": {"type": "object"}
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "fixtures": {
       "type": "object",
       "description": "Fixture identity records: name -> {path, sha256}. 64-hex sha256 required (R10/R17); hardening-era path records are rooted relative and verified against current source bytes.",
-      "additionalProperties": {"type": "object"}
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "artifact_index": {
       "type": "string"
@@ -239,6 +387,179 @@
     },
     "reproduction": {
       "type": "string"
+    },
+    "reasoning_topology": {
+      "type": "object",
+      "description": "Hash-bound reasoning topology qualification (welp-reasoning-topology-0.1.0-draft); required for campaigns under snapshots dated 2026-09-25 or later (validator R18).",
+      "required": [
+        "contract",
+        "case",
+        "off_control_status",
+        "publisher_default_profile",
+        "evidence"
+      ],
+      "properties": {
+        "contract": {
+          "const": "welp-reasoning-topology-0.1.0-draft"
+        },
+        "case": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "base_case": {
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ],
+          "description": "Required when case is D."
+        },
+        "off_control_status": {
+          "enum": [
+            "effective",
+            "unavailable",
+            "ineffective",
+            "unsupported",
+            "not_applicable"
+          ]
+        },
+        "publisher_default_profile": {
+          "type": "string"
+        },
+        "additional_effort_levels": {
+          "type": "array",
+          "description": "Required when case is D; each entry {level, control, qualification:{status, evidence, measured_differences}}.",
+          "items": {
+            "type": "object"
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "description": "{path, sha256} pointer to the frozen qualification record, rooted relative to the campaign bundle.",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "reasoning_profile": {
+      "type": "object",
+      "description": "This event's Reasoning Profile identity inside its reasoning group (welp-reasoning-topology-0.1.0-draft); required for campaigns under snapshots dated 2026-09-25 or later (validator R18/R19).",
+      "required": [
+        "profile",
+        "display_name",
+        "publisher_default",
+        "group"
+      ],
+      "properties": {
+        "profile": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "reasoning-on",
+            "reasoning-off"
+          ],
+          "description": "Machine profile id; a promoted effort level uses reasoning-<level> (enum extended additively)."
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher_default": {
+          "type": "boolean"
+        },
+        "group": {
+          "type": "object",
+          "required": [
+            "group_id",
+            "required_profiles"
+          ],
+          "properties": {
+            "group_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required_profiles": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "sibling_events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "profile",
+                  "event_id",
+                  "state"
+                ],
+                "properties": {
+                  "profile": {
+                    "type": "string"
+                  },
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "enum": [
+                      "complete",
+                      "pending"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "profile_invariant_evidence": {
+      "type": "array",
+      "description": "Explicitly marked profile-invariant records shared across sibling reasoning-profile events; every entry {kind, path, sha256, shared_across_profiles: true, note}. Behavioral evidence is never admissible here (validator R19).",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "path",
+          "sha256",
+          "shared_across_profiles"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "shared_across_profiles": {
+            "const": true
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

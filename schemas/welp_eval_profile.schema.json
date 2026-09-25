@@ -18,7 +18,10 @@
   "properties": {
     "schema": {
       "type": "string",
-      "enum": ["wumbolabs-eval-profile/1", "wumbolabs-eval-profile/2"]
+      "enum": [
+        "wumbolabs-eval-profile/1",
+        "wumbolabs-eval-profile/2"
+      ]
     },
     "model_id": {
       "type": "string",
@@ -71,27 +74,75 @@
       "description": "event_id of the first published event on this profile."
     },
     "current_status": {
-      "enum": ["current", "current-alternate", "historical", "superseded", "specialized", "benchmark-only", "specialized-test", "practical-use"],
+      "enum": [
+        "current",
+        "current-alternate",
+        "historical",
+        "superseded",
+        "specialized",
+        "benchmark-only",
+        "specialized-test",
+        "practical-use"
+      ],
       "description": "Published profile role. Historical classification vocabulary is retained rather than scientifically reclassified during migration."
     },
     "notes": {
       "type": "string",
       "description": "Optional bounded clarification (e.g. provenance of a split repository)."
+    },
+    "reasoning_profile": {
+      "type": "string",
+      "description": "Additive (2026-09-25): machine reasoning-profile id of this tested surface (standard | reasoning-on | reasoning-off | reasoning-<level>) per welp-reasoning-topology-0.1.0-draft."
+    },
+    "publisher_default_profile": {
+      "type": "boolean",
+      "description": "Additive (2026-09-25): true when this profile corresponds to the publisher/default deployment behavior; context only, never a demotion of sibling profiles."
     }
   },
   "allOf": [
     {
-      "if": {"properties": {"schema": {"const": "wumbolabs-eval-profile/1"}}},
-      "then": {"required": ["first_event"]}
+      "if": {
+        "properties": {
+          "schema": {
+            "const": "wumbolabs-eval-profile/1"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "first_event"
+        ]
+      }
     },
     {
-      "if": {"properties": {"schema": {"const": "wumbolabs-eval-profile/2"}}},
-      "then": {
-        "required": ["profile_path", "event_ids"],
+      "if": {
         "properties": {
-          "repository": {"const": "WumboLabs/evaluations"},
-          "profile_path": {"type": "string", "pattern": "^models/[a-z0-9][a-z0-9.-]*/profiles/[a-z0-9][a-z0-9.-]*$"},
-          "event_ids": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"}, "uniqueItems": true}
+          "schema": {
+            "const": "wumbolabs-eval-profile/2"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "profile_path",
+          "event_ids"
+        ],
+        "properties": {
+          "repository": {
+            "const": "WumboLabs/evaluations"
+          },
+          "profile_path": {
+            "type": "string",
+            "pattern": "^models/[a-z0-9][a-z0-9.-]*/profiles/[a-z0-9][a-z0-9.-]*$"
+          },
+          "event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "uniqueItems": true
+          }
         }
       }
     }

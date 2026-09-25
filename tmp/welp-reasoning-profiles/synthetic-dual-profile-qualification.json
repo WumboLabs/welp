@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "check": "reasoning_on_bundle_valid",
+      "detail": "case-C Reasoning On sibling passes the full validator",
+      "pass": true
+    },
+    {
+      "check": "reasoning_off_bundle_valid",
+      "detail": "case-C Reasoning Off sibling passes the full validator",
+      "pass": true
+    },
+    {
+      "check": "linkage_valid",
+      "detail": "same group_id, distinct profiles, both required profiles declared",
+      "pass": true
+    },
+    {
+      "check": "different_calibration_ceilings",
+      "detail": "ON {'calibration_predeclared': True, 'operational_ceiling': 2048, 'semantic_ceiling': 512} vs OFF {'calibration_predeclared': True, 'operational_ceiling': 1024, 'semantic_ceiling': 768}",
+      "pass": true
+    },
+    {
+      "check": "separate_verdicts_preserved",
+      "detail": "ON=READY OFF=READY OFF-negative=NOT_READY; each derived independently",
+      "pass": true
+    },
+    {
+      "check": "shared_invariant_identity_explicit",
+      "detail": "explicitly marked profile-invariant records hash-identical across siblings",
+      "pass": true
+    },
+    {
+      "check": "behavioral_evidence_separate",
+      "detail": "each sibling freezes its own hash-bound evidence document",
+      "pass": true
+    },
+    {
+      "check": "validator_selftest_matrix_A_L",
+      "detail": "cases A-L: topology cases, fake-OFF rejection, independent calibration, cross-profile contamination rejection, invariant sharing accepted, differing verdicts preserved, effort-level qualification gating, missing-OFF incompleteness warning, two-profile website export, historical one-profile compatibility",
+      "pass": true
+    },
+    {
+      "check": "publication_export_deterministic",
+      "detail": "website publication export canonicalizes deterministically (NOT_FOR_PUBLICATION for synthetic)",
+      "pass": true
+    }
+  ],
+  "contract": "welp-reasoning-topology-0.1.0-draft",
+  "pass": true,
+  "qualification": "welp-reasoning-profiles synthetic dual-profile integration",
+  "snapshot_id": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+  "synthetic": true
+}

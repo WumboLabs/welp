@@ -33,7 +33,12 @@
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
     },
     "disposition": {
-      "enum": ["WEBSITE_READY", "WEBSITE_BLOCKED", "NOT_FOR_PUBLICATION", "WEBSITE_PUBLISHED"],
+      "enum": [
+        "WEBSITE_READY",
+        "WEBSITE_BLOCKED",
+        "NOT_FOR_PUBLICATION",
+        "WEBSITE_PUBLISHED"
+      ],
       "description": "Exactly one website-publication disposition. WEBSITE_READY: campaign closed with sufficient public-safe material. WEBSITE_BLOCKED: intended for publication but blocked (missing public evidence, unresolved publication concern, or website integration blocker); reason required. NOT_FOR_PUBLICATION: intentionally excluded; reason required. WEBSITE_PUBLISHED: public evidence and website record are published and verified."
     },
     "reason": {
@@ -42,141 +47,335 @@
     },
     "model": {
       "type": "object",
-      "required": ["display_name"],
+      "required": [
+        "display_name"
+      ],
       "properties": {
-        "display_name": { "type": "string" },
-        "producer": { "type": "string" },
-        "official_id": { "type": "string" },
-        "official_revision": { "type": "string" },
-        "license": { "type": "string" }
+        "display_name": {
+          "type": "string"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "official_id": {
+          "type": "string"
+        },
+        "official_revision": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        }
       }
     },
     "artifact": {
       "type": "object",
-      "required": ["tested", "precision"],
+      "required": [
+        "tested",
+        "precision"
+      ],
       "properties": {
-        "tested": { "type": "string" },
-        "precision": { "type": "string" },
-        "sha256": { "type": "string" },
-        "source": { "type": "string" }
+        "tested": {
+          "type": "string"
+        },
+        "precision": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
       }
     },
     "runtime": {
       "type": "object",
-      "required": ["engine"],
+      "required": [
+        "engine"
+      ],
       "properties": {
-        "engine": { "type": "string" },
-        "version": { "type": "string" },
-        "notes": { "type": "string" }
+        "engine": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "hardware": {
       "type": "object",
-      "required": ["gpu"],
+      "required": [
+        "gpu"
+      ],
       "properties": {
-        "machine": { "type": "string" },
-        "gpu": { "type": "string" },
-        "notes": { "type": "string" }
+        "machine": {
+          "type": "string"
+        },
+        "gpu": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "welp": {
       "type": "object",
-      "required": ["outcome", "classification"],
+      "required": [
+        "outcome",
+        "classification"
+      ],
       "properties": {
-        "outcome": { "type": "string" },
-        "classification": { "type": "string" },
-        "artifact_classification": { "type": "string" }
+        "outcome": {
+          "type": "string"
+        },
+        "classification": {
+          "type": "string"
+        },
+        "artifact_classification": {
+          "type": "string"
+        }
       }
     },
     "context": {
       "type": "object",
-      "required": ["envelope_complete"],
+      "required": [
+        "envelope_complete"
+      ],
       "properties": {
-        "practical_default_tokens": { "type": "integer" },
-        "guarded_tokens": { "type": "integer" },
-        "native_maximum_tokens": { "type": "integer" },
-        "envelope_complete": { "type": "boolean" },
-        "native_maximum_disposition": { "type": "string" },
-        "notes": { "type": "string" }
+        "practical_default_tokens": {
+          "type": "integer"
+        },
+        "guarded_tokens": {
+          "type": "integer"
+        },
+        "native_maximum_tokens": {
+          "type": "integer"
+        },
+        "envelope_complete": {
+          "type": "boolean"
+        },
+        "native_maximum_disposition": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "performance": {
       "type": "object",
       "properties": {
-        "surface_note": { "type": "string" },
-        "short_ttft_s": { "type": ["number", "null"] },
-        "short_decode_tps": { "type": ["number", "null"] },
-        "moderate_input_tokens": { "type": ["integer", "null"] },
-        "moderate_ttft_s": { "type": ["number", "null"] },
-        "moderate_prefill_tps": { "type": ["number", "null"] },
-        "moderate_decode_tps": { "type": ["number", "null"] }
+        "surface_note": {
+          "type": "string"
+        },
+        "short_ttft_s": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "short_decode_tps": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "moderate_input_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "moderate_ttft_s": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "moderate_prefill_tps": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "moderate_decode_tps": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
       }
     },
     "quality": {
       "type": "object",
       "description": "Only evidence established by this event. A context-only event need not repeat inherited reliability claims; null performance measurements mean unmeasured, not zero.",
       "properties": {
-        "constrained_result": { "type": "string" },
-        "capability_highlights": { "type": "array", "items": { "type": "string" } },
-        "key_guardrails": { "type": "array", "items": { "type": "string" } },
-        "reliability_summary": { "type": "string" }
+        "constrained_result": {
+          "type": "string"
+        },
+        "capability_highlights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_guardrails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reliability_summary": {
+          "type": "string"
+        }
       }
     },
     "localmaxxing": {
       "type": "object",
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
-          "enum": ["SUBMITTED", "MEASURED_NOT_SUBMITTED", "NOT_ELIGIBLE", "BLOCKED"]
+          "enum": [
+            "SUBMITTED",
+            "MEASURED_NOT_SUBMITTED",
+            "NOT_ELIGIBLE",
+            "BLOCKED"
+          ]
         },
-        "canonical_context_tokens": { "type": "integer" },
-        "tok_s_out": { "type": "number" },
-        "ttft_ms": { "type": "number" },
-        "submission_ref": { "type": "string" },
-        "verified_run": { "type": ["boolean", "null"] },
-        "note": { "type": "string" }
+        "canonical_context_tokens": {
+          "type": "integer"
+        },
+        "tok_s_out": {
+          "type": "number"
+        },
+        "ttft_ms": {
+          "type": "number"
+        },
+        "submission_ref": {
+          "type": "string"
+        },
+        "verified_run": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
       }
     },
     "canonical_evidence": {
       "type": "object",
-      "required": ["state"],
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
-          "enum": ["PUBLISHED", "PENDING_HUMAN_GATE"],
+          "enum": [
+            "PUBLISHED",
+            "PENDING_HUMAN_GATE"
+          ],
           "description": "PENDING_HUMAN_GATE until accepted public event evidence has been pushed. Never invent a published citation."
         },
-        "url": { "type": ["string", "null"] },
-        "proposed_repo": { "type": ["string", "null"] },
-        "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
-        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-        "path": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$" },
-        "note": { "type": "string" }
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "proposed_repo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+        },
+        "note": {
+          "type": "string"
+        }
       },
       "allOf": [
         {
-          "if": { "required": ["path"] },
+          "if": {
+            "required": [
+              "path"
+            ]
+          },
           "then": {
-            "required": ["repo", "commit", "path"],
-            "properties": { "repo": { "const": "WumboLabs/evaluations" }, "state": { "const": "PUBLISHED" } }
+            "required": [
+              "repo",
+              "commit",
+              "path"
+            ],
+            "properties": {
+              "repo": {
+                "const": "WumboLabs/evaluations"
+              },
+              "state": {
+                "const": "PUBLISHED"
+              }
+            }
           }
         },
         {
           "if": {
-            "required": ["repo", "state"],
-            "properties": { "repo": { "const": "WumboLabs/evaluations" }, "state": { "const": "PUBLISHED" } }
+            "required": [
+              "repo",
+              "state"
+            ],
+            "properties": {
+              "repo": {
+                "const": "WumboLabs/evaluations"
+              },
+              "state": {
+                "const": "PUBLISHED"
+              }
+            }
           },
-          "then": { "required": ["commit", "path"] }
+          "then": {
+            "required": [
+              "commit",
+              "path"
+            ]
+          }
         }
       ]
     },
     "website_record_slug": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Website Labs record slug this export drives. null only for NOT_FOR_PUBLICATION."
     },
     "identity": {
       "type": "object",
       "description": "Stable scientific publication identity. One model_id identifies a model page; one profile_id identifies a materially distinct tested surface; one event_id identifies an immutable event. No new profile repository is required. Optional only for legacy exports.",
-      "required": ["model_id", "profile_id", "event_id", "event_type"],
+      "required": [
+        "model_id",
+        "profile_id",
+        "event_id",
+        "event_type"
+      ],
       "properties": {
         "model_id": {
           "type": "string",
@@ -208,26 +407,54 @@
           "description": "Legacy publication topology only. Accepted unchanged for historical exports; never reinterpret this as a central repository path."
         },
         "profile_status": {
-          "enum": ["current", "current-alternate", "historical", "superseded", "specialized"],
+          "enum": [
+            "current",
+            "current-alternate",
+            "historical",
+            "superseded",
+            "specialized"
+          ],
           "description": "Role of this profile among the model's tested profiles at publication time."
         },
         "evidence_scope": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1,
           "description": "Surfaces this event establishes or updates (e.g. model-classification, reliability, capabilities, context, performance, serving-profile, localmaxxing, protocol-development). A later context-only event must NOT claim scopes it does not evidence; per-surface currency derives from this declaration."
         },
-        "shared_event_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "shared_event_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "related_model_ids": {
-          "type": "array", "minItems": 2, "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" }
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]*$"
+          }
         },
         "related_profile_ids": {
-          "type": "array", "minItems": 1, "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" }
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]*$"
+          }
         }
       },
-      "dependentRequired": { "shared_event_id": ["related_model_ids"], "related_model_ids": ["shared_event_id"] }
+      "dependentRequired": {
+        "shared_event_id": [
+          "related_model_ids"
+        ],
+        "related_model_ids": [
+          "shared_event_id"
+        ]
+      }
     },
     "record_description": {
       "type": "string",
@@ -236,6 +463,46 @@
     "public_summary": {
       "type": "string",
       "description": "Bounded human-readable summary; no marketing language."
+    },
+    "reasoning_profiles": {
+      "type": "array",
+      "description": "Additive (2026-09-25): independent per-profile results for a model with more than one reasoning profile (welp-reasoning-topology-0.1.0-draft). Verdicts are never averaged or flattened into a model-level score (validator R20).",
+      "items": {
+        "type": "object",
+        "required": [
+          "profile",
+          "display_name",
+          "event_id",
+          "readiness"
+        ],
+        "properties": {
+          "profile": {
+            "type": "string",
+            "minLength": 1
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publisher_default": {
+            "type": "boolean"
+          },
+          "event_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "readiness": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "This profile's independent derived classification readiness."
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "allOf": [
@@ -244,15 +511,43 @@
         "properties": {
           "canonical_evidence": {
             "anyOf": [
-              { "required": ["path"] },
-              { "required": ["repo"], "properties": { "repo": { "const": "WumboLabs/evaluations" } } },
-              { "required": ["proposed_repo"], "properties": { "proposed_repo": { "const": "WumboLabs/evaluations" } } }
+              {
+                "required": [
+                  "path"
+                ]
+              },
+              {
+                "required": [
+                  "repo"
+                ],
+                "properties": {
+                  "repo": {
+                    "const": "WumboLabs/evaluations"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "proposed_repo"
+                ],
+                "properties": {
+                  "proposed_repo": {
+                    "const": "WumboLabs/evaluations"
+                  }
+                }
+              }
             ]
           }
         },
-        "required": ["canonical_evidence"]
+        "required": [
+          "canonical_evidence"
+        ]
       },
-      "then": { "required": ["identity"] }
+      "then": {
+        "required": [
+          "identity"
+        ]
+      }
     }
   ]
 }

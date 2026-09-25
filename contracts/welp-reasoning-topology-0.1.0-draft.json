@@ -1,0 +1,87 @@
+{
+    "contract_id": "welp-reasoning-topology",
+    "version": "0.1.0-draft",
+    "applies_from_snapshot_date": "2026-09-25",
+    "status": "DRAFT / PROSPECTIVE",
+    "module": "validators/validate_campaign_welp.py rules R18-R21 (welp-reasoning-profiles/1)",
+    "schema": "embedded in schemas/welp_campaign_manifest.schema.json (reasoning_topology / reasoning_profile / profile_invariant_evidence properties)",
+    "supersedes": {
+        "contract_id": null,
+        "version": null,
+        "migration_type": "new-concept",
+        "note": "First-class Reasoning Profile concept. The 2026-09-23 rule that 'different effective reasoning controls become distinct profiles only when they change deployment behavior' is narrowed: when an effective SUPPORTED ON/OFF reasoning control exists, Reasoning On and Reasoning Off are both REQUIRED full WELP deployment profiles, never optional variants."
+    },
+    "purpose": "Qualify a model's actual reasoning topology experimentally BEFORE scored work and require the deployment profiles the model genuinely exposes. Motivated by ling-3.0-tiny: reasoning ON was the classified profile while enable_thinking=false was proven to produce effective OFF behavior that was never characterized, leaving the model's legitimate alternate deployment profile unknown.",
+    "scope_note": "Determine EFFECTIVE behavior on the pinned runtime; the request field alone never qualifies a control. This contract changes which profiles must exist; it does not change any scoring contract, gate, fixture, or classification rule.",
+    "topology_cases": {
+        "A": {
+            "label": "No reasoning mode",
+            "meaning": "No separate reasoning/thinking behavior exists.",
+            "required_profiles": ["standard"],
+            "off_control_status": null
+        },
+        "B": {
+            "label": "Reasoning present, cannot be disabled",
+            "meaning": "Effective reasoning behavior exists but no supported effective OFF control exists (unavailable, ineffective, or unsupported on the pinned runtime).",
+            "required_profiles": ["reasoning-on"],
+            "off_control_status": ["unavailable", "ineffective", "unsupported"]
+        },
+        "C": {
+            "label": "Effective ON/OFF control exists",
+            "meaning": "Both states are real and supported on the pinned runtime; each is experimentally proven, not assumed from the request field.",
+            "required_profiles": ["reasoning-on", "reasoning-off"],
+            "off_control_status": ["effective"]
+        },
+        "D": {
+            "label": "Additional effort levels exist",
+            "meaning": "The base case (A, B, or C, recorded in base_case) is additionally accompanied by bounded reasoning-effort levels (low/medium/high/budget/effort/thinking depth). Effort levels are QUALIFIED prospectively and become full profiles only when genuinely supported, measurably distinct, deployment-relevant, and sufficient to change practical interpretation.",
+            "required_profiles": "same as base_case, plus any effort level promoted under the effort-level policy",
+            "off_control_status": "same as base_case"
+        }
+    },
+    "machine_profile_ids": {
+        "standard": "Standard",
+        "reasoning-on": "Reasoning On",
+        "reasoning-off": "Reasoning Off",
+        "reasoning-<level>": "Reasoning <Level> — only for a qualified, promoted effort level (e.g. reasoning-high / Reasoning High)"
+    },
+    "display_names": {
+        "standard": "Standard",
+        "reasoning-on": "Reasoning On",
+        "reasoning-off": "Reasoning Off"
+    },
+    "qualification_record": {
+        "required_keys": ["contract", "version", "campaign_id", "case", "controls", "off_control", "publisher_default_profile", "determined_utc", "method"],
+        "case": "A | B | C | D (case D additionally requires base_case A|B|C and additional_effort_levels)",
+        "controls": "list of {control, requested_state, effective_state, evidence:{path, sha256}} — every examined reasoning control with its MEASURED effective behavior on the pinned runtime",
+        "off_control": "{status: effective|unavailable|ineffective|unsupported, control, evidence:{path, sha256}} — status effective requires raw proof of OFF behavior (no reasoning channel) AND raw proof of the ON comparator from the same runtime; ineffective/unavailable/unsupported require the recorded attempt evidence",
+        "publisher_default_profile": "standard | reasoning-on | reasoning-off | reasoning-<level> — the profile matching publisher/default deployment behavior; context only, never a demotion of the other supported profile(s)",
+        "additional_effort_levels": "list of {level, control, qualification: {status: distinct_deployment_relevant|not_distinct|unqualified, evidence:{path, sha256}, measured_differences:{...}}} — present for case D; a level may become a full profile ONLY with status distinct_deployment_relevant"
+    },
+    "profile_requirements": {
+        "full_profile": "Each required profile is a complete WELP campaign event with its own profile identity, setup, calibration, response ceilings, prompt/control binding, reliability, safety, real-work results, context results, performance, evidence bundle, classification and deployment guidance. No diagnostic-only afterthought, no shared calibration, no ceiling reuse across profiles.",
+        "same_task_set": "Where applicable the SAME frozen model-agnostic task set is used across reasoning profiles so results are directly comparable; profile-specific setup/calibration may differ and must not alter fixture difficulty.",
+        "independent_classification": "Each profile gets its own derived classification. Averaging, merging, scoring or verbally collapsing distinct profile verdicts into one artificial model-level score is PROHIBITED. A model-level summary may state the publisher/default profile and the alternate supported profile(s) and provide deployment guidance; it must not flatten them.",
+        "profile_invariant_evidence": "Genuinely profile-invariant records (model source identity, license, artifact SHA-256, quant identity, architecture, runtime commit/build, physical hardware, pure load/fit qualification, unchanged template identity, artifact provenance) MAY be shared, but only when explicitly marked in manifest.profile_invariant_evidence with hash-bound references and provenance. Behavioral evidence (effective reasoning state, calibration, ceilings, scored outputs, reliability, safety outcomes, capability modules, context cells, generation performance, latency, token consumption, classification) is PROFILE-SPECIFIC and is never shared merely because artifact/runtime/hardware are identical.",
+        "bound": "Normal profile count: Standard model 1 profile; reasoning model without OFF 1 profile; reasoning model with effective OFF 2 profiles. Additional effort profiles are exceptional and prospectively justified. No unbounded configuration sweep and no post-hoc best-mode search."
+    },
+    "manifest_binding": {
+        "reasoning_topology": "{contract: welp-reasoning-topology-0.1.0-draft, case, base_case (case D), off_control_status, publisher_default_profile, additional_effort_levels (case D), evidence:{path, sha256}} — hash-bound pointer to the frozen qualification record; required in new-era campaign manifests",
+        "reasoning_profile": "{profile, display_name, publisher_default (bool), group:{group_id, required_profiles, sibling_events:[{profile, event_id, state: complete|pending}]}} — this event's profile identity inside its reasoning group; case C groups list exactly the two required profiles",
+        "profile_invariant_evidence": "list of {kind, path, sha256, shared_across_profiles: true, note} — the ONLY evidence allowed to be shared across sibling profile events"
+    },
+    "reuse_policy": {
+        "classes": ["REUSE", "REVALIDATE", "RE-DERIVED", "MUST_RERUN", "INCOMPARABLE"],
+        "rules": "Evidence reused from a prior event of the same model (e.g. a pre-reasoning-profiles campaign re-derived under the new snapshot) is legitimate only for the SAME effective reasoning profile, with explicit reuse provenance records ({class, source_event_id, source_path, source_sha256, rationale}) in the new event's evidence; behavioral evidence is reused only where the new methodology proves the underlying task, prompt, artifact, runtime, sampler, reasoning state, setup semantics and evidence format scientifically compatible. A reused classification is always re-derived under the new snapshot and validator-approved; it is never grandfathered.",
+        "contamination": "Evidence belonging to a different reasoning profile of the same model is NEVER reused as another profile's behavioral evidence. Cross-profile behavioral binding fails validation closed."
+    },
+    "regression_contract": [
+        "case A model yields exactly one Standard profile; case B yields Reasoning On with an explicit unavailable/ineffective/unsupported OFF record; case C yields both Reasoning On and Reasoning Off",
+        "a requested-but-ineffective OFF control never creates a Reasoning Off profile (no fake OFF)",
+        "case C sibling events share a group_id, carry independent classifications, and never average verdicts",
+        "cross-profile behavioral evidence binding is rejected; explicitly marked profile-invariant evidence is accepted",
+        "additional effort levels are qualified before promotion; unqualified levels never become full profiles",
+        "a case C model whose sibling profile event is still pending records an incomplete model characterization",
+        "historical one-profile events remain valid unchanged under their frozen snapshots"
+    ]
+}
