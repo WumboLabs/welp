@@ -1,58 +1,102 @@
 {
-  "schema": "welp-modules-index/0.1.0-draft",
-  "created": "2026-08-26",
-  "note": "Index of WELP Phase 5 capability module contracts. Each entry records the frozen historical contract it supersedes. Those files are immutable and remain valid for reproducing historical campaigns.",
-  "modules": [
-    {
-      "contract_id": "welp-coding",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-module-coding", "version": "0.1-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-module-coding-0.1-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL"
-    },
-    {
-      "contract_id": "welp-structured-interfaces",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-structured-interfaces", "version": "0.1.0-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-structured-interfaces-0.1.0-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "UNIVERSAL_CORE"
-    },
-    {
-      "contract_id": "welp-native-tools",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-native-tools", "version": "0.1.0-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-native-tools-0.1.0-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL"
-    },
-    {
-      "contract_id": "welp-extraction-rag",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-extraction-rag", "version": "0.1.0-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-extraction-rag-0.1.0-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL"
-    },
-    {
-      "contract_id": "welp-reasoning",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-reasoning", "version": "0.1.0-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-reasoning-0.1.0-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL"
-    },
-    {
-      "contract_id": "welp-linux-systems",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-linux-systems", "version": "0.1.0-draft", "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-linux-systems-0.1.0-draft.json"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL"
-    },
-    {
-      "contract_id": "welp-omp-local-agent",
-      "version": "0.1.0-draft",
-      "supersedes": {"contract_id": "wlep-omp-local-agent", "version": "0.1.0-draft", "frozen_path": "phase5-hardening/omp/fixtures/omp-fix-{01,02,03,04}-*/fixture.json (oracle-validated fixtures)"},
-      "status": "READY_DRAFT",
-      "applicability_default": "CONDITIONAL",
-      "system_level_only": true
-    }
-  ],
-  "vision_default": "NOT_APPLICABLE"
+ "schema": "welp-modules-index/0.1.0-draft",
+ "created": "2026-08-26",
+ "note": "Index of WELP Phase 5 capability module contracts. Each entry records the frozen historical contract it supersedes. Those files are immutable and remain valid for reproducing historical campaigns.",
+ "modules": [
+  {
+   "contract_id": "welp-coding",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-module-coding",
+    "version": "0.1-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-module-coding-0.1-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL"
+  },
+  {
+   "contract_id": "welp-structured-interfaces",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-structured-interfaces",
+    "version": "0.1.0-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-structured-interfaces-0.1.0-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "UNIVERSAL_CORE"
+  },
+  {
+   "contract_id": "welp-native-tools",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-native-tools",
+    "version": "0.1.0-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-native-tools-0.1.0-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL"
+  },
+  {
+   "contract_id": "welp-extraction-rag",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-extraction-rag",
+    "version": "0.1.0-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-extraction-rag-0.1.0-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL"
+  },
+  {
+   "contract_id": "welp-reasoning",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-reasoning",
+    "version": "0.1.0-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-reasoning-0.1.0-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL"
+  },
+  {
+   "contract_id": "welp-linux-systems",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-linux-systems",
+    "version": "0.1.0-draft",
+    "frozen_path": "overnight-hardening-2026-08-25/publication/repo-candidate/contracts/wlep-linux-systems-0.1.0-draft.json"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL"
+  },
+  {
+   "contract_id": "welp-omp-local-agent",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "wlep-omp-local-agent",
+    "version": "0.1.0-draft",
+    "frozen_path": "phase5-hardening/omp/fixtures/omp-fix-{01,02,03,04}-*/fixture.json (oracle-validated fixtures)"
+   },
+   "status": "HISTORICAL",
+   "applicability_default": "CONDITIONAL",
+   "system_level_only": true,
+   "historical": true,
+   "historical_note": "Indexed contract/scorer files were never present in welp/contracts/; surviving evidence is 4 oracle-validated fixtures + one 2-fixture calibration run (research/methodology/wlep-development/phase5-hardening/omp/), recorded as an OMP+MODEL system result. Superseded for current Agentic-section work by welp-agentic 0.1.0-draft; retained unchanged as historical provenance."
+  },
+  {
+   "contract_id": "welp-agentic",
+   "version": "0.1.0-draft",
+   "supersedes": {
+    "contract_id": "welp-omp-local-agent",
+    "version": "0.1.0-draft",
+    "frozen_path": "research/methodology/wlep-development/phase5-hardening/omp/ (historical fixtures + calibration; indexed contract/scorer files were never present in welp/contracts/)"
+   },
+   "status": "READY_DRAFT",
+   "applicability_default": "CONDITIONAL",
+   "section": "agentic",
+   "note": "WELP Agentic section contract (autonomous execution: discover -> decide -> act -> observe -> recover -> verify -> finish). Historical welp-omp-local-agent evidence remains system-level historical provenance under its own path."
+  }
+ ],
+ "vision_default": "NOT_APPLICABLE",
+ "updated": "2026-09-25"
 }

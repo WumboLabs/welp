@@ -1,0 +1,22 @@
+Research question (frozen local corpus; offline task)
+
+The Atlas-9 message bus documentation set in sources/ contains versioned
+operator manuals, numbered operations bulletins, and a governance note.
+The documents disagree about the maximum recommended CONSUMER batch size.
+
+Using ONLY the provided sources, determine the current authoritative value
+and produce the artifact research-pack/answer.md with exactly these four
+lines (fill in the placeholders):
+
+Maximum recommended consumer batch size: <N> messages
+Governing source: <source-id>
+Superseded on this point: <comma-separated source-ids>
+Sources used: <comma-separated source-ids>
+
+Rules for the artifact:
+- source-id values are the file basenames under sources/ without the .md
+  extension (for example: manual-v1).
+- "Superseded on this point" lists every source whose consumer-batch value
+  is superseded by the governing source on this specific point.
+- "Sources used" lists every source you actually relied on.
+- Cite only sources that exist in sources/.

@@ -13,6 +13,7 @@ lab-records/<model-slug>/welp-<YYYY-MM-DD>/
 ├── commands/            # exact launch/run commands
 ├── results/             # raw jsonl (public-eligible)
 ├── summaries/           # all machine-readable summaries incl artifact_index, publication_status, welp_conformance.json
+├── agentic/             # WELP Agentic section evidence when applicable: task records, transcripts, result JSONs (per welp-agentic-0.1.0-draft; also record sections.model / sections.agentic dispositions in the manifest)
 ├── telemetry/           # gpu/journal samples
 ├── omp/                 # omp evidence if applicable (system-level)
 ├── localmaxxing/        # submission payloads/responses (redacted)

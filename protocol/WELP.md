@@ -771,6 +771,203 @@ Historical campaigns (Granite, Ling original, LFM, Spark, Bonsai and every
 other one-profile event) remain valid under their frozen methodologies; old
 reports never need invented Reasoning Off results.
 
+## WELP Model and WELP Agentic (prospective 2026-09-25 model-agentic revision)
+
+This is a **methodology change, DRAFT / NOT v1.0**. The parent is
+`welp-next-snapshot-2026-09-25-reasoning-profiles`. Old snapshots, campaigns,
+raw answers and published verdicts remain immutable. Contract:
+`welp-agentic-0.1.0-draft`; harness `welp-agentic-harness/0.1.0-draft`
+(`harness/agentic.py`); task record schema `welp_agentic_task.schema.json`
+(`welp-agentic-task-record/1`). Validator rules R22–R24 apply to campaigns
+under the exact snapshot `welp-next-snapshot-2026-09-25-model-agentic`, under
+any later-dated snapshot, or wherever a manifest explicitly adopts the
+`welp-agentic` contract — deliberately NOT date-only gating, because this
+snapshot shares its date with reasoning-profiles and reasoning-era campaigns
+never recorded section dispositions.
+
+### One protocol, two sections
+
+WELP comprises two sections. Both belong to ONE protocol and every current
+campaign summary shows both explicitly.
+
+**WELP Model** asks: how capable, reliable and useful is the tested local
+model profile? It retains the existing coverage: Reliability and Safety,
+Assistant Quality, Structured Output, Tool Recovery, Linux Diagnosis,
+Repository Repair, Multi-Turn Correction, Controlled Context, Multi-Document
+Context, Reasoning Profiles, and Performance/deployment geometry.
+
+**WELP Agentic** asks: can that model, through a specified agent harness,
+independently complete bounded tasks using tools and environment feedback?
+It measures autonomous execution: discover → decide → act → observe →
+recover → verify → finish. Model tests may supply relevant inputs directly
+and examine bounded skills; Agentic tasks require the tested model to
+discover and execute the work through tools. The Model suite is not
+duplicated inside Agentic.
+
+Each section has its own execution status, its own evidence-backed results,
+and its own applicability and limitations. **Averaging of Model and Agentic
+verdicts is prohibited.** A negative Model verdict does not automatically
+prohibit Agentic testing; a real integration or sandbox-safety blocker
+prevents execution and is reported as `INTEGRATION_BLOCKED`, never as a
+model verdict. A completed negative Agentic task is a successfully executed
+measurement, not a broken experiment.
+
+### Agentic configuration binding and profile honesty
+
+WELP Agentic initially tests ONE explicitly selected qualified model profile
+under a **predeclared selection rule**, recorded before any Agentic task
+output is seen. Prefer the publisher/default profile unless the preregistered
+rule selects another profile for the intended role; never select whichever
+Agentic result looks best afterward. An alternate reasoning mode may be
+tested as a separately declared extension, and is not automatically another
+full Agentic suite; untested modes remain explicitly untested for Agentic
+behavior. Agentic inherits verified model/artifact/runtime/hardware identity
+(see profile-invariant evidence) — it does NOT inherit behavioral results
+from Model.
+
+Every Agentic run binds and freezes: parent model-profile ID; harness
+implementation and commit; tool schemas and parser; agent system
+instructions; effective reasoning/sampling settings; context handling and any
+compaction; permissions and sandbox image; retries, execution limits and
+stopping policy. An agent system prompt is not identical to a normal
+assistant prompt — record the difference instead of claiming the entire
+profile is unchanged. Results describe the **MODEL + HARNESS + ENVIRONMENT**
+combination, and wrong-profile or wrong-harness evidence is rejected.
+
+### The three initial tasks
+
+The initial suite is three bounded tasks using existing machinery where
+suitable — not another standalone agent product or evaluation framework:
+
+1. **Repository** — a small repository with a bounded defect/request: the
+   agent inspects, locates the issue, edits, runs tests, responds to
+   reviewer feedback, verifies the final state and reports what actually
+   happened.
+2. **System** — a broken service/configuration in a disposable sandboxed
+   environment or faithful stateful simulator: the agent gathers evidence,
+   applies an authorized repair and verifies it. No live host or service
+   changes.
+3. **Research** — a question plus a frozen local source collection: the
+   agent locates relevant sources, resolves conflicting/outdated evidence,
+   produces the requested artifact and cites supporting evidence. No live-web
+   dependency in the scored fixture.
+
+Task content differs from any Model task whose solution the evaluated agent
+has already seen; shared infrastructure is acceptable, solution leakage is
+not. All needed information must be discoverable through documented tools —
+no hidden paths, undocumented arguments, or unstated goals. No single exact
+tool sequence is required unless dependencies or permissions genuinely impose
+one; different valid solutions remain valid.
+
+### The runner must not rescue the agent
+
+The tested model chooses the actions. The harness executes the model's
+declared tool operations and returns observations; it must not choose the
+next repair, invent missing arguments, reinterpret an incomplete patch into a
+correct solution, provide answer-specific hints, silently repair malformed
+output, or claim verification the model never performed. Accepted edit
+formats and parser behavior are frozen and documented before testing, and
+deterministic adapter behavior is logged. The canonical harness ships two
+declared adapters — a strict JSON text envelope (with a logged, declared
+fence-tolerance step) and native OpenAI-style tool calls through the
+endpoint — and the whole-file `write_file` interface; the chosen
+`tool_call_adapter` is part of the frozen configuration and must be
+qualified on the tested model during non-scored qualification before any
+scored task (a model whose chat template carries native tool calls is
+measured through that actual deployment path, never forced through an
+adapter its training rejects). No stronger model may plan, debug, or complete the
+evaluated model's task; reviewers judge evidence and never participate in
+execution. Any human/evaluator assistance is recorded and can never become an
+unassisted completion.
+
+### Attempt and budget policy
+
+Default initial coverage: three distinct tasks, one initial attempt each;
+repetitions are prospectively justified and strictly bounded. Normal
+retry/debug actions within an attempt are agent behavior; restarting the
+whole task is a separate attempt and never erases failure. Practical limits
+(total wall time, total generated tokens, per-request ceiling, maximum tool
+calls/turns, command timeouts, retry policy, CPU/RAM/disk limits) are frozen
+per task from **non-scored disjoint qualification**, never copied from
+one-turn Model ceilings and never enlarged after seeing scored failures.
+Capability, completion and resource cost stay distinct — a time/token limit
+is recorded as budget exhaustion, not automatically semantic failure. Agentic
+overhead is recorded separately from Model testing; downloads, fit ladders,
+context sweeps and speed benchmarks are not repeated merely because Agentic
+runs.
+
+### Sandbox and permission boundaries
+
+Isolation is **proven before executing model-generated actions** (the
+canonical harness probes positive-control plus network/DNS absence, host
+file absence, evaluator-file absence and write-containment). Sandboxes are
+disposable and unprivileged: no credentials, personal home mounts, real
+project write access, production data/services, host Docker socket, or
+unrestricted network. Model tools stay offline; only the controlled runner
+communicates with the qualified local inference endpoint. Evaluator-only
+tests, reference solutions and expected outputs live outside the sandbox.
+Denied actions are recorded without allowing damage; no real Git publication,
+host package installation or infrastructure change happens inside scored
+tasks. The evaluation runner's own authorized publication actions are separate
+from the tested model's permissions.
+
+### Scoring what actually happened
+
+Primary Agentic evidence: final environment/artifact state; executable
+outcome checks; the actual tool transcript with exact commands, outputs and
+exit statuses; preserved before/after files; verification actions the model
+itself performed; and the final report versus observed facts. Every result
+reports: task completed or not; completed without assistance or not;
+correctness and preserved constraints; observed unsafe/prohibited actions;
+recovery and repeated errors; false completion claims; total steps, tokens
+and elapsed time; stop reason. Task success, truthful reporting, safety and
+efficiency are kept separate — a convincing completion message never
+substitutes for task completion. Mechanical oracles where defensible; the
+existing maximum-three-reviewer blinded procedure where interpretation is
+genuinely required (two agreeing reviewers decide; one tie-break on a
+genuine split; rubric ambiguity stays unresolved). Per-task outcome
+vocabulary is exactly `PASS | FAIL | NOT_EVALUABLE` plus the separate
+assistance, unsafe-action, false-claim, budget and stop-reason fields — no
+new score hierarchy. Three tasks are a bounded task sample, not a
+certification of general autonomous reliability: a 3/3 result is reported as
+3/3 tested tasks.
+
+### Applicability, completion and historical migration
+
+Every current campaign summary explicitly shows both sections with an Agentic
+disposition of exactly `COMPLETED` (evidence-backed), `INAPPLICABLE` (with
+evidence), `INTEGRATION_BLOCKED` (with cause), or `NOT_TESTED`. No missing
+section; no Agentic PASS inferred from Model results. Lack of a native
+function-calling interface does not prove every agent interface is
+unsupported — the chosen harness's actual path is evaluated, and any
+text-tool adapter is itself qualified and recorded. Missing test
+infrastructure is `NOT_TESTED` or `INTEGRATION_BLOCKED`, never a negative
+model verdict. Campaign-group completeness is defined from required profiles
+and applicable sections: a completed Model section is never erased by an
+Agentic issue, but the group cannot claim complete required testing while a
+required Agentic section is unresolved. Ordinary failed agent tasks are
+never relabeled methodology blockers.
+
+Historical Model-era events do not acquire Agentic results retroactively.
+Historical agent evidence — the WLEP-era `welp-omp-local-agent` module
+(4 oracle-validated fixtures plus one 2-fixture OMP-CLI calibration run,
+retained under `research/methodology/wlep-development/phase5-hardening/omp/`;
+its indexed contract and scorer files were never present in `welp/contracts/`)
+— is reusable only where its actual task/harness/profile/oracle boundaries
+support the claim: it proves harness mechanics, not any current model's
+Agentic capability. Campaigns document the old-to-new section mapping,
+compatible identity/evidence reuse, methodology-incomparable results, newly
+required measurements, and current-versus-historical public presentation.
+
+Each new Agentic task requires, before scored use: a trusted reference
+execution that succeeds; alternate valid execution where appropriate; no-op
+and wrong-result cases that fail; false-success, forbidden-edit and
+missing-verification cases; correct-recovery and unrecovered-error cases;
+bounded token/time/tool exhaustion; and harness failure separated from model
+behavior — exercised through the actual runner. Selftests use trusted fixture
+code only; untrusted model actions execute only in the qualified disposable
+sandbox.
+
 ## Canonical contracts (current)
 
 - `welp-outcomes` 0.1.0-draft (task outcome semantics; new)
@@ -780,6 +977,9 @@ reports never need invented Reasoning Off results.
 - `welp-reasoning-topology` 0.1.0-draft (Reasoning Profiles: topology
   qualification, ON/OFF profile requirement, effort-level policy, evidence
   binding, no-average rule; new)
+- `welp-agentic` 0.1.0-draft (Model/Agentic two-section structure; Agentic
+  configuration binding, initial three tasks, runner no-rescue rules,
+  sandbox boundaries, scoring and disposition vocabulary; new)
 - `welp-practical-viability` 0.1.4-draft
 - `welp-reliability` 0.3.0-draft (scorer v3, independent safety, paired lanes and bounded fixed-screen sensitivity)
 - `welp-context` 0.3.0-draft (canonical Controlled Context answer oracle, machine ID Family A; coverage/execution/capability axes with answerless budget exhaustion as a covered measured row; full-window requirements remain in `context-scaling.md`)
@@ -792,7 +992,37 @@ reports never need invented Reasoning Off results.
 - `welp-measurement` 0.1.0-draft
 - `welp-evidence-bundle` 0.1.0-draft
 - `welp-preflight` 0.1.0-draft
-- Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`, `welp-omp-local-agent`.
+- Phase 5 module contracts (indexed in `contracts/welp-modules.json`): `welp-coding`, `welp-structured-interfaces`, `welp-native-tools`, `welp-extraction-rag`, `welp-reasoning`, `welp-linux-systems`; `welp-omp-local-agent` is retained as HISTORICAL provenance only (its indexed contract/scorer files were never present; superseded for Agentic-section work by `welp-agentic`).
+
+## Stabilization accounting (superseding rule, 2026-09-25 model-agentic revision)
+
+Stabilization counts only fresh-model campaigns. The following rule supersedes
+any earlier accounting that counted a methodology-validation run as a clean
+stabilization campaign (a superseding record lives in
+`summaries/stabilization-accounting.json`; historical reports stand as
+historical):
+
+- **METHODOLOGY_VALIDATION** is the known-model run that validates a newly
+  frozen methodology revision (for the model-agentic snapshot: the Ling
+  Reasoning Off Agentic validation on the RTX 5070). It is NEVER clean
+  campaign 1 and never increments the count.
+- Repair completions, reused/re-derived campaigns, two reasoning profiles of
+  one model, and repeated hardware runs never inflate the count.
+- After a freeze and successful methodology validation:
+
+  ```
+  STABILIZATION_BASELINE: <new snapshot>
+  METHODOLOGY_VALIDATION: PASS
+  CLEAN_STABILIZATION_CAMPAIGNS: 0 / 5
+  ```
+
+- Only a qualifying fresh-model campaign that starts AFTER the freeze under
+  the unchanged frozen method and completes all required profiles and
+  applicable sections increments the count. A negative model verdict can
+  count as clean methodology execution; a campaign requiring a methodology
+  revision cannot. Non-semantic runner/reporting fixes may be recorded
+  separately; changing scoring or experimental meaning is not a minor tooling
+  exemption. The first fresh campaign is never started automatically.
 
 ## Canonical schemas (current)
 
@@ -806,15 +1036,17 @@ reports never need invented Reasoning Off results.
 - `welp_toolchain_inventory.schema.json`
 - `welp_task_outcome.schema.json` (CP-1 task-instance outcome record; new)
 - `welp_setup.schema.json` (prospective calibration, prompt and cache setup)
+- `welp_agentic_task.schema.json` (`welp-agentic-task-record/1`; Agentic task
+  attempt record: transcript, commands, sandbox state, outcome checks)
 
 ## Canonical harness, scorers, and fixtures (current)
 
 - `harness/` — canonical versioned phase implementations: outcomes, admission, quality, reliability, capabilities, context and classification; prospective setup, measurement import and evidence-bundle integration. Campaign wrappers call these implementations, never fork their scoring semantics.
-- `scorers/score_reliability.py` (`welp-reliability-scorer/3`), `scorers/safety_review.py` (explicit qualitative adjudication binding), and `scorers/rescore_acceptance.py` (historical frozen-output mechanical acceptance, read-only).
+- `harness/agentic.py` (`welp-agentic-harness/0.1.0-draft`) — canonical Agentic runner: bwrap sandbox with proven isolation, declared text-tool adapter, frozen-limit turn loop, mechanical evaluation; `fixtures/agentic/{repository,system,research,qualification}` — frozen initial task fixtures with evaluator-only acceptance code (qualification is non-scored bounds calibration).
 - `fixtures/reliability/welp-reliability-sample-20-v3.json`, `fixtures/useful_context/{family-a,multidocument}.json`, `fixtures/quality/welp-quality-screen-12-v1.json`, `fixtures/real_work/{tool-recovery,linux-diagnosis,multi-turn-correction,document-synthesis,repository-timeout}.json` — freeze exact versions/hashes before outputs; applicability varies by role.
 
 ## Canonical validator (current)
 
-- `validators/validate_campaign_welp.py` — version-aware historical compatibility; R09–R14 from 2026-09-19, R15/R16 from 2026-09-23, evidence-bound hardening (R17) from 2026-09-24, and reasoning-profile rules R18–R21 from 2026-09-25. It checks machine-verifiable evidence and review provenance, not independent truth of qualitative judgments.
+- `validators/validate_campaign_welp.py` — version-aware historical compatibility; R09–R14 from 2026-09-19, R15/R16 from 2026-09-23, evidence-bound hardening (R17) from 2026-09-24, and reasoning-profile rules R18–R21 from 2026-09-25, and Model/Agentic section rules R22–R24 from the model-agentic snapshot (exact-snapshot/later-date/contract-adoption gating). It checks machine-verifiable evidence and review provenance, not independent truth of qualitative judgments.
 - `validators/validate_publication.py` — current immutable citations, scientific IDs,
   shared relationships, and profile-path consistency; legacy URL exports remain accepted.

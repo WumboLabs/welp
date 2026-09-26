@@ -1,0 +1,248 @@
+{
+ "snapshot_id": "welp-next-snapshot-2026-09-25-model-agentic",
+ "status": "DRAFT \u2014 NOT v1.0",
+ "created_utc": "2026-09-26T00:11:39.259660+00:00",
+ "methodology_changed": "YES",
+ "naming_changed": "NO",
+ "naming_note": "Display names WELP Model / WELP Agentic and the Agentic task names were ADDED to the canonical display-name map; no machine ID was renamed and no historical identifier changed.",
+ "migration_type": "model-agentic-two-sections",
+ "parent_snapshot": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+ "parent_manifest": "../welp-next-snapshot-2026-09-25-reasoning-profiles/manifest.json",
+ "parent_manifest_sha256": "27218d19136afb8740f3b4fc45c359248539985890b04f560de88c52586d3570",
+ "parent_public_commit": "193cb645c81440cc1232447f3ebc32a8197a7f3e",
+ "changes": {
+  "two_sections": "welp-agentic 0.1.0-draft: WELP comprises WELP Model (existing coverage) and WELP Agentic (autonomous execution discover->decide->act->observe->recover->verify->finish through a specified harness). One protocol; each section has its own execution status, evidence, applicability and limitations; verdicts are never averaged; a negative Model verdict does not prohibit Agentic testing; real integration/sandbox blockers are INTEGRATION_BLOCKED, not model verdicts; a completed negative Agentic task is a valid measurement.",
+  "profile_selection": "Agentic initially tests ONE qualified model profile under a predeclared selection rule recorded before any task output; alternate reasoning modes only as separately declared extensions; untested modes stay NOT_TESTED. Agentic inherits verified artifact/runtime/hardware identity, never behavioral results.",
+  "configuration_binding": "Every Agentic run binds parent model-profile ID, harness implementation+commit, tool schemas and parser, agent system instructions (an agent system prompt is not a normal assistant prompt), effective reasoning/sampling, context handling, permissions/sandbox, retries/limits/stopping policy. Results describe MODEL + HARNESS + ENVIRONMENT.",
+  "initial_tasks": "Three-task suite (Repository, System, Research) with evaluator-only acceptance, no solution leakage from Model tasks, full discoverability through documented tools, and no single-mandated tool sequence.",
+  "runner_no_rescue": "The harness executes declared tool operations and returns observations; it never chooses repairs, invents arguments, repairs malformed output, or claims verification the model never performed; the declared adapter (strict JSON envelope with logged fence tolerance; whole-file write_file) is frozen in harness/agentic.py; the harness ships two declared adapters (strict JSON text envelope with logged fence tolerance; native OpenAI-style tool calls) and the chosen tool_call_adapter is part of the frozen configuration, qualified on the tested model during non-scored qualification before any scored task.",
+  "budgets": "Per-task limits (wall time, tokens, turns, per-command timeout, retry policy, CPU/RAM/disk) frozen from non-scored disjoint qualification; whole-task restarts are separate attempts; budget exhaustion is not semantic failure.",
+  "sandbox": "Disposable unprivileged offline sandbox with isolation PROVEN before model actions (positive control + network/DNS/host-file/evaluator-file/write-containment probes); evaluator-only files never mounted; no host Docker socket; runner endpoint access separate from model tools.",
+  "scoring": "Primary evidence is final environment state, executable outcome checks, verbatim transcripts with exit statuses, before/after state hashes, model-performed verification, and final-report-vs-facts; required report fields fixed; task success, truthful reporting, safety and efficiency separate; per-task outcome PASS|FAIL|NOT_EVALUABLE; bounded-sample statement mandatory; existing max-three-reviewer blinded procedure for genuinely interpretive judgment.",
+  "validator": "validate_campaign_welp.py R22-R24 from the exact snapshot welp-next-snapshot-2026-09-25-model-agentic, any later date, or explicit welp-agentic contract adoption (NOT date-only: the date is shared with reasoning-profiles). R22 two-section dispositions; R23 configuration binding + hash-bound task records + wrong-profile/harness rejection; R24 task accounting (distinct ids, attempt justification, unassisted claims, initial-suite classes, bounded-sample statement, combined-verdict export rejection).",
+  "schemas": "Additive: schemas/welp_agentic_task.schema.json (welp-agentic-task-record/1); manifest carries optional sections/agentic blocks so historical manifests stay valid unchanged.",
+  "stabilization": "Superseding rule (summaries/stabilization-accounting.json): METHODOLOGY_VALIDATION runs never count as clean stabilization campaigns; historical 1-count corrected to 0/5 through this record; historical reports stand as historical.",
+  "historical": "welp-omp-local-agent retained as HISTORICAL provenance (its indexed contract/scorer files were never present in welp/contracts/; surviving evidence is 4 fixtures + a 2-fixture OMP-CLI calibration recorded as an OMP+MODEL system result). Historical Model-era events acquire no Agentic results retroactively."
+ },
+ "frozen_artifact_sha256": {
+  "publication_root": {
+   ".gitignore": "2eaca9bddc50ece7d46e4935ab0af183e6da7fcf6e4000d7b0284ea74d92a297",
+   "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+   "PUBLICATION-MANIFEST.json": "06b699d8970444800a1adfe07f338a7078240f19769e0f0b7a1d4384e7492c19",
+   "publication-allowlist.json": "c5674bc301c18aea9315c43cfb1baf490056d439ec96def905d873acd2cf7166",
+   "README.md": "e28592609a34d7af273b906987e7c095e9a242a774772adab9e15891be5982b5"
+  },
+  "contracts": {
+   "contracts/welp-agentic-0.1.0-draft.json": "1d26c68fe74573d2082dccb306b4310ecc772b364e1c84bb521023570cd60a7b",
+   "contracts/welp-context-0.1.0-draft.json": "18591507dd3fea5724a68a847db0234179c33138d177c73b9c5924417b0e31c5",
+   "contracts/welp-context-0.2.0-draft.json": "8b6710c1b7865987b0ba1b131fa8c25f9608d45d11754122518fc57c0cdbf9c2",
+   "contracts/welp-context-0.3.0-draft.json": "e58a073f9c9ec8c7194eebc2d58352adb561a9d8d0b695567050e33b2c383339",
+   "contracts/welp-deployment-lanes-0.1.0-draft.json": "97d33d10889ca3d84730435a1182b02d93896549a682c6b342d7311f33c20070",
+   "contracts/welp-evidence-bundle-0.1.0-draft.json": "230c08428a534693da4586daf2f23323b1c16867a6ef63ba3b3ded08155dfb03",
+   "contracts/welp-final-classification-0.1.0-draft.json": "81f73e61ff017944f94b564a2d970fa42af8c5ba2e062934b54ebde6f2149813",
+   "contracts/welp-final-classification-0.2.0-draft.json": "6616e52a68578584f1e6e6b48a63376899e4e197b82b7caf9de05be990a33da4",
+   "contracts/welp-final-classification-0.3.0-draft.json": "2a15aca1cda9b608426a2d94a2c422f4a94552eeee9084da51593fa9204b4481",
+   "contracts/welp-final-classification-0.3.1-draft.json": "d790d963b98de73ad04717af5071d1667b1feddaeeccd87282aa62eaa446cae4",
+   "contracts/welp-final-classification-0.4.0-draft.json": "21320512abc8431019d07fc7dc0b7c004801964d2b8545cb1bea1295d44dd62f",
+   "contracts/welp-generation-budget-0.1.0-draft.json": "59f8bdaa6b646773af2351694ce9f27819c893139c8d21f4edacec62ab4bb927",
+   "contracts/welp-measurement-0.1.0-draft.json": "8c3f86e42ac2a7f8f8b62f6111ee9232d92a3132a669b502cd661f801111278b",
+   "contracts/welp-modules.json": "baef30fddfa8b23abfefeccfc2c9bbe0104360d8592fa56954d73a6a6d48e7bb",
+   "contracts/welp-optimization-0.1.0-draft.json": "a1b0a7d444d07dc4f7c2fc11066815ffdfcdab1f43403058289f8c88bcfaea67",
+   "contracts/welp-outcomes-0.1.0-draft.json": "9316dfd625d0797c5c5dbde859a9317e4679b58ea59c63ea8c7ad3aab29ffd14",
+   "contracts/welp-practical-viability-0.1.3-draft.json": "050256243ded4a3ad97cb1c9e5da5419478311b33961fa3eeecd14605a089f98",
+   "contracts/welp-preflight-0.1.0-draft.json": "85e27605905ef0b34545a5842ada72671bb6bdf922e6095b21571bdaddb103cc",
+   "contracts/welp-real-work-0.1.0-draft.json": "71e6014d9edcdf78bb1cd5c385c211845b8fc0a5c725fb8f8e8a4dadd37cb558",
+   "contracts/welp-real-work-0.2.0-draft.json": "ec911a7f768508061e0e4275c06191c4f38d79d26a745bbd53717919947f3736",
+   "contracts/welp-reasoning-topology-0.1.0-draft.json": "0ba790872c727c0fac29a2839dd363e8d305b86d5fb1f13cf6f7cc05fe699094",
+   "contracts/welp-reliability-0.1.0-draft.json": "25834778e38643d9f7a8086ef8c1fd0520663bea6adb035538577e4963289668",
+   "contracts/welp-reliability-0.2.0-draft.json": "febbe886cc2be9e24196a92849778654854dd1fabb2f7423c63e9b5690066a75",
+   "contracts/welp-reliability-0.3.0-draft.json": "57f7d5ba6a48aceaab6da6993862dea5cac207a2b5a9260c776a2bdcec254417",
+   "contracts/welp-review-adjudication-0.1.0-draft.json": "8feaeb78a6f275ecf8ffc92d446d9ec757954539c328d6c4dac27494c3fff445",
+   "contracts/welp-safety-review-0.1.0-draft.json": "80d2866b6aa1aa1825555a7f7d53d44f783de5a6b7e5b0dbce27b12c5a428f25",
+   "contracts/welp-setup-0.1.0-draft.json": "6f4595dcd5ada2df7e3de49d5ff6db89804c41679bbccc5112c990dce7548055",
+   "contracts/welp-setup-0.2.0-draft.json": "73f2b0c5bb4c06b179b4161589888e121134a0c24217fe58c702e4daa62c87b2",
+   "contracts/welp-stability-0.1.0-draft.json": "77fec7fb637d490b23f2edc72c6ca8e9428c75f8dd2dbdf5fea865cecba34aed"
+  },
+  "docs": {
+   "docs/README.md": "dd42b92ec2f1552d18964e0c40fa50ecde7ab43efe9a160febd7b1a4d39de2fd",
+   "docs/naming-policy.md": "0915e327a76b35a49ac043dbfd0e04c37a55a4c799af398f512667d4f374413b",
+   "docs/publication.md": "cace6169223bb0be0675b869b3894bb1acf0c5ee62281234b3f485d107f4386e",
+   "docs/reproduction.md": "641a54dfaa3472a65e78b88ea4ab8b12bd6abf4edf6c01d683282e3f604d1ce0",
+   "docs/validator.md": "377aa7ed3b2a35392ff27ffec6ca49df3705968415451d8d895e473e80022c90"
+  },
+  "examples": {
+   "examples/README.md": "5ca5ec618231cde646c57dc2c9687906dac215abdc1f9617c24bc92cceea632b",
+   "examples/toolchain_inventory.example.json": "8032f2198da1e7c7293668f6d542329c6a0f8868a819259d0a6aeb02155ded2a"
+  },
+  "fixtures": {
+   "fixtures/agentic/qualification/evaluator/extra_checks.py": "b1176df0bc94fe4a914f554f57fc6b1705d66023721cfb980bbe5ee0ccaafaa6",
+   "fixtures/agentic/qualification/task.json": "ab0fcc2f5bcdafbc34be12663b158fc3448f471b1ff595e84dc54646685d3211",
+   "fixtures/agentic/qualification/workspace/formatters.py": "82d864d888206bd1554b390de327df5ded47191db5a921100fd9691e4a23fc22",
+   "fixtures/agentic/qualification/workspace/greet.py": "18681c9e97454fa0bf804d28e6132597533999a49366b0cf66816d2913aac7db",
+   "fixtures/agentic/qualification/workspace/run_tests.sh": "b738d754207b62733f5d72955c1b9d99918aeb2c46dee7dcd2b5cc3fcb5e696e",
+   "fixtures/agentic/qualification/workspace/tests/test_greet.py": "a629fc619b7f0926a5fa7c6355eca6e00a00491cd648a88ce08050981ba791d3",
+   "fixtures/agentic/repository/evaluator/extra_checks.py": "c9d8339912ce98cd2a3a11db153c72d6553cca15c78d8829746b4d35682b1fd4",
+   "fixtures/agentic/repository/evaluator/hidden_tests/test_acceptance.py": "56d42939eecccc8900c181e6763886bc8380200d53c74f8c1abfb1d750e11bdf",
+   "fixtures/agentic/repository/task.json": "3a0947a9905aeecd8b6bc6fc41123cbe5b6ccbcf1edcc986bec07f9e2b925ddf",
+   "fixtures/agentic/repository/workspace/README.md": "89984d5d384e6016994900022fa94f96f59038e694d02ffc9ce302a23f2aa9e1",
+   "fixtures/agentic/repository/workspace/REVIEW.md": "dc9083c0541597f866f53d5c8f7a450d77893b15ce300a0fb751341c2b4f095d",
+   "fixtures/agentic/repository/workspace/notes.py": "187545e7c52c5488cc284ad9d4d6efa92cfd8d689850bfe116812ec46165e7f7",
+   "fixtures/agentic/repository/workspace/run_tests.sh": "8e3519c78992025fdfa51cf2b8b77f2bde361482b8b278a35e2132eb392bc7b2",
+   "fixtures/agentic/repository/workspace/tests/test_notes.py": "e9cbd8fed43e88746f387a1f5ba78e708fc5b5a112ce5aa42cbd64af676bd765",
+   "fixtures/agentic/research/evaluator/extra_checks.py": "0c0e0c9d4e6bd9b0952290383885070292b1ce55018c8396bef1cdd0bcf86538",
+   "fixtures/agentic/research/task.json": "32196112b384c64cca2303026d6a468227dce9b609aa965ba07a0994b586569a",
+   "fixtures/agentic/research/workspace/question.txt": "987efe79e4285578bb96758c3a48f2dba1b41defa0b7aacb3c18f5e5f52b6684",
+   "fixtures/agentic/research/workspace/sources/changelog.md": "f1fa48037d74affa3c8193e0bf7197a5c1cbd8c95f8866ccab976de057ec915c",
+   "fixtures/agentic/research/workspace/sources/faq.md": "b5b28ad22a4c6b66a3f3e1d5d3a562f0324e12b429e6d661fd617f16dd34cb72",
+   "fixtures/agentic/research/workspace/sources/glossary.md": "37cb9dbf3c569665f190c268094d65f0ce690d15b948b2c73c206a214a7da53e",
+   "fixtures/agentic/research/workspace/sources/governance.md": "ee34f169b07526d835062720c81c15c863ba6668e76b7aec1a6337aacff26656",
+   "fixtures/agentic/research/workspace/sources/manual-v1.md": "18ae93b6a38448a46ada4cd2821a6933bf2fb4e8a56e32a2ce54971665bc08ca",
+   "fixtures/agentic/research/workspace/sources/manual-v2.md": "bee84d08322ae5eccaa27be2b3dba25e9419aeec5d0c0bbf1fd5b1bd7d658dbf",
+   "fixtures/agentic/research/workspace/sources/manual-v3.md": "9b58fbbd8d1ee7449fe9e039b0462267692db390c74203570bea6216d0d82e1f",
+   "fixtures/agentic/research/workspace/sources/ops-bulletin-5.md": "117b423530b751a9e9675d97b1005f83fbe28cda4cad8df4f501c2aa65976507",
+   "fixtures/agentic/research/workspace/sources/ops-bulletin-7.md": "fee5b75b019970b3574350f6ba2708e67bbfba30c7605d5fe2fc2abb13c6ae3f",
+   "fixtures/agentic/research/workspace/sources/quickstart.md": "302af4dbefc60eb988afa21e98ad8ef0b88dd23d8b1f6618f5bcbb6f53734b02",
+   "fixtures/agentic/system/evaluator/extra_checks.py": "e43f29afc27cd11339eb32861febedae7e90d55e861ee0e70767e21ef78af086",
+   "fixtures/agentic/system/task.json": "d2b857374251e68399580ae7d00bf8a1c19f192e20db543bf1a9b46f3f4fbb1d",
+   "fixtures/agentic/system/workspace/README.md": "7c4f0f725bf978d2ffd4b29f1c7e2a5f27de1fd8bcc3e73fbddf8b5807de451b",
+   "fixtures/agentic/system/workspace/check.sh": "7e08dfde730fdadea69d7929b13f62e7709b29cd7e4e79a8e9556c8e3540e683",
+   "fixtures/agentic/system/workspace/config/service.json": "df1e656c928568e05633c4dbeda14c1f598f07997a6b8dd9c2cd2192bbbc5268",
+   "fixtures/agentic/system/workspace/data/quotes.json": "da29f582adcd9ca6b1f8526aefe51bbd75377826c85820653cc68fe4b9c61385",
+   "fixtures/agentic/system/workspace/logs/service.log": "cdc51b990c3566e359443d704aae738d12d5ba2c78319424d264b27bf0e7e74d",
+   "fixtures/agentic/system/workspace/service.py": "9021f104de42db7b4b474c081debfe53c6932f5e7e58a20610772fb05d288394",
+   "fixtures/agentic/system/workspace/start.sh": "86f444da4176235382f7a3772032c851a979a9ebbdc77e228bd8db81e4ea328f",
+   "fixtures/quality/welp-quality-screen-12-v1.json": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+   "fixtures/real_work/document-synthesis.json": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+   "fixtures/real_work/linux-diagnosis.json": "d0d000de5a13d8e5aa3ef382d6a06521c28ff0436bfd46a644c6478c12b26e5d",
+   "fixtures/real_work/multi-turn-correction.json": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+   "fixtures/real_work/repository-timeout.json": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+   "fixtures/real_work/tool-recovery.json": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2",
+   "fixtures/reliability/welp-reliability-sample-20-v2.json": "38eb1cd6db5512bb365193d55a0051b09d4284c39d111f23c7048843367663e1",
+   "fixtures/reliability/welp-reliability-sample-20-v3.json": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41",
+   "fixtures/useful_context/family-a.json": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4",
+   "fixtures/useful_context/multidocument.json": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f"
+  },
+  "harness": {
+   "harness/admission.py": "abd3b1d065374d98b9f2f25ca9390ad796af70bf18ae77c428ad4c17047fa45d",
+   "harness/agentic.py": "07cbc7323d7f62ae3eae6a3d47d9b321ae108e8c37a16ffc52cdba0398155733",
+   "harness/bundle.py": "eaeefddeea0d164e55c29ed47ba9bbc3673d4ece3abc22736795f2b21a67669d",
+   "harness/capabilities.py": "6a8c513ba494e81f52aa8f0254f6f0777fdb941d290e4a7ac6e6b6b522deb93f",
+   "harness/classification.py": "2f2bb8a6118e6b8af150dd04c5b80fef25eb9c8b65a3995c93b0924d6f9617ca",
+   "harness/context.py": "ad944fe5f0c371d07a2303504d9d39d7ea6d0e49ebd6c05ca100924bc4883c16",
+   "harness/measurement.py": "622da592925fe3488150132176c47bc5bcfa72d8699c4134d29a3b75c5b63db6",
+   "harness/quality.py": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+   "harness/reliability.py": "ec22cfa91cb2914f2f04eb593e3c0a8d971ef305fdd2af7d8a59f786d70e8db5",
+   "harness/setup.py": "6e3923d80215bfac6730b3cb0467f7b94ff6daab40b2af274579cec651af653e",
+   "harness/synthetic_bundle.py": "2ec0a50feb1fbc066c670ec26b072f5f310355df4097517f3f98cf602c6bbb53",
+   "harness/welp_outcomes.py": "8b58c8cf9f08c2602b7fa683843229562201a52cfa1369c3383c0f97e86c7cf7"
+  },
+  "lab-record-template": {
+   "lab-record-template/LAB-RECORD-LAYOUT.md": "dec76c5e68f7dcf33e554a7ce33c9ac09912cbee6e84cb90bf576d6197c9676d",
+   "lab-record-template/README.md": "65d6f95cad1e9aebb6fe7ff9c84e2896f1fac04821660cc6d2086bb818f47238"
+  },
+  "protocol": {
+   "protocol/WELP.md": "3e69ec80defb5d0aa5b4a9556e509a2e5266cfa5887313a87bd32f59ae930b7d",
+   "protocol/context-scaling.md": "8f28ade68bbbaaa68defd207bc1b6b8264ff98c71a22fc32aadb846316e6528a"
+  },
+  "schemas": {
+   "schemas/welp_agentic_task.schema.json": "5e124cbd215288bb989c9469d96322dc3893172469a7bd706ab43eaf7bb144ad",
+   "schemas/welp_artifact_index.schema.json": "8c01f50d9a83441d2fb4239ae7495e983a8307482ae4d0cf553f3812ce89dad4",
+   "schemas/welp_campaign_manifest.schema.json": "fc31a19ca7b3aeacfbbee65cfdc87a1ff1e287a2cfa6f6fb612e344de47ecec1",
+   "schemas/welp_eval_profile.schema.json": "81f19c61edd5900b00f38f962a91c2a01d2883d17ba0c73fca672a6b8699dc01",
+   "schemas/welp_publication_status.schema.json": "0e05f87d16e9278ef15cd32598e611c21ae70eced8a450bb65af674f31ea29e4",
+   "schemas/welp_serving_profile.schema.json": "e0d8582f1f9ef873f15bfdfa690160428e4acac6c6761103f5eecbde4e51fdf6",
+   "schemas/welp_setup.schema.json": "cb01225aa62988ff4c1f3a0b4bb7571d3b960a0d7e84f2981c18b93480c17c8f",
+   "schemas/welp_task_outcome.schema.json": "45d3406a57d7483a4660f9273893608faf40e862dec3ab045dc82d4b12a70d7f",
+   "schemas/welp_toolchain_inventory.schema.json": "ee3407bd19e89f492308ef1b89f0bacd67a7b301fa642fbfc4c674533267befc",
+   "schemas/welp_toolchain_preflight.schema.json": "5d8166560be36b3dae6e0c74cb00e46d11f721cb38ecce00bbba49441e66150e",
+   "schemas/welp_website_publication.schema.json": "f505e026ca6cdacd69c7158f597ca084e3bd910b2dd0c46b638ab21f1ec8ce6f"
+  },
+  "scorers": {
+   "scorers/rescore_acceptance.py": "6704d7cd61cb854f341ccf6f9c571650f99e3e66a0edc57faa92df4e5dcb010b",
+   "scorers/safety_review.py": "6d8e5b504416fddd87a8c9edc5a879063e165154657979d42786e093ed5dbdf5",
+   "scorers/score_reliability.py": "c6fddd41c28444390adf25b44b676da1c38a3e1f26a7e27b67e768a0627eaab7",
+   "scorers/score_reliability_fixtures.json": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+  },
+  "summaries": {
+   "summaries/stabilization-accounting.json": "d7b491d10af8106eab5242b99302a3a3468367d857d50bebb50fbc966039ba11",
+   "summaries/welp_compatibility_policy.json": "779daa9719ed93df5b31215171534eafa8758087c215865dba66896e6272930b",
+   "summaries/welp_migration_inventory.json": "f8ba207700d79c74dd6bff753a9723b869121fa32e611de4b661011a9ba59f67"
+  },
+  "validators": {
+   "validators/check_canonical_welp_naming.py": "b6586b9dd874479e207768866e0f627d9e75b8e8bb9139c7dcd4de71a538e39d",
+   "validators/validate_campaign_welp.py": "1c6fd383bb7b1e330710be8742c5aa2848d167e8969edbfcb26e7ee99765c75c",
+   "validators/validate_public_tree.py": "f6dabfc96e8876bc190c0f2b9ba22d133f78431fdfc3ae58206075ae98ff8ae1",
+   "validators/validate_publication.py": "778a258624f37409bc0feadd4dd0e15382f1248cbb2e56c528f94299a06123c8",
+   "validators/welp-legacy-exceptions.json": "352e01982567d4845b39c55e59751879200d71bad5adb00655d303942a858b1c"
+  }
+ },
+ "validation_at_freeze": {
+  "all_selftests_pass": true,
+  "campaign_validator_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "publication_validator_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "bundle_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "classification_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "setup_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "reliability_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "context_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "capabilities_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "measurement_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "agentic_harness_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "naming_validator_selftest": {
+   "exit": 0,
+   "pass": true
+  },
+  "historical_bundle_regression": {
+   "ling_reasoning_off_2026_09_25": {
+    "valid": true,
+    "errors": 0
+   },
+   "ling_reasoning_on_2026_09_25": {
+    "valid": true,
+    "errors": 0
+   },
+   "granite_context_outcome_2026_09_24": {
+    "valid": true,
+    "errors": 0
+   }
+  }
+ },
+ "historical_compatibility": "No retained raw output, score, report, event, older snapshot manifest or classification rewritten. Machine IDs and frozen provenance unchanged; welp-omp-local-agent module-index entry annotated HISTORICAL without altering its identity. Frozen reasoning-profiles and earlier bundles validate unchanged (historical_bundle_regression).",
+ "limitations": [
+  "DRAFT / NOT v1.0: the three-task Agentic suite is a bounded task sample; repetition thresholds and promotion rules remain under empirical validation.",
+  "The Agentic system task is a faithful stateful simulator inside a disposable sandbox, not a real host service; research task is a frozen offline corpus.",
+  "The model-agentic snapshot shares its activation date with reasoning-profiles; R22-R24 therefore gate on exact snapshot id / later date / explicit contract adoption rather than date alone."
+ ],
+ "model_testing_resume_gate": "This snapshot authorizes no new model inference except the explicitly authorized METHODOLOGY_VALIDATION (Ling Reasoning Off Agentic run on the RTX 5070, restored verified artifact, pinned harness). The fresh-model queue is NOT started by this snapshot.",
+ "refreeze_note": "PRE-RELEASE REFREEZE 2 (same snapshot id; never committed, pushed, or consumed; still zero scored tasks). Refreeze 1 added the native_tools adapter after the live qualification probe showed the text adapter unqualified for the validation model. Qualification probe #2 (native adapter, retained at runs/qualification-probe-native in the campaign bundle) exposed one further adapter defect: model-supplied ABSOLUTE paths under /workspace were rejected by the path guard, looping the model. Fixed deterministically (absolute /workspace paths resolve; other roots and .. still rejected; declared in the adapter prompt and docstring); selftest extended to 37 cases (all pass, incl. native_absolute_workspace_path_resolves and native_escape_rejected). No scored task has run; no verdict exists or was forced."
+}

@@ -50,14 +50,28 @@
    uncertainty checks, a blind qualitative rubric, and any disagreement.
    Distinguish WELP campaign evidence from optional LLMGauge measurements;
    no historical event gains prospective labels retroactively.
-10. **Validation.** `python3 validators/validate_campaign_welp.py <campaign_dir>`
+10. **WELP Agentic section (model-agentic-era campaigns).** Record the
+    two-section summary (`sections.model` + `sections.agentic`) with exactly
+    one disposition per section (`COMPLETED | INAPPLICABLE |
+    INTEGRATION_BLOCKED | NOT_TESTED`). For a COMPLETED Agentic section, bind
+    the full configuration before scored outputs (parent profile, harness
+    id/version/commit, tool schemas/parser, agent system prompt, sampling,
+    context handling, sandbox, frozen limits) under a predeclared profile
+    selection rule; qualify bounds on non-scored disjoint tasks; run the
+    three initial tasks (`fixtures/agentic/{repository,system,research}`) through
+    `harness/agentic.py` in the disposable offline sandbox — never let the
+    runner rescue the model; score with the fixture oracles plus the
+    manifest-level R22–R24 accounting. Missing infrastructure is NOT_TESTED
+    or INTEGRATION_BLOCKED, never a negative model verdict. Model and
+    Agentic conclusions are reported separately and never averaged.
+11. **Validation.** `python3 validators/validate_campaign_welp.py <campaign_dir>`
     MUST exit 0. From 2026-09-24, provide hash-bound `hardening_evidence` and
     rederive the classifier/report through `harness/bundle.py`; inspect required
     context cells, role coverage and actual qualitative notes. Historical
     bundles retain their weaker pinned checks. Exit 0 proves only the checks
     performed, not independent scientific truth or subjective review accuracy.
-11. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` and the public-safe website-publication export `summaries/website-publication.json` with its explicit disposition — and, when requested, a `<campaign-slug>-review-report.md` human summary under the campaign bundle `<campaign>/reviews/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
-12. **Publication routing.** Follow the
+12. **Standard Completion Package.** Produce `REPORT.md` (primary scientific report), `WELP-LAB-RECORD.md` (standardized Lab Record companion), `WELP-CONFORMANCE.md`, `protocol-findings.md`, all machine-readable summaries including `summaries/localmaxxing.json` and the public-safe website-publication export `summaries/website-publication.json` with its explicit disposition — and, when requested, a `<campaign-slug>-review-report.md` human summary under the campaign bundle `<campaign>/reviews/` that links back to the primary report. Do not create `report.md`; see the [report artifact hierarchy](../protocol/WELP.md#report-artifact-hierarchy). Include context coverage and outstanding work even after an early stop.
+13. **Publication routing.** Follow the
     [four-layer publication contract](publication.md): local `research/model-evaluations/`
     holds working/raw science; `WumboLabs/evaluations` holds public scientific
     evidence; `wumbolabs.dev/evaluations/` is human discovery/share; the NAS archive

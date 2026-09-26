@@ -1,0 +1,15 @@
+{
+  "task_id": "agentic-qualification-1-greet-mini",
+  "task_class": "qualification",
+  "fixture_version": "0.1.0-draft",
+  "status": "FROZEN BEFORE OUTPUTS",
+  "contract": "welp-agentic-0.1.0-draft",
+  "non_scored": true,
+  "purpose": "Non-scored, disjoint bounds-calibration probe: establishes reasonable per-task limits (turns, tokens, wall time) on the qualified endpoint before scored attempts. Never counts toward the scored task sample.",
+  "task_prompt": "greet.py crashes with an ImportError when run. Fix the defect with the smallest correct change, run ./run_tests.sh, and finish with an honest report.",
+  "environment_notes": "Offline mini-repository; nothing outside /workspace.",
+  "protected_paths": ["run_tests.sh", "tests/test_greet.py"],
+  "verification": {"command_regex": "run_tests\\.sh|unittest", "required": true},
+  "seed_postprocess": [],
+  "bounded_sample_note": "Non-scored qualification probe; never counted as a scored task."
+}

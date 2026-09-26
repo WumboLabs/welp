@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "welp-agentic-task-record/1",
+  "title": "WELP Agentic task attempt record (welp-agentic-0.1.0-draft)",
+  "type": "object",
+  "required": ["schema", "harness_id", "harness_version", "task_id", "attempt",
+               "stop_reason", "turns_used", "total_completion_tokens", "wall_s",
+               "sandbox_probe", "before_state", "after_state", "commands", "limits",
+               "outcome", "evaluation"],
+  "properties": {
+    "schema": {"const": "welp-agentic-task-record/1"},
+    "harness_id": {"type": "string"},
+    "harness_version": {"type": "string"},
+    "task_id": {"type": "string"},
+    "attempt": {"type": "integer", "minimum": 1},
+    "stop_reason": {"type": "string",
+      "description": "FINISHED | TURN_LIMIT | WALL_CLOCK_LIMIT | TOKEN_BUDGET_LIMIT | PARSE_ERROR_LIMIT | HARNESS_FAILURE | SANDBOX_ISOLATION_FAILED"},
+    "final_report": {"type": ["string", "null"],
+      "description": "The model's finish report, verbatim."},
+    "turns_used": {"type": "integer", "minimum": 0},
+    "total_completion_tokens": {"type": "integer", "minimum": 0},
+    "wall_s": {"type": "number"},
+    "sandbox_probe": {"type": "object"},
+    "before_state": {"type": "object"},
+    "after_state": {"type": "object"},
+    "commands": {"type": "array",
+      "description": "Every run-command the model issued, verbatim, with ok/exit_code."},
+    "limits": {"type": "object"},
+    "outcome": {"enum": ["PASS", "FAIL", "NOT_EVALUABLE"]},
+    "evaluation": {
+      "type": "object",
+      "required": ["outcome", "checks"],
+      "properties": {
+        "outcome": {"enum": ["PASS", "FAIL", "NOT_EVALUABLE"]},
+        "checks": {"type": "array", "items": {
+          "type": "object",
+          "required": ["id", "pass"],
+          "properties": {
+            "id": {"type": "string"},
+            "pass": {"type": "boolean"},
+            "detail": {"type": "string"}
+          }
+        }},
+        "acceptance_pass": {"type": ["boolean", "null"]},
+        "bounded_sample_note": {"type": "string"}
+      }
+    },
+    "transcript_path": {"type": "string"},
+    "error": {"type": "string"}
+  },
+  "notes": "Additive schema: additional properties are allowed. outcome PASS requires acceptance_pass true and every generic check passing. HARNESS_FAILURE / SANDBOX_ISOLATION_FAILED are runner-side states and yield NOT_EVALUABLE, never a model verdict."
+}

@@ -1,0 +1,3 @@
+[2026-09-24 09:14:02] starting quoteservice (config/service.json)
+FATAL: invalid log_level: 'verrbose' (valid: debug, info, warning, error)
+[2026-09-24 09:14:02] service stopped, exit 1

@@ -1,0 +1,5 @@
+[
+  {"id": 1, "author": "Ada Lovelace", "text": "That brain of mine is something more than merely mortal."},
+  {"id": 2, "author": "Grace Hopper", "text": "The most damaging phrase is: it's always been done that way."},
+  {"id": 3, "author": "Edsger Dijkstra", "text": "Simplicity is prerequisite for reliability."}
+]

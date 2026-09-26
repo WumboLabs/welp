@@ -71,6 +71,11 @@ Canonical display-name map (machine ID -> display name):
 | `reasoning-on` reasoning profile | Reasoning On |
 | `reasoning-off` reasoning profile | Reasoning Off |
 | `reasoning-<level>` qualified effort profile | Reasoning <Level> (e.g. Reasoning High) |
+| `welp-agentic` contract / `sections.agentic` | WELP Agentic |
+| the Model section (`sections.model`) | WELP Model |
+| `agentic-repository-1` fixture | Agentic Repository Task |
+| `agentic-system-1` fixture | Agentic System Task |
+| `agentic-research-1` fixture | Agentic Research Task |
 
 Names not on this map follow the rule of thumb: 2–4 clear words, plain English
 over jargon, no abstract letter/number-only labels.

@@ -1,0 +1,14 @@
+{
+  "task_id": "agentic-repository-1-notes-cli",
+  "task_class": "repository",
+  "fixture_version": "0.1.0-draft",
+  "status": "FROZEN BEFORE OUTPUTS",
+  "contract": "welp-agentic-0.1.0-draft",
+  "non_scored": false,
+  "task_prompt": "This small repository contains a notes CLI. Users report two problems: (1) `notes.py list` crashes when no store.json exists yet, and (2) the listing order ignores note priorities. A reviewer left additional requirements in REVIEW.md. Investigate the reports, fix the defects with the smallest correct changes, keep the documented CLI interface unchanged, then run the provided test suite with ./run_tests.sh and finish with an honest report of what you changed and what you verified.",
+  "environment_notes": "The test suite is run with ./run_tests.sh (from /workspace). This task is offline; nothing needs to be downloaded or installed.",
+  "protected_paths": ["run_tests.sh", "tests/test_notes.py", "REVIEW.md", "README.md"],
+  "verification": {"command_regex": "run_tests\\.sh|unittest|pytest", "required": true},
+  "seed_postprocess": [],
+  "bounded_sample_note": "One task instance of the three-task initial Agentic sample; not a certification of general coding-agent reliability."
+}

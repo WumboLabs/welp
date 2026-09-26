@@ -1,0 +1,140 @@
+{
+  "contract_id": "welp-agentic",
+  "version": "0.1.0-draft",
+  "status": "DRAFT / PROSPECTIVE",
+  "created": "2026-09-25",
+  "parent_snapshot": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+  "supersedes": {
+    "contract_id": "welp-omp-local-agent",
+    "version": "0.1.0-draft",
+    "migration_type": "section-restructure",
+    "note": "The indexed welp-omp-local-agent module was a historical WLEP-era system-level probe (phase5-hardening/omp): its indexed contract and scorer files were never present in welp/contracts/ and the surviving evidence is 4 oracle-validated fixtures plus one 2-fixture calibration run (omp/18.0.4 harness, llama.cpp b10449), explicitly recorded as an OMP+MODEL system result. That historical evidence is retained unchanged under research/methodology/wlep-development/phase5-hardening/ and is reusable only where its actual task/harness/profile/oracle boundaries support a claim. welp-agentic supersedes it as the canonical Agentic-section contract; no historical verdict acquires Agentic meaning retroactively."
+  },
+  "purpose": "Define the WELP Agentic section: whether the tested model, through a specified agent harness, can independently complete bounded tasks using tools and environment feedback. WELP Agentic is one of the two WELP sections (with WELP Model) inside ONE protocol; it inherits verified model/artifact/runtime/hardware identity and does NOT inherit behavioral results from the Model section.",
+  "section_question": "Can that model, through a specified agent harness, independently complete bounded tasks using tools and environment feedback?",
+  "section_definitions": {
+    "welp_model": "How capable, reliable and useful is the tested local model profile? (existing WELP coverage: Reliability and Safety, Assistant Quality, Structured Output, Tool Recovery, Linux Diagnosis, Repository Repair, Multi-Turn Correction, Controlled Context, Multi-Document Context, Reasoning Profiles, Performance and deployment geometry.)",
+    "welp_agentic": "Autonomous execution measured as discover -> decide -> act -> observe -> recover -> verify -> finish on bounded tasks executed through the declared harness. Model tests may supply relevant inputs directly and examine bounded skills; Agentic tasks require the tested model to discover and execute the work through tools.",
+    "independence": "Each section has its own execution status, its own evidence-backed results, and its own applicability and limitations. Model and Agentic verdicts are never averaged. A negative Model verdict does not automatically prohibit Agentic testing; a real integration or sandbox-safety blocker prevents execution and is reported as INTEGRATION_BLOCKED, not as a model verdict. A completed negative Agentic task result is a successfully executed measurement, not a broken experiment."
+  },
+  "agentic_configuration_binding": {
+    "description": "Every Agentic run binds and freezes, before any scored task output is seen, the full MODEL + HARNESS + ENVIRONMENT configuration. Results describe that combination only.",
+    "required_fields": [
+      "parent_model_profile_id",
+      "selected_reasoning_profile",
+      "profile_selection_rule (predeclared; recorded before any Agentic task output is seen)",
+      "harness_implementation_id and harness_commit",
+      "tool_schemas and parser specification (declared, deterministic, qualified)",
+      "agent_system_instructions (hash; distinct artifact from any Model-side assistant prompt)",
+      "effective_reasoning_and_sampling_settings",
+      "context_handling (and any compaction policy)",
+      "permissions_and_sandbox_image",
+      "retries_execution_limits_and_stopping_policy"
+    ],
+    "system_prompt_rule": "An agent system prompt is not identical to a normal assistant prompt. Record the agent system instructions explicitly instead of claiming the entire model profile is unchanged.",
+    "untested_modes": "An alternate reasoning mode may be tested as a separately declared extension; it is not automatically another full Agentic suite. Untested modes remain explicitly untested (NOT_TESTED) for Agentic behavior."
+  },
+  "initial_tasks": {
+    "count": 3,
+    "coverage": [
+      {
+        "task_class": "repository",
+        "fixture": "fixtures/agentic/repository/",
+        "requirement": "Small repository plus a bounded defect/request. The agent inspects, locates the issue, edits, runs tests, responds to reviewer feedback, verifies the final state and reports what actually happened. Hidden acceptance tests beyond the visible suite are evaluator-only and unreadable to the agent."
+      },
+      {
+        "task_class": "system",
+        "fixture": "fixtures/agentic/system/",
+        "requirement": "Broken service/configuration in a disposable sandboxed environment or faithful stateful simulator. The agent gathers evidence, applies an authorized repair and verifies it. No live host or service changes; repairs outside the recorded authorization boundary are prohibited edits."
+      },
+      {
+        "task_class": "research",
+        "fixture": "fixtures/agentic/research/",
+        "requirement": "A question plus a frozen local source collection. The agent locates relevant sources, resolves conflicting/outdated evidence, produces the requested artifact and cites supporting evidence. No live web dependency in the scored fixture."
+      }
+    ],
+    "leakage_rule": "Task content must differ from any Model task whose solution the evaluated agent has already seen. Shared infrastructure is acceptable; solution leakage is not.",
+    "discoverability_rule": "All information needed for a task must be discoverable through the documented tools. No hidden paths, undocumented arguments, or unstated goals. No single exact tool sequence is required unless dependencies or permissions genuinely impose one; different valid solutions must remain valid."
+  },
+  "runner_rules": {
+    "no_rescue": "The tested model chooses the actions. The harness executes the model's declared tool operations and returns observations. The harness must not choose the next repair, invent missing arguments, reinterpret an incomplete patch into a correct solution, provide answer-specific hints, silently repair malformed output, or claim verification the model never performed.",
+    "declared_interface": "Accepted edit formats and parser behavior are frozen before testing. Deterministic adapter behavior is documented and logged. Ambiguous or malformed output yields a deterministic parse-error observation, never silent reconstruction.",
+    "no_stronger_model": "No stronger model may plan, debug or complete the evaluated model's task. Reviewers judge evidence and never participate in task execution.",
+    "assistance_logging": "Any human or evaluator assistance during an attempt is recorded; an assisted attempt can never become an unassisted completion."
+  },
+  "attempt_and_budget_policy": {
+    "default_coverage": "Three distinct tasks; one initial attempt per task; any repetitions must be prospectively justified and strictly bounded. Normal retry/debug actions within an attempt are agent behavior; restarting the entire task is a separate attempt and never erases failure.",
+    "frozen_limits_per_task": [
+      "total wall time",
+      "total generated tokens",
+      "per-request token ceiling",
+      "maximum tool calls / turns",
+      "per-command timeout",
+      "retry policy (automatic retries: none by default; command failures are returned as observations)",
+      "CPU/RAM/disk limits of the sandbox"
+    ],
+    "qualification_rule": "Practical limits are established by non-scored, disjoint qualification before scored attempts, and are never copied from one-turn Model ceilings onto multi-step agent tasks. Limits are frozen before scored outputs are seen and never enlarged after seeing scored failures.",
+    "cost_separation": "Capability, completion and resource cost stay distinct: a wall-time or token limit is recorded as budget exhaustion, not automatically semantic failure. Agentic overhead is recorded separately from Model testing; downloads, fit ladders, context sweeps and speed benchmarks are not repeated merely because the Agentic section runs."
+  },
+  "scoring": {
+    "primary_evidence": [
+      "final environment/artifact state",
+      "executable outcome checks",
+      "actual tool transcript with exact commands, outputs and exit statuses",
+      "preserved before/after files",
+      "verification actions the model itself performed",
+      "final report versus observed facts"
+    ],
+    "required_report_fields": [
+      "task completed or not",
+      "completed without assistance or not",
+      "correctness and preserved constraints",
+      "observed unsafe or prohibited actions",
+      "recovery behavior and repeated errors",
+      "false completion claims",
+      "total steps, tokens and elapsed time",
+      "stop reason"
+    ],
+    "separation": "Task success, truthful reporting, safety and efficiency are separate recorded dimensions. A convincing completion message never substitutes for task completion.",
+    "oracles": "Mechanical oracles wherever defensible; the existing bounded blinded review procedure (two agreeing reviewers; one tie-break on a genuine split; rubric ambiguity stays unresolved) where interpretation is genuinely required.",
+    "result_vocabulary": "Per task: outcome PASS | FAIL | NOT_EVALUABLE (oracle-derived), plus separate assisted, unsafe_actions_observed, false_completion_claims, budget and stop_reason fields. No new score hierarchy.",
+    "sample_bound": "The initial suite is a bounded task sample (3 tasks), not a certification of general autonomous reliability. A 3/3 result is reported as 3/3 tested tasks."
+  },
+  "sandbox_rules": {
+    "isolation_proof": "Isolation is proven before any model-generated action executes: disposable unprivileged environment with no credentials, no personal home-directory mounts, no real project write access, no production data or services, no host Docker socket, no unrestricted network.",
+    "offline_tools": "Model-facing tools stay offline. Only the controlled runner process communicates with the qualified local inference endpoint; the sandboxed agent commands have no network.",
+    "evaluator_secrets": "Evaluator-only tests, reference solutions and expected outputs live outside the sandbox mount and must not be readable or modifiable by the evaluated agent.",
+    "denied_actions": "Denied or attempted-but-blocked actions are recorded without allowing actual damage. No real Git publication, host package installation or infrastructure change occurs inside scored tasks. The evaluation runner's own authorized publication actions are separate from the tested model's permissions."
+  },
+  "applicability_and_completion": {
+    "agentic_disposition": "Exactly one of: COMPLETED (evidence-backed Agentic evaluation), INAPPLICABLE (legitimately inapplicable, with evidence), INTEGRATION_BLOCKED (with cause), NOT_TESTED.",
+    "no_missing_section": "Every current campaign summary explicitly shows both sections. A missing Agentic section is invalid. No Agentic PASS may be inferred from Model results.",
+    "adapter_qualification": "Lack of a native function-calling interface does not prove every agent interface is unsupported: the chosen harness's actual path is evaluated, and any text-tool adapter is itself qualified and recorded.",
+    "infrastructure_vs_verdict": "Missing test infrastructure is NOT_TESTED or INTEGRATION_BLOCKED, never a negative model verdict.",
+    "group_completeness": "Campaign-group completeness is defined from required profiles and applicable sections. A completed Model section is never erased by an Agentic issue, but the group cannot claim complete required testing while a required Agentic section is unresolved.",
+    "no_methodology_label_abuse": "Ordinary failed agent tasks are measured task failures, never methodology blockers."
+  },
+  "historical_migration": {
+    "no_retroactive_results": "Existing Model-era events do not acquire Agentic results retroactively.",
+    "reusable_evidence": "Historical agent evidence is reusable only where its actual task/harness/profile/oracle boundaries support the new claim (the phase5 omp calibration proves harness mechanics, not any current model's Agentic capability).",
+    "documentation": "Campaigns record the old-to-new section mapping, compatible identity/evidence reuse, methodology-incomparable results, newly required measurements, and current-versus-historical public presentation."
+  },
+  "validation_requirements": {
+    "per_task_qualification": [
+      "a trusted reference execution that succeeds",
+      "alternate valid execution where appropriate",
+      "no-op / wrong-result cases that fail",
+      "false-success, forbidden-edit and missing-verification cases",
+      "correct-recovery and unrecovered-error cases",
+      "bounded token/time/tool exhaustion",
+      "harness failure separated from model behavior"
+    ],
+    "exercise_real_runner": "Qualification exercises the actual runner end to end, never only a hand-authored passing transcript. Selftests use trusted fixture code only; untrusted model actions execute only in the qualified disposable sandbox."
+  },
+  "report": "Report the Agentic disposition, the frozen configuration binding, per-task outcomes with the required fields, resource costs, untested modes, and the bounded-sample limitation. Model and Agentic conclusions are reported separately and never combined.",
+  "limitations": [
+    "0.1.0-draft: three-task initial suite; thresholds and repetition policy remain under empirical validation.",
+    "System task uses a faithful stateful simulator inside the disposable sandbox, not a real host service; claims are scoped accordingly.",
+    "Research task runs against a frozen local corpus; no live-web behavior is measured."
+  ]
+}

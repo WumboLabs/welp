@@ -154,6 +154,24 @@ PROFILE_INVARIANT_KINDS = {
 # reasoning-<level> where <level> matches this pattern.
 EFFORT_PROFILE_ID_RE = re.compile(r"^reasoning-[a-z0-9][a-z0-9-]*$")
 
+# ---- WELP Model / WELP Agentic sections (welp-agentic-0.1.0-draft) ----
+# Era gating is deliberately NOT date-only: the model-agentic snapshot shares
+# its date (2026-09-25) with reasoning-profiles, so date-only gating would
+# retroactively apply R22-R24 to reasoning-era campaigns that never recorded
+# section dispositions. The rules apply to the exact model-agentic snapshot,
+# to any LATER snapshot date, or whenever a manifest explicitly adopts the
+# welp-agentic contract.
+AGENTIC_CONTRACT = "welp-agentic-0.1.0-draft"
+AGENTIC_CONTRACT_KEY = "welp-agentic"  # manifest contracts-map key (bare id)
+AGENTIC_HARNESS_ID = "welp-agentic-harness"
+AGENTIC_SNAPSHOT_EXACT = "welp-next-snapshot-2026-09-25-model-agentic"
+AGENTIC_SECTION_DATE = "2026-09-25"
+AGENTIC_DISPOSITIONS = {"COMPLETED", "INAPPLICABLE", "INTEGRATION_BLOCKED", "NOT_TESTED"}
+AGENTIC_TASK_OUTCOMES = {"PASS", "FAIL", "NOT_EVALUABLE"}
+AGENTIC_HARNESS_STOPS = {"HARNESS_FAILURE", "SANDBOX_ISOLATION_FAILED"}
+AGENTIC_INITIAL_SUITE = "initial-three-tasks"
+AGENTIC_INITIAL_CLASSES = {"repository", "system", "research"}
+
 
 def _reasoning_profile_id_ok(pid) -> bool:
     return pid in REASONING_PROFILE_IDS or (
@@ -398,6 +416,223 @@ def _check_hardening(root: Path, m: dict, bad, warn, ok):
                 ok(f"R17_{section}_hash_verified", name)
 
 
+def _check_agentic(root: Path, m: dict, web, bad, warn, ok):
+    """R22-R24 — WELP Model / WELP Agentic two-section rules
+    (welp-agentic-0.1.0-draft).
+
+    R22  Two-section disposition: manifest.sections carries a Model and an
+         Agentic entry, each with exactly one disposition (COMPLETED |
+         INAPPLICABLE | INTEGRATION_BLOCKED | NOT_TESTED). INAPPLICABLE
+         requires evidence, INTEGRATION_BLOCKED requires cause, NOT_TESTED
+         requires reason, COMPLETED requires the corresponding evidence
+         block (sections.agentic -> manifest.agentic). A missing section is
+         an error; no Agentic result may be inferred from Model evidence.
+    R23  Agentic configuration binding + evidence identity (COMPLETED only):
+         the agentic block binds contract, harness id/version/commit, parent
+         model profile, selected reasoning profile with a predeclared
+         selection rule, agent system-prompt hash, sandbox description and
+         frozen limits; the model profile must be the serving profile or an
+         explicitly declared extension of it; every task record is a
+         hash-bound pointer verified against its bytes; records carry the
+         task outcome and stop reason, and harness-side stops stay separate
+         from model verdicts.
+    R24  Task accounting: distinct task ids, attempt counts with justification
+         when > 1, unassisted-completion claims require assisted=false on
+         every record, an initial-three-tasks suite covers the three task
+         classes, and the bounded-sample statement is declared.
+    """
+    sections = m.get("sections")
+    agentic = m.get("agentic")
+    if isinstance(web, dict):
+        for key in ("combined_verdict", "agentic_combined_verdict",
+                    "overall_model_agentic_verdict"):
+            if key in web:
+                bad("R22_no_combined_verdict",
+                    f"website export carries a combined Model+Agentic verdict field: {key!r}; "
+                    "Model and Agentic conclusions are never combined")
+    if not isinstance(sections, dict):
+        bad("R22_sections_required",
+            "manifest.sections {model: ..., agentic: ...} required for "
+            "model-agentic-era campaigns")
+        return
+    for name in ("model", "agentic"):
+        entry = sections.get(name)
+        if not isinstance(entry, dict):
+            bad("R22_section_required", f"manifest.sections.{name} is required")
+            continue
+        disp = entry.get("disposition")
+        if disp not in AGENTIC_DISPOSITIONS:
+            bad("R22_section_disposition",
+                f"sections.{name}.disposition must be one of "
+                f"{sorted(AGENTIC_DISPOSITIONS)}, got {disp!r}")
+            continue
+        if disp == "INAPPLICABLE" and not str(entry.get("evidence", "")).strip():
+            bad("R22_section_inapplicable_evidence",
+                f"sections.{name}: INAPPLICABLE requires evidence")
+        if disp == "INTEGRATION_BLOCKED" and not str(entry.get("cause", "")).strip():
+            bad("R22_section_blocked_cause",
+                f"sections.{name}: INTEGRATION_BLOCKED requires cause")
+        if disp == "NOT_TESTED" and not str(entry.get("reason", "")).strip():
+            bad("R22_section_not_tested_reason",
+                f"sections.{name}: NOT_TESTED requires reason")
+        if disp == "COMPLETED" and name == "agentic" and not isinstance(agentic, dict):
+            bad("R22_agentic_block_required",
+                "sections.agentic COMPLETED requires manifest.agentic evidence block")
+            continue
+        ok("R22_section_disposition", f"{name}={disp}")
+    if (isinstance(sections.get("agentic"), dict)
+            and sections["agentic"].get("disposition") != "COMPLETED"
+            and agentic is not None):
+        warn("R22_agentic_block_ignored",
+             "manifest.agentic present while sections.agentic is not COMPLETED")
+
+    # ---- R23/R24: completed Agentic evidence ----
+    if not (isinstance(sections.get("agentic"), dict)
+            and sections["agentic"].get("disposition") == "COMPLETED"):
+        return
+    if not isinstance(agentic, dict):
+        return  # already reported by R22
+    if agentic.get("contract") != AGENTIC_CONTRACT:
+        bad("R23_agentic_contract",
+            f"agentic.contract must be {AGENTIC_CONTRACT!r}, got {agentic.get('contract')!r}")
+    harness = agentic.get("harness")
+    if (isinstance(harness, dict)
+            and str(harness.get("id", "")).startswith(AGENTIC_HARNESS_ID)
+            and harness.get("version") and isinstance(harness.get("commit"), str)
+            and re.fullmatch(r"[0-9a-f]{40}", harness.get("commit") or "")):
+        ok("R23_agentic_harness_identity", f"{harness.get('id')} {harness.get('version')}")
+    else:
+        bad("R23_agentic_harness_identity",
+            "agentic.harness {id: welp-agentic-harness*, version, commit: 40-hex} required")
+
+    serving = ((m.get("serving_profile") or {}).get("profile_id")
+               or (m.get("classification") or {}).get("profile_id"))
+    model_profile = agentic.get("model_profile_id")
+    extension = agentic.get("profile_extension")
+    if model_profile == serving:
+        ok("R23_agentic_model_profile", str(model_profile))
+    elif (isinstance(extension, dict) and model_profile
+          and extension.get("parent_profile_id") == serving
+          and str(extension.get("basis", "")).strip()):
+        ok("R23_agentic_model_profile", f"{model_profile} (declared extension)")
+    else:
+        bad("R23_agentic_model_profile",
+            "agentic.model_profile_id must equal serving_profile.profile_id or declare "
+            "profile_extension {parent_profile_id, basis}; wrong-profile/harness evidence "
+            "is rejected")
+
+    if not str(agentic.get("profile_selection_rule", "")).strip():
+        bad("R23_profile_selection_rule",
+            "agentic.profile_selection_rule (predeclared, recorded before task outputs) required")
+    if not HASH.match(str(agentic.get("system_prompt_sha256", ""))):
+        bad("R23_agent_system_prompt",
+            "agentic.system_prompt_sha256 (hash of the frozen agent system instructions) required")
+    if not str(agentic.get("sandbox", "")).strip():
+        bad("R23_sandbox_binding", "agentic.sandbox (disposable isolation description) required")
+    limits = agentic.get("limits")
+    required_limits = ("max_turns", "wall_clock_sec", "total_completion_token_budget",
+                       "per_request_max_tokens", "command_timeout_sec")
+    if isinstance(limits, dict) and all(
+            isinstance(limits.get(k), (int, float)) and limits[k] > 0
+            for k in required_limits):
+        ok("R23_agentic_limits", ",".join(required_limits))
+    else:
+        bad("R23_agentic_limits",
+            f"agentic.limits with positive {required_limits} required (frozen before scored outputs)")
+
+    tasks = agentic.get("tasks")
+    if not isinstance(tasks, list) or not tasks:
+        bad("R24_agentic_tasks_required", "agentic.tasks list required")
+        return
+    seen_ids = set()
+    classes_seen = set()
+    for t in tasks:
+        if not isinstance(t, dict):
+            bad("R24_agentic_task_entry", f"malformed task entry: {t!r}")
+            continue
+        tid = t.get("task_id")
+        if not tid or tid in seen_ids:
+            bad("R24_agentic_task_distinct", f"task_id missing or duplicated: {tid!r}")
+        seen_ids.add(tid)
+        classes_seen.add(t.get("task_class"))
+        outcome = t.get("outcome")
+        if outcome not in AGENTIC_TASK_OUTCOMES:
+            bad("R24_agentic_task_outcome", f"{tid}: outcome must be one of "
+                f"{sorted(AGENTIC_TASK_OUTCOMES)}, got {outcome!r}")
+        if not str(t.get("stop_reason", "")).strip():
+            bad("R24_agentic_task_stop_reason", f"{tid}: stop_reason required")
+        attempts = t.get("attempts", 1)
+        if not isinstance(attempts, int) or attempts < 1:
+            bad("R24_agentic_task_attempts", f"{tid}: attempts must be a positive integer")
+        elif attempts > 1 and not str(t.get("repetition_justification", "")).strip():
+            bad("R24_agentic_task_repetition",
+                f"{tid}: attempts>1 requires repetition_justification (strictly bounded)")
+        assisted = t.get("assisted")
+        if assisted is not None and not isinstance(assisted, bool):
+            bad("R24_agentic_task_assisted", f"{tid}: assisted must be boolean when present")
+        rec = t.get("record")
+        if (not isinstance(rec, dict) or not _is_rooted_rel(rec.get("path"))
+                or not HASH.match(str(rec.get("sha256", "")))):
+            bad("R23_agentic_task_record_pointer",
+                f"{tid}: record must be a rooted {{path, sha256}} pointer")
+        else:
+            target = root / rec["path"]
+            if not target.is_file():
+                bad("R23_agentic_task_record_missing", f"{tid}: record missing: {rec['path']}")
+            else:
+                actual = hashlib.sha256(target.read_bytes()).hexdigest()
+                if actual != rec["sha256"]:
+                    bad("R23_agentic_task_record_hash",
+                        f"{tid}: record sha256 does not match {rec['path']} bytes")
+                else:
+                    ok("R23_agentic_task_record", str(tid))
+                    try:
+                        rj = json.loads(target.read_text())
+                    except Exception:
+                        rj = None
+                    if isinstance(rj, dict):
+                        if rj.get("task_id") != tid:
+                            bad("R23_agentic_task_record_identity",
+                                f"{tid}: record task_id mismatch: {rj.get('task_id')!r}")
+                        rj_outcome = (rj.get("evaluation") or {}).get("outcome") or rj.get("outcome")
+                        if rj_outcome is not None and outcome != "NOT_EVALUABLE" \
+                                and rj_outcome != outcome:
+                            bad("R24_agentic_task_outcome_mismatch",
+                                f"{tid}: manifest outcome {outcome!r} != record outcome {rj_outcome!r}")
+                        if outcome == "NOT_EVALUABLE" and rj.get("stop_reason") not in AGENTIC_HARNESS_STOPS \
+                                and not str(t.get("repetition_justification", "")).strip() \
+                                and t.get("attempts", 1) == 1:
+                            warn("R24_agentic_not_evaluable_stop",
+                                 f"{tid}: NOT_EVALUABLE with a non-harness stop reason must be explained")
+                        if rj.get("harness_id") is not None and harness is not None \
+                                and rj.get("harness_id") != harness.get("id"):
+                            bad("R23_agentic_harness_mismatch",
+                                f"{tid}: record harness_id {rj.get('harness_id')!r} != "
+                                f"manifest harness id {harness.get('id')!r}")
+    if agentic.get("suite") == AGENTIC_INITIAL_SUITE:
+        if not AGENTIC_INITIAL_CLASSES <= classes_seen:
+            bad("R24_initial_suite_classes",
+                f"suite {AGENTIC_INITIAL_SUITE!r} requires task classes "
+                f"{sorted(AGENTIC_INITIAL_CLASSES)}, got {sorted(classes_seen)}")
+        else:
+            ok("R24_initial_suite_classes", ",".join(sorted(classes_seen)))
+    if len(seen_ids) == len(tasks) and tasks:
+        ok("R24_agentic_task_distinct", f"{len(tasks)} distinct task(s)")
+    if agentic.get("bounded_sample_declared") is not True:
+        bad("R24_bounded_sample_statement",
+            "agentic.bounded_sample_declared=true required (task sample, not a certification "
+            "of general autonomous reliability)")
+    completed_tasks = [t for t in tasks if isinstance(t, dict) and t.get("outcome") == "PASS"]
+    unassisted_claim = agentic.get("completed_without_assistance")
+    if unassisted_claim is True:
+        if all(t.get("assisted") is False for t in completed_tasks) and completed_tasks:
+            ok("R24_unassisted_claim", f"{len(completed_tasks)} task(s)")
+        else:
+            bad("R24_unassisted_claim",
+                "completed_without_assistance=true requires every PASS task record to carry "
+                "assisted=false")
+
+
 def _check_reasoning_profiles(root: Path, m: dict, web, bad, warn, ok):
     """R18-R21 — reasoning-profile rules (welp-reasoning-topology-0.1.0-draft).
 
@@ -427,7 +662,6 @@ def _check_reasoning_profiles(root: Path, m: dict, web, bad, warn, ok):
     """
     top = m.get("reasoning_topology")
     prof = m.get("reasoning_profile")
-
     # ---- R18 topology + profile identity ----
     if not isinstance(top, dict):
         bad("R18_reasoning_topology_required",
@@ -1196,6 +1430,17 @@ def check(root: Path):
     # ---- Reasoning-profile rules R18-R21 (snapshot date >= 2026-09-25) ----
     if mdate and mdate.group(1) >= REASONING_PROFILES_FROM:
         _check_reasoning_profiles(root, m, web, bad, warn, ok)
+
+    # ---- Model/Agentic section rules R22-R24 ----
+    # NOT date-only gating: the model-agentic snapshot shares 2026-09-25 with
+    # reasoning-profiles, so the era is the exact snapshot, any LATER date,
+    # or explicit adoption of the welp-agentic contract.
+    _contracts_map = m.get("contracts") or {}
+    agentic_era = (sid == AGENTIC_SNAPSHOT_EXACT
+                   or (mdate and mdate.group(1) > AGENTIC_SECTION_DATE)
+                   or AGENTIC_CONTRACT_KEY in _contracts_map)
+    if agentic_era:
+        _check_agentic(root, m, web, bad, warn, ok)
 
     # ---- N03 improper-rewrite detection ----
     # A welp-* campaign whose contract IDs are ALL wlep-* (with no welp-* counterpart)
@@ -2338,8 +2583,150 @@ def selftest():
                 fails.append(f"revision_{label}_missing_{rule}_error")
         if not any(f[0] == "warning" and f[1] == "R13_context_not_executed" for f in rg_rev_deferred["findings"]):
             fails.append("revision_context_deferred_missing_R13_warning")
+
+        # ---- Model/Agentic section rules R22-R24 (welp-agentic-0.1.0-draft) ----
+        ag_cases = {}
+
+        def agentic_variant(name, manifest_mut=None, web_mut=None):
+            g = _synthetic_hardening_bundle(td, "reasoning-off-positive")
+            man_path = g / "summaries/campaign_manifest.json"
+            man = json.loads(man_path.read_text())
+            man.setdefault("contracts", {})["welp-agentic"] = "0.1.0-draft"
+            tasks = []
+            (g / "evidence/agentic").mkdir(parents=True, exist_ok=True)
+            for tid, cls, outcome in [("agentic-repository-1", "repository", "PASS"),
+                                      ("agentic-system-1", "system", "PASS"),
+                                      ("agentic-research-1", "research", "PASS")]:
+                rec = {"schema": "welp-agentic-task-record/1",
+                       "harness_id": "welp-agentic-harness",
+                       "harness_version": "0.1.0-draft",
+                       "task_id": tid, "attempt": 1, "stop_reason": "FINISHED",
+                       "turns_used": 8, "total_completion_tokens": 4200,
+                       "wall_s": 301.0, "synthetic": True,
+                       "evaluation": {"outcome": outcome,
+                                      "checks": [{"id": "acceptance",
+                                                  "pass": outcome == "PASS"}]},
+                       "commands": []}
+                rec_bytes = json.dumps(rec, indent=2, sort_keys=True).encode()
+                rel = f"evidence/agentic/{tid}.json"
+                (g / rel).write_bytes(rec_bytes)
+                tasks.append({"task_id": tid, "task_class": cls, "outcome": outcome,
+                              "stop_reason": "FINISHED", "attempts": 1,
+                              "assisted": False,
+                              "record": {"path": rel,
+                                         "sha256": hashlib.sha256(rec_bytes).hexdigest()}})
+            man["sections"] = {"model": {"disposition": "COMPLETED"},
+                               "agentic": {"disposition": "COMPLETED"}}
+            serving = ((man.get("serving_profile") or {}).get("profile_id")
+                       or (man.get("classification") or {}).get("profile_id"))
+            man["agentic"] = {
+                "contract": AGENTIC_CONTRACT,
+                "harness": {"id": "welp-agentic-harness",
+                            "version": "0.1.0-draft", "commit": "1" * 40},
+                "model_profile_id": serving,
+                "profile_selection_rule": "predeclared: sibling Reasoning Off profile "
+                                          "designated before any Agentic output was seen",
+                "system_prompt_sha256": "ab" * 32,
+                "sandbox": "bwrap disposable offline unprivileged sandbox",
+                "limits": {"max_turns": 40, "wall_clock_sec": 1800,
+                           "total_completion_token_budget": 65536,
+                           "per_request_max_tokens": 2048,
+                           "command_timeout_sec": 60},
+                "suite": AGENTIC_INITIAL_SUITE,
+                "bounded_sample_declared": True,
+                "completed_without_assistance": True,
+                "tasks": tasks}
+            if manifest_mut is not None:
+                manifest_mut(man)
+            man_path.write_text(json.dumps(man, indent=2, sort_keys=True))
+            if web_mut is not None:
+                web_path = g / "summaries/website-publication.json"
+                web = json.loads(web_path.read_text())
+                web_mut(web)
+                web_path.write_text(json.dumps(web, indent=2, sort_keys=True))
+            return check(g)
+
+        def ag_has(r, sev, rule):
+            return any(f[0] == sev and f[1] == rule for f in r["findings"])
+
+        ag_cases["completed_accepted"] = agentic_variant("agentic_completed")
+        ag_cases["missing_sections"] = agentic_variant(
+            "agentic_missing", manifest_mut=lambda m: m.pop("sections"))
+        ag_cases["inapplicable_no_evidence"] = agentic_variant(
+            "agentic_inapp",
+            manifest_mut=lambda m: (
+                m["sections"].__setitem__("agentic", {"disposition": "INAPPLICABLE"}),
+                m.pop("agentic")))
+        ag_cases["harness_identity_rejected"] = agentic_variant(
+            "agentic_harness",
+            manifest_mut=lambda m: m["agentic"]["harness"].pop("commit"))
+        ag_cases["record_hash_rejected"] = agentic_variant(
+            "agentic_hash",
+            manifest_mut=lambda m: m["agentic"]["tasks"][0]["record"].update(
+                {"sha256": "0" * 64}))
+        ag_cases["wrong_profile_rejected"] = agentic_variant(
+            "agentic_profile",
+            manifest_mut=lambda m: m["agentic"].update({"model_profile_id": "other/profile"}))
+        ag_cases["extension_profile_accepted"] = agentic_variant(
+            "agentic_extension",
+            manifest_mut=lambda m: m["agentic"].update(
+                {"model_profile_id": "other/profile-extension",
+                 "profile_extension": {"parent_profile_id": m["classification"]["profile_id"],
+                                       "basis": "declared separately tested extension"}}))
+        ag_cases["repetition_unjustified_rejected"] = agentic_variant(
+            "agentic_reps",
+            manifest_mut=lambda m: m["agentic"]["tasks"][0].update({"attempts": 2}))
+        ag_cases["unassisted_claim_rejected"] = agentic_variant(
+            "agentic_unassisted",
+            manifest_mut=lambda m: m["agentic"]["tasks"][0].update({"assisted": True}))
+        ag_cases["bounded_sample_required"] = agentic_variant(
+            "agentic_bounded",
+            manifest_mut=lambda m: m["agentic"].pop("bounded_sample_declared"))
+        ag_cases["initial_suite_classes_enforced"] = agentic_variant(
+            "agentic_suite",
+            manifest_mut=lambda m: m["agentic"]["tasks"].__delitem__(2))
+        ag_cases["not_evaluable_warning"] = agentic_variant(
+            "agentic_neval",
+            manifest_mut=lambda m: (
+                m["agentic"]["tasks"][0].update({"outcome": "NOT_EVALUABLE",
+                                                 "stop_reason": "TURN_LIMIT"}),
+                m["agentic"].update({"completed_without_assistance": False})))
+        ag_cases["combined_verdict_rejected"] = agentic_variant(
+            "agentic_combined",
+            web_mut=lambda w: w.update({"combined_verdict": "READY"}))
+
+        if not ag_cases["completed_accepted"]["valid"]:
+            fails.append("agentic_completed_bundle_invalid: "
+                         + str([f for f in ag_cases["completed_accepted"]["findings"]
+                                if f[0] == "error"]))
+        for key, sev, rule in [
+                ("missing_sections", "error", "R22_sections_required"),
+                ("inapplicable_no_evidence", "error", "R22_section_inapplicable_evidence"),
+                ("harness_identity_rejected", "error", "R23_agentic_harness_identity"),
+                ("record_hash_rejected", "error", "R23_agentic_task_record_hash"),
+                ("wrong_profile_rejected", "error", "R23_agentic_model_profile"),
+                ("repetition_unjustified_rejected", "error", "R24_agentic_task_repetition"),
+                ("unassisted_claim_rejected", "error", "R24_unassisted_claim"),
+                ("bounded_sample_required", "error", "R24_bounded_sample_statement"),
+                ("initial_suite_classes_enforced", "error", "R24_initial_suite_classes"),
+                ("combined_verdict_rejected", "error", "R22_no_combined_verdict")]:
+            r = ag_cases[key]
+            if r["valid"] or not ag_has(r, sev, rule):
+                fails.append(f"agentic_{key}_not_rejected ({rule})")
+        if not ag_cases["extension_profile_accepted"]["valid"]:
+            fails.append("agentic_declared_extension_rejected: "
+                         + str([f for f in ag_cases["extension_profile_accepted"]["findings"]
+                                if f[0] == "error"]))
+        if not ag_has(ag_cases["not_evaluable_warning"], "warning",
+                      "R24_agentic_not_evaluable_stop"):
+            fails.append("agentic_not_evaluable_missing_warning")
+        # Historical compatibility: the reasoning-era bundle carries no R22-R24 findings
+        for f in rg_roff["findings"]:
+            if f[1].startswith(("R22_", "R23_", "R24_")):
+                fails.append("reasoning_era_bundle_hit_agentic_rules")
+
         print(json.dumps({
-            "fixture_sets": 38,
+            "fixture_sets": 39,
             "accepted_legacy_wlep": rg_legacy["valid"],
             "accepted_current_welp": rg_welp["valid"],
             "accepted_welp_with_legacy_evidence": rg_mixed["valid"],
@@ -2371,6 +2758,21 @@ def selftest():
             "rejected_hardening_pointer_absolute": bool(rb_pointer_abs and not rb_pointer_abs["valid"]),
             "rejected_hardening_pointer_hash": bool(rb_pointer_hash and not rb_pointer_hash["valid"]),
             "rejected_hardening_bare_asserted_classification": bool(rb_asserted and not rb_asserted["valid"]),
+            "accepted_agentic_completed": ag_cases["completed_accepted"]["valid"],
+            "accepted_agentic_declared_extension": ag_cases["extension_profile_accepted"]["valid"],
+            "rejected_agentic_missing_sections": not ag_cases["missing_sections"]["valid"],
+            "rejected_agentic_inapplicable_without_evidence": not ag_cases["inapplicable_no_evidence"]["valid"],
+            "rejected_agentic_harness_without_commit": not ag_cases["harness_identity_rejected"]["valid"],
+            "rejected_agentic_record_hash": not ag_cases["record_hash_rejected"]["valid"],
+            "rejected_agentic_wrong_profile": not ag_cases["wrong_profile_rejected"]["valid"],
+            "rejected_agentic_unjustified_repetition": not ag_cases["repetition_unjustified_rejected"]["valid"],
+            "rejected_agentic_false_unassisted_claim": not ag_cases["unassisted_claim_rejected"]["valid"],
+            "required_agentic_bounded_sample": not ag_cases["bounded_sample_required"]["valid"],
+            "enforced_agentic_initial_suite_classes": not ag_cases["initial_suite_classes_enforced"]["valid"],
+            "warned_agentic_not_evaluable_stop": any(
+                f[0] == "warning" and f[1] == "R24_agentic_not_evaluable_stop"
+                for f in ag_cases["not_evaluable_warning"]["findings"]),
+            "rejected_agentic_combined_verdict": not ag_cases["combined_verdict_rejected"]["valid"],
             "failures": fails,
             "pass": not fails,
         }, indent=2))

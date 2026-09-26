@@ -38,6 +38,7 @@ Selftest: python3 harness/capabilities.py selftest
 """
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -267,26 +268,68 @@ def score_tool_recovery(actions: list) -> dict:
             "tool_calls": len(tool_events), "replay": replay, "final": final_parsed}
 
 
-def score_multi_turn_final(content: str) -> dict:
-    """Evaluate corrected facts, absent evidence and strict JSON on final turn."""
+def _multi_turn_content_failures(value):
+    """Content-level failure list for the multi-turn oracle (used by both the
+    strict path and the supplementary lenient content probe)."""
     fixture = json.loads((HERE.parent / "fixtures/real_work/multi-turn-correction.json").read_text())
     oracle = fixture["oracle"]
+    failures = []
+    if not isinstance(value, dict) or set(value) != set(oracle["exact_keys"]):
+        failures.append("exact object keys")
+        return failures
+    if value["service"] != oracle["service"]:
+        failures.append("service retention")
+    if type(value["port"]) is not int or value["port"] != oracle["port"]:
+        failures.append("correction not incorporated")
+    if value["health"] is not None:
+        failures.append("absent health evidence fabricated")
+    return failures
+
+
+def score_multi_turn_final(content: str) -> dict:
+    """Evaluate corrected facts, absent evidence and strict JSON on final turn."""
     failures = []
     try:
         value = json.loads(content, object_pairs_hook=_unique_pairs)
     except (TypeError, ValueError):
         value = None
         failures.append("strict JSON")
-    if not isinstance(value, dict) or set(value) != set(oracle["exact_keys"]):
-        failures.append("exact object keys")
-    else:
-        if value["service"] != oracle["service"]:
-            failures.append("service retention")
-        if type(value["port"]) is not int or value["port"] != oracle["port"]:
-            failures.append("correction not incorporated")
-        if value["health"] is not None:
-            failures.append("absent health evidence fabricated")
-    return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
+    failures.extend(_multi_turn_content_failures(value))
+    out = {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
+    if value is None:
+        # Format failed: separately expose whether the underlying content was
+        # correct (diagnostic only; the strict failure stands).
+        probe = lenient_json_probe(content, _multi_turn_content_failures)
+        out["content_probe"] = {k: v for k, v in probe.items()
+                                if k != "fenced_content_failures" or v is not None}
+    return out
+
+
+def lenient_json_probe(content, checker=None):
+    """Area-B diagnostic (model-agentic revision): whether the underlying
+    content parses and the content checks pass once a single surrounding code
+    fence is tolerated. SUPPLEMENTARY ONLY: it never changes the strict
+    semantic result, because a mandatory parser requirement is never silently
+    overridden (welp protocol hardening II). `checker(value)` returns a list
+    of content-failure strings exactly as the strict path would."""
+    out = {"fenced_parse": None, "fenced_content_failures": None}
+    if not isinstance(content, str):
+        return out
+    m = re.fullmatch(r"\s*```[a-zA-Z0-9_-]*\s*\n(.*)\n```\s*", content, re.DOTALL)
+    if not m:
+        return out
+    try:
+        value = json.loads(m.group(1), object_pairs_hook=_unique_pairs)
+    except (TypeError, ValueError):
+        out["fenced_parse"] = False
+        return out
+    out["fenced_parse"] = True
+    if callable(checker):
+        try:
+            out["fenced_content_failures"] = checker(value)
+        except Exception:
+            out["fenced_content_failures"] = None
+    return out
 
 
 def resolve_source_alias(cited, known_ids):
@@ -578,15 +621,12 @@ def score_multidocument(content: str) -> dict:
     """
     fixture = json.loads(FIXTURE_MULTIDOCUMENT.read_text())
     oracle = fixture["oracle"]
-    failures = []
-    try:
-        value = json.loads(content, object_pairs_hook=_unique_pairs)
-    except (TypeError, ValueError):
-        value = None
-        failures.append("strict JSON")
-    if not isinstance(value, dict) or set(value) != set(oracle["exact_keys"]):
-        failures.append("exact object keys")
-    else:
+
+    def content_failures(value):
+        failures = []
+        if not isinstance(value, dict) or set(value) != set(oracle["exact_keys"]):
+            failures.append("exact object keys")
+            return failures
         integer_keys = set(oracle.get("integer_keys_exact", []))
         doc_ids = [d["id"] for d in fixture.get("documents", [])
                    if isinstance(d, dict) and isinstance(d.get("id"), str)]
@@ -604,7 +644,23 @@ def score_multidocument(content: str) -> dict:
                     failures.append(f"{key}: wrong value")
             elif got != expected:
                 failures.append(f"{key}: wrong value")
-    return {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
+        return failures
+
+    failures = []
+    try:
+        value = json.loads(content, object_pairs_hook=_unique_pairs)
+    except (TypeError, ValueError):
+        value = None
+        failures.append("strict JSON")
+    failures.extend(content_failures(value))
+    out = {"semantic": "PASS" if not failures else "FAIL", "failures": failures}
+    if value is None:
+        # Format failed: separately expose whether the underlying content was
+        # correct (diagnostic only; the strict failure stands).
+        probe = lenient_json_probe(content, content_failures)
+        out["content_probe"] = {k: v for k, v in probe.items()
+                                if k != "fenced_content_failures" or v is not None}
+    return out
 
 
 def resolve_selftest_interpreter(executable=None, override=None,

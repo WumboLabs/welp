@@ -118,6 +118,34 @@ The canonical new-campaign validator.
   Historical acceptance remains version-aware and does not retroactively apply
   these stronger checks or certify historical scientific interpretations.
 
+- **R22–R24 (Model/Agentic sections, welp-agentic-0.1.0-draft):** apply to
+  campaigns under the exact snapshot `welp-next-snapshot-2026-09-25-model-agentic`,
+  any later-dated snapshot, or any manifest adopting the `welp-agentic`
+  contract — deliberately not date-only, because the model-agentic snapshot
+  shares 2026-09-25 with reasoning-profiles.
+  - **R22** two-section disposition: `manifest.sections` carries `model` and
+    `agentic`, each with exactly one disposition `COMPLETED | INAPPLICABLE |
+    INTEGRATION_BLOCKED | NOT_TESTED`; INAPPLICABLE requires evidence,
+    INTEGRATION_BLOCKED a cause, NOT_TESTED a reason, and a COMPLETED Agentic
+    section requires the `manifest.agentic` evidence block. A website export
+    carrying a combined Model+Agentic verdict field is rejected; no Agentic
+    result is ever inferred from Model evidence.
+  - **R23** Agentic configuration binding + evidence identity (COMPLETED
+    only): contract id, harness id/version/40-hex commit, parent model
+    profile equal to the serving profile or an explicitly declared extension
+    (`profile_extension {parent_profile_id, basis}`), predeclared
+    `profile_selection_rule`, agent system-prompt hash, sandbox description,
+    frozen positive limits, and per-task hash-bound record pointers verified
+    against bytes (record identity, outcome consistency, harness mismatch
+    rejected).
+  - **R24** task accounting: distinct task ids, attempts with
+    `repetition_justification` when > 1, `completed_without_assistance` only
+    when every PASS record carries `assisted=false`, the
+    `initial-three-tasks` suite covers repository/system/research, a
+    bounded-sample statement is declared, NOT_EVALUABLE with a non-harness
+    stop reason is a warning, and outcome mismatches between manifest and
+    record are errors.
+
 ## LocalMaxxing disposition (`summaries/localmaxxing.json`)
 
 - `summaries/localmaxxing.json` fields: `status` — exactly `SUBMITTED | MEASURED_NOT_SUBMITTED | NOT_ELIGIBLE | BLOCKED`; `SUBMITTED` requires `origin` (`NEW | VERIFIED_EXISTING`) and `submission_ref`; every other status requires `reason`. Recommended companions: canonical profile identity, configured context, actual prompt tokens, result summary, evidence paths.

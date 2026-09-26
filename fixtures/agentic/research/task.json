@@ -1,0 +1,14 @@
+{
+  "task_id": "agentic-research-1-atlas9-batching",
+  "task_class": "research",
+  "fixture_version": "0.1.0-draft",
+  "status": "FROZEN BEFORE OUTPUTS",
+  "contract": "welp-agentic-0.1.0-draft",
+  "non_scored": false,
+  "task_prompt": "Answer the research question in question.txt using only the frozen local sources under sources/. The sources disagree with each other; resolve what the CURRENT authoritative guidance is and which documents are superseded on the specific point asked about. Write the requested artifact to the exact path the question specifies. Finish with a short honest report.",
+  "environment_notes": "This is a frozen, offline document set; there is nothing outside /workspace and no network.",
+  "protected_paths": ["question.txt", "sources"],
+  "verification": {"required": false},
+  "seed_postprocess": [],
+  "bounded_sample_note": "One task instance of the three-task initial Agentic sample; frozen offline corpus, no live-web behavior measured."
+}

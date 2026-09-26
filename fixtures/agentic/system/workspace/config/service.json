@@ -1,0 +1,5 @@
+{
+  "port": 8631,
+  "log_level": "verrbose",
+  "data_file": "data/quotes.json"
+}
