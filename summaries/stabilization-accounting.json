@@ -1,34 +1,45 @@
 {
-  "record_id": "welp-stabilization-accounting",
-  "version": "2.0.0",
-  "updated": "2026-09-25",
-  "record_type": "SUPERSEDING_RECORD",
-  "purpose": "Canonical stabilization ledger for WELP. This record supersedes any earlier stabilization accounting that counted a methodology-validation run as a clean stabilization campaign. Historical campaign reports and closeouts stand as historical evidence and are not rewritten.",
-  "superseded_accounting": [
-    {
-      "location": "research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-reasoning-off-2026-09-25/CLOSEOUT.md (and REPORT.md section 14)",
-      "recorded": "STABILIZATION_BASELINE welp-next-snapshot-2026-09-25-reasoning-profiles; CLEAN_CAMPAIGNS_SINCE_BASELINE: 1 (the Ling dual-profile validation)",
-      "correction": "That run was the METHODOLOGY_VALIDATION for the reasoning-profiles snapshot (a re-derived reuse event plus a first-time sibling profile under a freshly frozen method). Under the corrected rule it is METHODOLOGY_VALIDATION, never clean campaign 1. The corrected count at that baseline is 0/5, not 1."
-    }
+ "record_id": "welp-stabilization-accounting",
+ "version": "2.0.0",
+ "updated": "2026-09-25",
+ "record_type": "SUPERSEDING_RECORD",
+ "purpose": "Canonical stabilization ledger for WELP. This record supersedes any earlier stabilization accounting that counted a methodology-validation run as a clean stabilization campaign. Historical campaign reports and closeouts stand as historical evidence and are not rewritten.",
+ "superseded_accounting": [
+  {
+   "location": "research/model-evaluations/ling-3.0-tiny/ling-3.0-tiny-rtx5070-welp-reasoning-off-2026-09-25/CLOSEOUT.md (and REPORT.md section 14)",
+   "recorded": "STABILIZATION_BASELINE welp-next-snapshot-2026-09-25-reasoning-profiles; CLEAN_CAMPAIGNS_SINCE_BASELINE: 1 (the Ling dual-profile validation)",
+   "correction": "That run was the METHODOLOGY_VALIDATION for the reasoning-profiles snapshot (a re-derived reuse event plus a first-time sibling profile under a freshly frozen method). Under the corrected rule it is METHODOLOGY_VALIDATION, never clean campaign 1. The corrected count at that baseline is 0/5, not 1."
+  }
+ ],
+ "corrected_rule": {
+  "methodology_validation_never_counts": "The known-model run that validates a newly frozen methodology revision is METHODOLOGY_VALIDATION. It is never clean campaign 1 and never increments the count.",
+  "non_inflating_runs": [
+   "repair completions",
+   "reused/re-derived campaigns",
+   "two reasoning profiles of one model",
+   "repeated hardware runs"
   ],
-  "corrected_rule": {
-    "methodology_validation_never_counts": "The known-model run that validates a newly frozen methodology revision is METHODOLOGY_VALIDATION. It is never clean campaign 1 and never increments the count.",
-    "non_inflating_runs": ["repair completions", "reused/re-derived campaigns", "two reasoning profiles of one model", "repeated hardware runs"],
-    "count_increment_rule": "Only a qualifying fresh-model campaign that starts after the freeze under the unchanged frozen method and completes all required profiles and applicable sections increments the count. A negative model verdict can count as clean methodology execution; a campaign requiring a methodology revision cannot.",
-    "minor_fix_exemption": "Non-semantic runner/reporting fixes may be recorded separately; changing scoring or experimental meaning is not a minor tooling exemption.",
-    "no_autostart": "The first fresh campaign is never started automatically."
+  "count_increment_rule": "Only a qualifying fresh-model campaign that starts after the freeze under the unchanged frozen method and completes all required profiles and applicable sections increments the count. A negative model verdict can count as clean methodology execution; a campaign requiring a methodology revision cannot.",
+  "minor_fix_exemption": "Non-semantic runner/reporting fixes may be recorded separately; changing scoring or experimental meaning is not a minor tooling exemption.",
+  "no_autostart": "The first fresh campaign is never started automatically."
+ },
+ "current_state": {
+  "stabilization_baseline": "welp-next-snapshot-2026-09-25-model-agentic",
+  "methodology_validation": {
+   "status": "PASS",
+   "event": "ling-3-0-tiny-rtx5070-welp-agentic-20260925 (METHODOLOGY_VALIDATION; campaign bundle ling-3.0-tiny-rtx5070-welp-agentic-2026-09-25)",
+   "evidence": "campaign validator exit 0; harness selftest 37/37; three scored tasks executed on real hardware (RTX 5070) through the pinned harness; adapter qualification retained (3 probes); no verdict forced",
+   "note": "METHODOLOGY_VALIDATION runs never count toward CLEAN_STABILIZATION_CAMPAIGNS."
   },
-  "current_state": {
-    "stabilization_baseline": "welp-next-snapshot-2026-09-25-reasoning-profiles (historical) -> welp-next-snapshot-2026-09-25-model-agentic (current, set at freeze of the Model/Agentic revision)",
-    "methodology_validation": "PENDING (Ling Reasoning Off Agentic validation under the model-agentic snapshot; to be recorded PASS only with real executed evidence)",
-    "clean_stabilization_campaigns": "0 / 5"
-  },
-  "history": [
-    {
-      "baseline": "welp-next-snapshot-2026-09-25-reasoning-profiles",
-      "recorded_count": "1 (superseded)",
-      "corrected_count": "0 / 5",
-      "note": "Counted run was METHODOLOGY_VALIDATION, not a fresh-model campaign."
-    }
-  ]
+  "clean_stabilization_campaigns": "0 / 5",
+  "fresh_model_queue": "NOT STARTED (must not start automatically)"
+ },
+ "history": [
+  {
+   "baseline": "welp-next-snapshot-2026-09-25-reasoning-profiles",
+   "recorded_count": "1 (superseded)",
+   "corrected_count": "0 / 5",
+   "note": "Counted run was METHODOLOGY_VALIDATION, not a fresh-model campaign."
+  }
+ ]
 }
