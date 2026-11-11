@@ -1,0 +1,8 @@
+{
+  "task_id": "agentic-qualification-1-greet-mini-v3",
+  "fixture_version": "0.3.0-proposed",
+  "checker_version": 3,
+  "status": "PROPOSED; SOFTWARE_TEST ONLY; human scientific acceptance pending",
+  "verification_command": "./run_tests.sh",
+  "environment_notes": "Offline mini-repository; nothing outside /workspace. Verification requires successful execution of ./run_tests.sh in /workspace after all writes and run commands. Direct invocation, sh/bash invocation, or a cd /workspace && prefix are equivalent; no extra arguments, redirects or trailing commands. Original sandbox receipts and independent acceptance are required, not a claim or echo."
+}

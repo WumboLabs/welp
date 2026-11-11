@@ -1,83 +1,163 @@
-# WELP — WumboLabs Evaluation Lifecycle Protocol (repo-candidate)
+# WELP — Modular model evaluation
 
-Public reproducibility package for the **WELP — WumboLabs Evaluation Lifecycle Protocol**.
+WELP is an eight-section, model/runtime/backend/GPU/host-independent framework
+for evidence-backed evaluation of language models. It produces one
+model-facing research record per evaluation: standardized, reproducible,
+original-evidence-backed findings for text, coding, reasoning, tool-use, and
+Agentic models. There are no cross-model leaderboards or rankings; comparisons
+appear only where a section explicitly compares configurations for one model.
+`SPEC.md` is the authoritative scientific specification.
 
-> Status: **DRAFT**. WELP is not frozen as v1.0. Thresholds marked draft are under empirical validation.
+WELP v1.0 was HUMAN_ACCEPTED on 2026-11-11 after end-to-end validation with three
+diverse real-model families, and WELP v1.0 is released: public availability
+takes effect when this source is promoted through ordinary repository history.
+Claims are bounded: results are
+configuration-specific (artifact × runtime × deployment), negative results and
+budget-limited outcomes are first-class findings, and no universal model score
+is computed.
 
-*"Real Hardware. Real Testing. No Hype."*
+## Sections
+
+Eight scientific sections, independently finalized and reported:
+
+- **Model/Core baseline** (`baseline`) — the standardized reliability, coding,
+  reasoning, context and real-work inventory; the anchor for advancement.
+- **Advanced Coding** (`coding`) — predefined fixed eligibility, frozen tasks
+  and budgets.
+- **Advanced Reasoning** (`advanced-reasoning`)
+- **Advanced Long Context** (`advanced-long-context`)
+- **Advanced Tool Use** (`advanced-tool-use`)
+- **HelicopterBench** (`helicopterbench`) — objective playable-game benchmark
+  with frozen mechanical scoring.
+- **Runtime Performance** (`runtime-performance`) — measured serving
+  conditions (tokens/s, latency, boundary memory), always reported separately
+  from quality and never mixed into scoring.
+- **Agentic** (`agentic-readiness`, `agentic`) — offline readiness plus the
+  campaign-gated authentic scored route; Agentic findings are independent of
+  Model findings and never averaged with them.
+
+Non-scored `diagnostic` and `calibration` sections support deployment
+diagnostics and fixed calibration pairs.
+
+## Requirements
+
+- Python **3.11+** (only the standard library; no third-party packages).
+- Optional external tools, only for the sections that use them:
+  - `bwrap` (bubblewrap) — isolated execution probes for coding/Agentic
+    sandbox checks;
+  - a Chromium-family browser — independent HelicopterBench artifact
+    verification;
+  - `ffprobe` (FFmpeg) — verify captured H.264 MP4 publication assets;
+  - `nvidia-smi` — optional NVIDIA GPU/environment observations;
+  - a qualified OpenAI-compatible serving endpoint (e.g. `llama-server`) for
+    `REAL_MODEL` measurements.
+
+No build step: run from the source tree. Nothing runs between CLI
+invocations; WELP installs no services or daemons.
 
 ## Layout
 
-| Path | Contents |
-|---|---|
-| `protocol/` | protocol notes (phase structure, policies, standards) |
-| `contracts/` | versioned evaluation contracts: outcomes, budgets/prompt lanes, real-work applicability, reliability, classification and capability modules. |
-| `harness/` | canonical versioned phase implementations, evidence-bound setup/bundle validation, optional measurement import and the Agentic runner (`agentic.py`: sandboxed tool loop with mechanical oracles). |
-| `scorers/` | reliability scorer v3, evidence-bound qualitative safety review, embedded self-tests and historical acceptance rescore. |
-| `fixtures/` | fixed reliability 20-task sample; the Controlled Context fixture (legacy ID: Family A 1.3) and the complementary Multi-Document Context fixture; the Assistant Quality screen; real-work Linux Diagnosis, Tool Recovery, Multi-Turn Correction and Repository Repair fixtures; the Agentic initial suite (`agentic/`: Repository, System, Research tasks plus a non-scored qualification probe). |
-| `schemas/` | Campaign, setup, artifact index, publication, profile, task outcome and toolchain contracts. |
-| `hardware-profiles/` | *(see top-level `hardware/`; WELP carries reference runtime identities in `schemas/` + `docs/`)* |
-| `docs/` | methodology documentation |
-| `examples/` | example campaign records |
-| `validators/` | campaign-bundle validator (`validate_campaign_welp.py`, self-test passes) |
-| `lab-record-template/` | template for publishing a campaign evidence record |
-| `summaries/` | executor-independence + integrity reports (compatibility policy, migration inventory, stabilization accounting) |
+```
+welp_next/    framework library and CLI implementation
+fixtures/     frozen scientific fixtures (tasks, corpora, oracles)
+tests/        behavioral test suite (software validation, no model calls)
+docs/         publication contract
+SPEC.md       scientific specification: methodology, limits, evidence rules
+```
 
-## Core rules
+## CLI
 
-- The testing protocol is fixed before a model is evaluated; a failed gate is a valid result.
-- Every canonical run distinguishes REQUESTED vs EFFECTIVE serving configuration; requested flags alone are not proof.
-- Single-user baselines run `parallel=1`, `fit=off`; automatic parallelism is never relied upon.
-- Every generation-bearing task emits semantic/completion/budget outcomes;
-  answerless reasoning is NOT_EVALUABLE, not semantic FAIL. Prospective semantic
-  ceilings are bounded and selected from disjoint calibration before scored
-  runs; operational role/SLO caps and latency/resource cost remain separate.
-- Freeze exact prompt lane, template, sampler, profile and effective reasoning
-  control. DEPLOYMENT controls role conclusions; MINIMAL, PUBLISHER and optional
-  OPTIMIZED results stay separate. A blocked methodology run has no model verdict.
-- Scorers self-test before live gate use (`python3 scorers/score_reliability.py selftest`; `python3 harness/<module>.py selftest`).
-- Human-controlled Git operations only.
-- [Report artifact hierarchy](protocol/WELP.md#report-artifact-hierarchy): `REPORT.md` is the single authoritative primary scientific report; the Lab Record companion is `WELP-LAB-RECORD.md`; `report.md` is historical-only; superseded prior attempts stay quarantined and never supply current claims.
-- [Context Scaling](protocol/context-scaling.md): the Controlled Context
-  fixture (legacy ID: Family A 1.3) places targets against the final rendered
-  token stream; lane-specific reserves and Multi-Document Context, codebase
-  and session results remain distinct. Configured capacity
-  is not useful context; practical default selection does not complete the
-  model-card envelope.
-- [Protocol hardening](protocol/WELP.md#protocol-hardening-prospective-2026-09-24-revision):
-  task failure is not unsafe behavior; unresolved deciding review blocks a
-  verdict. Context coverage, execution validity, capability and useful maximum
-  are independent axes. Twenty fixed tasks repeated across seeds are not an
-  IID population sample. Performance imports retain raw provenance and boundaries.
-- [Publication operating contract](docs/publication.md): website for human discovery/share; `WumboLabs/evaluations` for public scientific evidence and exact repo/full-commit/path citations; local `research/model-evaluations/` for working/raw science; NAS archive for large model artifacts. Model/profile/event identity is independent of repository boundaries. Never create a new `eval-*` repository.
+All commands print compact JSON (`--json` for machine-readable output) and
+fail closed with a `BLOCKED` record on any check failure.
 
-## WELP snapshots
+```
+python3 -m welp_next plan   --profile PROFILE.json --section baseline
+python3 -m welp_next run    --profile PROFILE.json --section baseline
+python3 -m welp_next status --campaign CAMPAIGN --section baseline
+python3 -m welp_next resume --campaign CAMPAIGN --profile PROFILE.json
+python3 -m welp_next report --campaign CAMPAIGN --section baseline
+python3 -m welp_next validate --campaign CAMPAIGN [--campaign ...]
+```
 
-| Snapshot | Status | Scope |
-|---|---|---|
-| `welp-next-snapshot-2026-08-26-post-rename` | frozen (DRAFT — NOT v1.0) | First WELP snapshot; naming-only migration. Manifest: `snapshot-freeze/manifest.json` (immutable). |
-| `welp-next-snapshot-2026-09-19-methodology-revision` | frozen DRAFT (NOT v1.0); methodology in force | Methodology revision (`methodology_changed: YES`): CP-1 outcome semantics, CP-2 generation-budget policy, reliability scorer v2 + re-derived 20×2 gates, useful-context outcome lanes + standardized 512-token reserve, canonical harness/scorers/fixtures, in-repo classification, validator R09–R14. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-19-methodology-revision/manifest.json`. |
-| `welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule` | frozen DRAFT (NOT v1.0); superseded lifecycle rule | LocalMaxxing terminal-closeout and two-stage lifecycle delta (`methodology_changed: NO`); the two-stage rule is superseded by the 2026-09-22 automatic-closeout delta. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-21-localmaxxing-closeout-rule/manifest.json`. |
-| `welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle` | frozen DRAFT (NOT v1.0); lifecycle in force | Automatic-closeout execution-state lifecycle delta (`methodology_changed: NO`); no measurement-methodology change. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-22-automatic-closeout-lifecycle/manifest.json`. |
-| `welp-next-snapshot-2026-09-22-readme-lineage-documentation` | frozen DRAFT (NOT v1.0); superseded | README snapshot-lineage documentation correction only (`methodology_changed: NO`); retains the 2026-09-19 methodology and 2026-09-22 automatic-closeout lifecycle. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-22-readme-lineage-documentation/manifest.json`. |
-| `welp-next-snapshot-2026-09-23-real-hardware-real-testing` | frozen DRAFT (NOT v1.0); superseded profile wording | Bounded semantic/deployment budget lanes, frozen prompt identities, Family A rendered-token placement, real-work fixtures and LLMGauge boundary. Its 0.3.0 classification contract included budget lane in the profile ID; that inconsistency is corrected prospectively by the next snapshot. Manifest remains immutable: `snapshot-freeze/welp-next-snapshot-2026-09-23-real-hardware-real-testing/manifest.json`. |
-| `welp-next-snapshot-2026-09-23-profile-identity-clarification` | frozen DRAFT (NOT v1.0); superseded | Semantic/operational budget lanes are distinct measurements of the same selected DEPLOYMENT profile. Classification 0.3.1 binds selected profile to DEPLOYMENT. Parent: 2026-09-23 real-hardware snapshot. Immutable manifest: `snapshot-freeze/welp-next-snapshot-2026-09-23-profile-identity-clarification/manifest.json`. |
-| `welp-next-snapshot-2026-09-24-protocol-hardening` | frozen DRAFT (NOT v1.0); superseded | Evidence-bound safety/task separation, classification 0.4, executable context coverage/oracles, class-specific setup, bounded reliability sensitivity, Linux/tool/multi-document fixtures and qualified LLMGauge import. Parent: profile-identity clarification. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-24-protocol-hardening/manifest.json`. |
-| `welp-next-snapshot-2026-09-24-review-and-setup-hardening` | frozen DRAFT (NOT v1.0); superseded | Frozen blinded-review disagreement resolution (one tie-break, 2-of-3, RUBRIC_AMBIGUITY fails closed to human review), welp-setup 0.2 mechanical calibration sanity layer (expected answer geometry, ceiling floor, upper-geometry coherence), unambiguous source-attribution aliasing in Linux Diagnosis and Multi-Document Context, and the clear display-name layer (machine IDs unchanged). Parent: protocol-hardening. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-24-review-and-setup-hardening/manifest.json`. |
-| `welp-next-snapshot-2026-09-24-context-outcome-repair` | frozen DRAFT (NOT v1.0); superseded | Answerless budget-exhausted Controlled Context cells become measured BUDGET_LIMITED rows (Granite D-01 repair, welp-context 0.3.0): CP-1-consistent on every path, coverage without capability, raw-proven empty-answer rows accepted and everything else fails closed. Parent: review-and-setup-hardening. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-24-context-outcome-repair/manifest.json`. |
-| `welp-next-snapshot-2026-09-25-reasoning-profiles` | frozen DRAFT (NOT v1.0); superseded by model-agentic | First-class Reasoning Profiles (welp-reasoning-topology 0.1.0-draft; validator R18-R21): prospective reasoning-topology qualification, required Reasoning On AND Reasoning Off full profiles when an effective supported ON/OFF control exists, independent setup/calibration and classification per profile, bounded effort-level qualification policy, profile-invariant vs profile-specific evidence binding, explicit no-averaging rule, linked sibling profile events, historical single-profile events unchanged. Parent: context-outcome-repair. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-25-reasoning-profiles/manifest.json`. |
-| `welp-next-snapshot-2026-09-25-model-agentic` | **current DRAFT** (NOT v1.0); methodology changed YES | WELP Model / WELP Agentic two-section structure (welp-agentic 0.1.0-draft; harness welp-agentic-harness/0.1.0-draft; validator R22-R24): WELP Model retains the full existing coverage; WELP Agentic measures autonomous execution (discover -> decide -> act -> observe -> recover -> verify -> finish) through a pinned harness on the initial three-task suite (Repository, System, Research) with predeclared profile selection, full configuration binding, no-rescue runner rules, proven disposable sandbox isolation, frozen limits from non-scored qualification, mechanical oracles plus the existing blinded-review procedure, explicit two-section dispositions, and the stabilization-accounting correction (METHODOLOGY_VALIDATION runs never count toward the 5-campaign stabilization requirement). Historical Model-era events unchanged; welp-omp-local-agent retained as historical provenance. Manifest: `snapshot-freeze/welp-next-snapshot-2026-09-25-model-agentic/manifest.json`. |
+- `plan` checks the qualified deployment profile (§3 of SPEC) and freezes the
+  section plan; `run` executes it with preflight fail-closed admission,
+  original-evidence recording, append-only manifests and interruption/resume
+  integrity; `report` renders the section report and finalizes the section;
+  `validate` is the lean release validator: it replays finalized campaigns
+  from original evidence (manifest verification, attempt reconstruction,
+  lifecycle and activation predicates) without any inference.
+- Agentic sections run offline against fixed SOFTWARE_TEST configurations via
+  `--agentic-config`; the authentic scored route activates only from a
+  recorded campaign-bound activation file (`--scored`), never from a source
+  flag.
+- Publication export (offline, no network):
+  `python3 -m welp_next.publication CAMPAIGN DEST
+  [--acceptance RECEIPT.json --review-source DECISION_SOURCE]` — see
+  `docs/publication.md`.
 
-Historical campaigns retain their recorded snapshots and are never relabeled.
-Compatibility acceptance does not certify a historical interpretation as
-scientifically correct: confirmed scoring defects require explicit qualification.
-Development replay is supplementary sensitivity evidence, not a replacement
-model classification. See `summaries/welp_compatibility_policy.json`.
+`tests/support.py` builds valid SOFTWARE_TEST profiles and a counting
+synthetic OpenAI-compatible endpoint, so the whole workflow can be exercised
+without any model: see the test suite for complete worked examples.
 
-## License
+## Qualified evaluation
 
-Licensed under the [Apache License 2.0](LICENSE).
+Every measurement records a qualified deployment profile first: model
+artifact identity (path/format/revision/SHA-256), runtime/engine identity and
+context capacity, reasoning controls, fixed sampler and budgets with recorded
+qualification sources, hardware and environment, plus required capability
+qualifications (native tool interface, rendered-token context meter, approved
+isolated executor). `REAL_MODEL` campaigns route under the established
+`research/model-evaluations/<model-key>/campaign-groups/<campaign-id>/`
+convention; `SOFTWARE_TEST` work stays inside the project `tmp/` tree. Fixed
+methodology, budgets and scoring precede any measurement; changing them
+mid-evaluation invalidates the affected work.
 
-## Evidence scope
+## Outcomes, evidence and validation
 
-WELP provides an evaluation methodology and evidence framework. Individual model results are bounded by the tested artifact, runtime, hardware, configuration, and protocol snapshot and should not be generalized beyond that evidence.
+Each work unit records one derived outcome from six facets (outcome, reason,
+execution, completion, scoring, limits). Poor performance is a legitimate
+scientific result: `FAIL`, `BUDGET_LIMITED`, `NOT_EVALUABLE`, invalid and
+indeterminate findings are preserved verbatim — never re-rolled, regraded or
+averaged. Every attempt keeps original request/response evidence under a
+SHA-256 manifest; corrections are errata, never rewrites. Interruption is
+recoverable attempt history, not an evaluated answer.
+
+Software validation: `python3 -B -m unittest discover -s tests` runs the
+behavioral suite (self-contained; it creates its own scratch space under
+`tmp/` and skips optional evidence-dependent checks when that evidence is not
+reachable). Release validation: `welp validate --campaign ...` verifies
+finalized campaigns by reconstruction.
+
+## Publication
+
+Publication is a deterministic offline transformation, never an evaluation
+step. A finalized campaign exports with its existing visibility disposition;
+held or unreviewed records cannot enter the website consumer. A separately
+recorded, evidence-bound `HUMAN_ACCEPTED` scientific review receipt
+(`welp-scientific-acceptance/1`) — bound to the exact campaign, review date,
+public-safe basis and the reviewed section manifests — admits routine
+public-safe publication to the central registry (`WumboLabs/evaluations`) and
+site (wumbolabs.dev/evaluations) through the standing closeout flow, with no
+additional approval. The receipt contains neither private decision-source
+bytes nor reviewer identity. Exports never contain credentials, private
+paths, raw prompts, or model weights; unsafe values fail closed. The full
+contract, including the evaluation → verify → review → HUMAN_ACCEPTED →
+automatic publication flow, is in `docs/publication.md`.
+
+## License, provenance and limits
+
+Released under the Apache License, Version 2.0 — see `LICENSE` and `NOTICE`.
+WELP v1.0 is the successor of the legacy WumboLabs WELP framework: the
+reused scientific fixtures listed in `SPEC.md` §8 carry recorded provenance
+(source + SHA-256), and the framework itself was authored fresh under this
+specification. Bounded claims: diagnostic advancement is a bounded evidence
+claim, not a population predictor; measured performance is
+deployment-attributed; context envelope completion is not claimed; all
+scientific limits and open calibration items are recorded in `SPEC.md`
+(§4, §10, §12).
+
+The [pre-v1.0 public snapshot](https://github.com/WumboLabs/welp/tree/228dfe6cd0785470d7e4f778f0e3f08ca413bbc7)
+remains a discoverable historical reference; promotion must preserve its ancestry.
+`provenance.json` records public-safe historical extraction hashes.
+See [release validation](docs/release-validation.md) for acceptance and software
+verification, including valid negative results and remaining comparison limits.

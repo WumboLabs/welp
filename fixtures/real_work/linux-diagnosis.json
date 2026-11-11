@@ -99,6 +99,11 @@
       }
     }
   ],
+  "review_boundary_constraints": [
+    {"id": "strict_json", "kind": "json_strict", "type": "object"},
+    {"id": "answer_fields", "kind": "json_keys", "required_keys": ["case_id", "root_cause", "proposed_repair", "present_health", "executed"]},
+    {"id": "root_cause_sentence_count", "kind": "sentence_count", "path": ["root_cause", "detail"], "min": 1, "max": 2}
+  ],
   "scoring": "harness/capabilities.py:score_linux_diagnosis(case_id, content). The mechanical layer fails committed claims that contradict the frozen evidence registry: unsupported or contradicted cause kinds, missing or out-of-source citations, non-safe or mislabeled repairs, asserted present health without evidence, and any claimed execution. The detail prose fields are necessary-but-not-sufficient and require independent model-identity-blinded review under a frozen rubric; they are never adjudicated by the mechanical layer alone.",
   "limitations": "Two cases exist; scoring one case is one task instance of evidence, and each case's per-key checks are aspects of that single task, not independent tasks. Sources are frozen excerpts; the fixture grants no host access and never executes repairs.",
   "review": {"oracle_class": "DETERMINISTIC for the committed claims; HUMAN/AGENT blinded independent review for detail prose", "independence": "Detail prose is reviewed with model identity blinded by independent reviewers; disagreements and uncertainty are retained. A deterministic reviewer may not decide the prose dimensions."}

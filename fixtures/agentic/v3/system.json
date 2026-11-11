@@ -1,0 +1,9 @@
+{
+  "task_id": "agentic-system-1-quoteservice-v3",
+  "fixture_version": "0.3.0-proposed",
+  "checker_version": 3,
+  "status": "PROPOSED; SOFTWARE_TEST ONLY; human scientific acceptance pending",
+  "verification_command": "./check.sh",
+  "environment_notes": "The service and all its files are inside your sandbox at /workspace; nothing here touches a real host service. The task is offline. ./check.sh is the supported one-shot start/health/stop verification; it needs no network. Verification requires successful execution of ./check.sh in /workspace after all writes and run commands. Direct invocation, sh/bash invocation, or a cd /workspace && prefix are equivalent; no extra arguments, redirects or trailing commands. Original sandbox receipts and independent acceptance are required, not a claim or echo. This quote service accepts only debug, info, warning, error in lowercase; uppercase is not normalized by service.py.",
+  "log_level_case": "native-sensitive"
+}

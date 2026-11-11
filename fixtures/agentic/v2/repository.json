@@ -1,0 +1,7 @@
+{
+  "task_id": "agentic-repository-1-notes-cli-v2",
+  "fixture_version": "0.2.0-prelive",
+  "checker_version": 2,
+  "status": "PROSPECTIVE; SOFTWARE_TEST ONLY; scientific acceptance pending",
+  "verification_command": "./run_tests.sh"
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Helicopter</title>
+<style>
+html,body{margin:0;height:100%;background:#0a2a0a;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh}
+#hud{position:fixed;top:8px;left:12px;color:#eaffea;font:16px monospace;text-shadow:1px 1px 2px #000}
+#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;background:rgba(0,0,0,.55);font:28px monospace;text-align:center}
+#over small{font-size:16px;margin-top:10px;opacity:.85}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">distance 0 m</div>
+<div id="over"><div>GAME OVER</div><div id="final"></div><small>click to restart</small></div>
+<script>
+(function(){
+"use strict";
+var canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+var W=canvas.width=innerWidth,H=canvas.height=innerHeight;
+var gap0=H*0.42,speed0=220,stepLen=260,margin=40;
+var y,vy,scroll,distance,difficulty,obstacles,over,holdMouse,last,speed=0;
+var nextX,center,painted=false;
+
+function reset(){
+  y=H/2;vy=0;scroll=0;distance=0;difficulty=0;over=false;holdMouse=false;
+  obstacles=[];nextX=W+200;center=H/2;
+  last=performance.now();
+}
+function currentGap(){return Math.max(H*0.22,gap0-difficulty*8);}
+function currentSpeed(){return speed0+difficulty*22;}
+
+function spawn(){ // next cave segment: center wanders, gap narrows with difficulty
+  var gap=currentGap();
+  var maxOff=H*0.18;
+  center=Math.max(gap/2+margin,Math.min(H-gap/2-margin,center+(Math.random()*2-1)*maxOff*0.55));
+  obstacles.push({x:nextX,top:center-gap/2,bottom:center+gap/2});
+  nextX+=stepLen;
+}
+
+function update(dt){
+  speed=currentSpeed();
+  distance+=speed*dt;
+  difficulty=distance/600;
+  vy+=(holdMouse?-950:820)*dt;
+  vy=Math.max(-380,Math.min(420,vy));
+  y+=vy*dt;
+  if(y<14){y=14;vy=0;}
+  scroll+=speed*dt;
+  var gap=currentGap();
+  while(scroll+W+200>nextX){nextX=scroll+W+200;spawn();}
+  for(var i=obstacles.length-1;i>=0;i--){
+    if(obstacles[i].x+40<scroll)obstacles.splice(i,1);
+  }
+  // collision: cave walls and vertical bounds
+  var headX=W*0.28,crashed=(y-12<0)||(y+12>H);
+  for(var j=0;j<obstacles.length;j++){
+    var o=obstacles[j];
+    if(headX+16>o.x&&headX-16<o.x+40){
+      if(y-12<o.top||y+12>o.bottom)crashed=true;
+    }
+  }
+  if(crashed){over=true;vy=0;}
+}
+function draw(){
+  ctx.fillStyle='#0a2a0a';ctx.fillRect(0,0,W,H);
+  // cave walls
+  ctx.fillStyle='#1f7a1f';
+  for(var i=0;i<obstacles.length;i++){
+    var o=obstacles[i],x=o.x-scroll;
+    if(x>-60&&x<W+60){
+      ctx.fillRect(x,0,40,o.top);
+      ctx.fillRect(x,o.bottom,40,H-o.bottom);
+    }
+  }
+  // parallax texture
+  ctx.fillStyle='#0d330d';
+  for(var k=0;k<8;k++){
+    var tx=((k*180-scroll*0.6)%(W+180)+W+180)%(W+180)-90;
+    ctx.fillRect(tx,H*0.5+Math.sin(k*2.1+scroll*0.001)*H*0.3,90,10);
+  }
+  // helicopter
+  var hx=W*0.28;
+  ctx.fillStyle='#ffdf4f';
+  ctx.fillRect(hx-16,y-8,32,16);
+  ctx.fillStyle='#c8a52a';
+  ctx.fillRect(hx-24,y-12,48,4);
+  ctx.beginPath();ctx.arc(hx+8,y,9,0,6.3);ctx.fillStyle='#a33';ctx.fill();
+}
+function loop(now){
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(!over)update(dt);
+  // Controlled admission fixture B: the simulation and the frozen state
+  // contract keep advancing every frame, but the rendered surface is painted
+  // exactly once and never changes, and no DOM text ever updates. Telemetry
+  // therefore contradicts the rendered behavior, and mechanical verification
+  // must not classify this artifact as fully functional.
+  if(!painted&&!over){draw();painted=true;}
+  window.__HELICOPTER_STATE__={
+    y:Math.round(y),vy:Math.round(vy),
+    score:Math.floor(distance/10),
+    crashed:over,gameOver:over,
+    difficulty:+difficulty.toFixed(2),
+    speed:Math.round(speed),
+    distance:Math.floor(distance),
+    obstacles:obstacles.map(function(o){return {x:o.x-scroll,top:o.top,bottom:o.bottom};})
+  };
+  requestAnimationFrame(loop);
+}
+addEventListener('mousedown',function(){if(over){reset();holdMouse=true;}else{holdMouse=true;}});
+addEventListener('mouseup',function(){holdMouse=false;});
+addEventListener('mousemove',function(e){holdMouse=over?false:(e.buttons&1)===1?true:holdMouse;});
+reset();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

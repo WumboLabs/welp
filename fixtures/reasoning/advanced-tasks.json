@@ -1,0 +1,91 @@
+{
+ "schema_version": 1,
+ "status": "FROZEN_PROSPECTIVE; no authentic evaluation has run",
+ "source": {
+  "kind": "authored",
+  "path": "fixtures/reasoning/advanced-tasks.json",
+  "note": "Authored advanced-reasoning section tasks; frozen before any authentic evaluation (none has run)."
+ },
+ "budget_note": "Profile reasoning budget applies (accepted M2 default mechanism; no section-specific numeric ceiling invented).",
+ "tasks": [
+  {
+   "id": "advanced-constraints-01",
+   "category": "reasoning",
+   "subtype": "multi_constraint",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/reasoning/advanced-tasks.json",
+    "note": "Authored advanced-reasoning section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "probe",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Four engineers \u2014 Priya, Quinn, Rafa, Sana \u2014 are scheduled to deploy a service across Monday, Tuesday, Wednesday and Thursday, exactly one engineer per day. All four conditions hold simultaneously:\n\n1. Sana deploys on Monday.\n2. Priya deploys earlier in the week than Quinn.\n3. Quinn deploys exactly two days after Rafa.\n4. Rafa does not deploy on Thursday.\n\nThe schedule that satisfies every condition is unique. Who deploys on Thursday? Reply with exactly one name and nothing else."
+    }
+   ],
+   "check": {
+    "method": "exact_tokens",
+    "tokens": [
+     "Quinn"
+    ]
+   },
+   "rationale": "four interacting conditions with a proven-unique satisfying schedule (Sana Mon; Quinn = Rafa+2 excludes Thu; Priya Wed); every violated condition changes the answer, so partial satisfaction cannot produce the frozen token"
+  },
+  {
+   "id": "advanced-evidence-01",
+   "category": "reasoning",
+   "subtype": "grounded_evidence",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/reasoning/advanced-tasks.json",
+    "note": "Authored advanced-reasoning section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "probe",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Five records describe a storage bucket's monthly transfer quota:\n\n- memo-1 (January 5): \"The bucket quota is set to 40 GB.\"\n- ops-log (February 2): \"Quota raised to 56 GB, superseding the memo.\"\n- dashboard (undated snapshot, possibly stale): \"Current quota: 56 GB.\"\n- bulletin-3 (March 9): \"Quota lowered to 48 GB, superseding all earlier records.\"\n- email (March 10): \"Reminder: the quarterly cleanup runs tomorrow.\"\n\nPrecedence rule: a later record that explicitly supersedes earlier records replaces them; records without supersession language never override anything; the undated dashboard is never authoritative.\n\nDuring March, two transfers of 12 GB each were charged against the effective quota. How many gigabytes of headroom remain under the effective quota for the rest of the month? Reply with exactly the number and nothing else."
+    }
+   ],
+   "check": {
+    "method": "exact_tokens",
+    "tokens": [
+     "24"
+    ]
+   },
+   "rationale": "conclusion requires the full supersession chain (memo -> ops-log -> bulletin-3), exclusion of the non-authoritative dashboard, and combination with two transfer facts; any short-circuited chain yields 8, 16, 24-from-wrong-quota, or other detectable wrong values"
+  },
+  {
+   "id": "advanced-revision-01",
+   "category": "reasoning",
+   "subtype": "revised_condition",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/reasoning/advanced-tasks.json",
+    "note": "Authored advanced-reasoning section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "probe",
+   "messages": [
+    {
+     "role": "user",
+     "content": "A model train consists of 3 identical cars, each 18 meters long, coupled front to back. How many meters long is the entire train? Reply with exactly the number and nothing else."
+    }
+   ],
+   "followups": [
+    {
+     "role": "user",
+     "content": "Revision: one of the original 18-meter cars is removed and a single 24-meter car is coupled in its place, so the train again has 3 cars. How many meters long is the train now? Reply with exactly the number and nothing else."
+    }
+   ],
+   "scored_exchange": "final",
+   "check": {
+    "method": "exact_tokens",
+    "tokens": [
+     "60"
+    ]
+   },
+   "rationale": "material condition changes mid-conversation; the frozen final token 60 follows from the revised composition (54 - 18 + 24), so stale-initial (54) or additive-stale (78) assumptions are detectable"
+  }
+ ]
+}

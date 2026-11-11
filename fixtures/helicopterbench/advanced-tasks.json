@@ -1,0 +1,28 @@
+{
+  "fixture_id": "welp-helicopterbench-1",
+  "version": "1.0.0",
+  "status": "PROSPECTIVE / FROZEN BEFORE OUTPUTS",
+  "methodology": "helicopterbench/1",
+  "concept_source": "Operator HelicopterBench concept, established 2026-10-29; ten gameplay requirements preserved verbatim; one testability requirement (window.__HELICOPTER_STATE__ state contract) added at freezing so every required mechanic is mechanically verifiable without source inspection.",
+  "one_shot_rules": "One frozen prompt; one generation opportunity; the first completed submission is the submission; no model feedback or corrective conversation; no agent repair of submitted code; no retries; no best-of selection. Incomplete generations take the accepted budget disposition, never a completed-incorrect-game classification.",
+  "task": {
+    "id": "helicopterbench-01",
+    "category": "helicopterbench",
+    "behavior": "one_shot_game_development",
+    "scorer": "heli_submission",
+    "requires": [],
+    "user_task": "Build a complete, immediately playable helicopter-style game as ONE standalone HTML file. Reply with exactly one fenced code block tagged html containing the entire file (HTML, CSS and JavaScript included; no other text).\n\nRequired gameplay:\n1. A scrolling green cave or corridor the player flies through.\n2. A helicopter the player controls with the mouse.\n3. Holding the mouse button makes the helicopter ascend; gravity pulls it down when the button is released.\n4. Moving hazards or obstacles inside the corridor.\n5. Working collision detection (walls, obstacles, and floor/ceiling all end the run).\n6. Difficulty that increases as the run continues.\n7. A distance-based score that updates during play.\n8. A clearly visible game-over state when a run ends.\n9. A working restart: after game over, clicking the mouse starts a fresh run.\n10. Immediate playability when the file is opened in a modern browser.\n\nNo external libraries, frameworks, hosted scripts, downloaded assets, or network access of any kind: everything must be inside the one submitted file and must work offline.\n\nRequired testability contract (used for mechanical gameplay verification): while running, the page must keep a global object window.__HELICOPTER_STATE__ updated with numeric fields y (helicopter vertical position), score, difficulty, distance, a numeric field speed (current corridor scroll speed), boolean fields crashed and gameOver, and an array obstacles whose entries expose x (and may expose top/bottom). State must refresh every frame. Clicking after game over must start a fresh run within the same page."
+  },
+  "budget_proposal": {
+    "category": "helicopterbench",
+    "max_tokens": 8192,
+    "timeout_seconds": 300,
+    "rationale": "One-shot single-file game: the calibration reference implementation is 3940 bytes (~1300 completion tokens incl. reasoning overhead); 8192 completion tokens give >5x headroom for any reasonable implementation without adopting Advanced Coding's 12288. 300 s accommodates the longest plausible single generation at reference throughput. Values are fixed pre-authentic by task requirements; they use the existing policy.task_budget by_category mechanism (no new machinery). Human acceptance of these proposed numbers is required before authentic scored use.",
+    "extraction": "Deterministic: if the completed reply contains a fenced code block tagged html, the FIRST such block is the artifact; else if the trimmed reply starts with '<' and contains '</html>', the whole reply is the artifact; otherwise there is no extractable artifact (completed-but-artifact-deficient FAIL). The extracted bytes are never altered."
+  },
+  "verification": {
+    "isolation": "Submitted games are untrusted: each runs once inside a disposable bubblewrap namespace (host root never mounted; isolated user/pid/ipc/uts/network namespaces; loopback-only; cleared environment; fresh tmpfs profile; hard host-side timeout). A self-contained CDP driver inside the namespace launches the deployed browser binary headlessly, drives REAL input events, samples the frozen state contract and frames, and writes one bounded JSON record. No artifact code executes on the host.",
+    "browser_discovery": "An existing installed Chromium-family binary is used (discovery list in welp_next.browser_harness; this host: brave-browser-stable). No browser is downloaded or installed by WELP; if none exists the section reports a technical environment failure, never a model outcome.",
+    "review_boundary": "Visual quality/playability (10 of 100 points) is qualitative-review only: the harness records screenshot evidence; those points are awarded exclusively by recorded independent review and are never invented by the harness. Mechanical checks that cannot run because of an environment malfunction are recorded as technical, never model failures."
+  }
+}

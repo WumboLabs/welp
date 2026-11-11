@@ -1,0 +1,21 @@
+{
+  "task_id": "agentic-calibration-research-1-orion-retention",
+  "task_prompt": "Resolve question.txt from the ten local sources, write its exact cited four-line artifact and finish honestly. Expose all cited full source texts verbatim via successful tool feedback.",
+  "protected_paths": [
+    "question.txt",
+    "sources"
+  ],
+  "verification": {
+    "required": false
+  },
+  "seed_postprocess": [],
+  "task_class": "research",
+  "fixture_version": "1.0.0-calibration",
+  "checker_version": 2,
+  "checker_family": "checker/2-calibration/1",
+  "non_scored": true,
+  "calibration_id": "agentic-calibration-research-1-orion-retention",
+  "status": "FROZEN BEFORE MODEL EXPOSURE",
+  "environment_notes": "Offline disposable /workspace only; no installation or external access.",
+  "bounded_sample_note": "Non-scored calibration only, never readiness or capability credit."
+}

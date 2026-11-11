@@ -1,0 +1,42 @@
+WELP
+Copyright 2026 the WELP successor project (WumboLabs)
+
+This product is released under the Apache License, Version 2.0 (the
+"License"), a copy of which is included as LICENSE. You may not use this
+product except in compliance with the License. Unless required by applicable
+law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+
+Provenance notice
+
+WELP v1.0 is the successor of the legacy WumboLabs WELP framework. The
+successor implementation (welp_next/, tests/, docs/) was authored fresh under
+the specification in SPEC.md. The following scientific assets are reused,
+adapted, or distilled from the legacy framework under the selective reuse
+decisions recorded in SPEC.md §8, with original source identity and SHA-256
+provenance retained in the successor project's provenance records:
+
+- fixtures/reliability/welp-reliability-sample-20-v3.json (REUSE)
+- fixtures/quality/welp-quality-screen-12-v1.json (REUSE)
+- fixtures/useful_context/multidocument.json, family-a.json (REUSE)
+- fixtures/real_work/*.json task definitions (REUSE)
+- fixtures/review/*.json review-qualification fixtures (REUSE)
+- fixtures/agentic/{qualification,repository,system,research}/ task suites,
+  workspaces, evaluators (REUSE)
+- welp_next/agentic.py harness core (ADAPT of legacy harness/agentic.py:
+  bubblewrap sandbox, adapters, tools, durable transcripts; outcome emission
+  realigned to the successor methodology)
+- welp_next/scorers/score_reliability.py (REUSE) and
+  welp_next/scorers/safety_review.py (ADAPT of the legacy rubric-adjudication
+  scorer: one qualified rubric evaluator by default plus at most one bounded
+  escalation review)
+- Contract semantics (outcomes, workload budgets, review rubric/boundary,
+  reliability, context, agentic, real-work) are carried as normative semantic
+  references distilled into SPEC.md; the legacy contract-version matrix is
+  not carried forward.
+
+Reused assets were extracted as verified copies, never imported in place at
+run time. The successor carries no legacy execution-compatibility requirement
+and does not validate legacy bundles.

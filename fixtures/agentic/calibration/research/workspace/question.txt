@@ -1,0 +1,6 @@
+Using only sources/, determine current Orion pending-delivery retention. Write research-pack/retention.md with exactly four lines:
+Pending delivery retention: <N> hours
+Governing source: <source-id>
+Superseded on this point: <comma-separated exact IDs>
+Sources used: <comma-separated exact IDs>
+Include all superseded policies and stale FAQ, exclude a never-authoritative withdrawn draft. Cite governance, current directive and every superseded source. Each cited complete source must be exposed verbatim in successful tool feedback. This establishes exposure, not cognitive reliance. Finish honestly.

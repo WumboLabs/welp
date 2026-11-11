@@ -1,118 +1,135 @@
-# Evaluation publication operating contract
+# Evaluation publication operating contract (WELP v1.0 successor)
+
+This contract governs how finalized WELP evaluations become public scientific
+records. Publication is a deterministic, offline transformation plus an
+established central-registry workflow — never an evaluation step, and never a
+gate on the evaluation core.
 
 ## Four layers
 
 | Layer | Authority and use |
 |---|---|
-| [wumbolabs.dev/evaluations](https://wumbolabs.dev/evaluations/) | Human-facing discovery, model summaries, and ordinary sharing. |
-| [WumboLabs/evaluations](https://github.com/WumboLabs/evaluations) | Canonical public scientific registry, event reports, profile metadata, and public-safe supporting evidence. Exact citations use repository + full commit SHA + relative file path. |
-| Local `research/model-evaluations/` | Working science, authoritative campaign reports, raw evidence, and internal audit material. Resolve scientific conflicts here; publish an attributed correction rather than silently rewriting a frozen public event. |
-| NAS model archive | Large model artifacts and verified archive manifests; weights are not Git evidence. Formal evaluation uses a verified local artifact copy. |
+| [wumbolabs.dev/evaluations](https://wumbolabs.dev/evaluations/) | Human-facing discovery, model summaries, and ordinary sharing. A deterministic derivative of the central registry. |
+| [WumboLabs/evaluations](https://github.com/WumboLabs/evaluations) | Canonical public scientific registry: event reports, profile metadata, and public-safe supporting evidence. Exact citations use repository + full commit SHA + relative file path. |
+| Local `research/model-evaluations/` tree | Working science, authoritative campaign reports, raw evidence, and internal audit material. Scientific conflicts resolve here; publish an attributed correction rather than rewriting a frozen public event. |
+| External model archive | Large model artifacts and verified archive manifests; weights are never Git evidence. Formal evaluation uses a verified local artifact copy. |
 
-A profile is a scientific surface, **not a repository boundary**. Never create a new
-`eval-*` repository for a model, profile, campaign, or event. Existing legacy repos
-are immutable historical provenance, not future publication targets.
+A profile is a scientific surface, **not a repository boundary**. Never create
+a new `eval-*` repository for a model, profile, campaign, or event. Historical
+repositories are immutable provenance, not future publication targets.
 
-## Identity and paths
+## Identity
 
 - `model_id`: stable model identity and one human-facing Evaluation page.
-- `profile_id`: materially distinct artifact/quantization, runtime, or deployment
-  topology. Multiple events can characterize the same profile.
-- `event_id`: globally unique scientific/publication event; retain its date and
-  evidence scope. A context-only event cannot supersede unrelated model-role findings.
-- Models: `models/<model_id>/model.json` and generated `README.md`.
-- Profiles: `models/<model_id>/profiles/<profile_id>/profile.json`, schema
-  `wumbolabs-eval-profile/2`, with repository `WumboLabs/evaluations`, matching
-  `profile_path`, and explicit `event_ids`.
-- Ordinary events: `models/<model_id>/events/<event_id>/REPORT.md`, optional
-  public-safe `WELP-LAB-RECORD.md`, structured export, and supporting artifacts.
-- Shared comparisons: `shared-events/<shared_event_id>/REPORT.md`, one copy with
-  explicit related model/profile IDs. Central shared-event metadata has no owner
-  model/profile. `website_attribution` preserves display placement only, not ownership
-  or scientific precedence. In an export, `identity.model_id/profile_id` are display
-  attribution and the related IDs describe the actual shared scope.
+- `profile_id`: materially distinct artifact/quantization, runtime, or
+  deployment topology. Multiple events can characterize the same profile.
+- `event_id`: globally unique scientific/publication event; WELP campaigns
+  export with `event_id = campaign_id` and `event_type =
+  welp-recharacterization`. A context-only event cannot supersede unrelated
+  model-role findings.
 
-`registry.json` in the central repository owns model/profile/event relationships,
-current per-surface attribution, and publication paths. Its generated indexes and
-metadata are derivatives. The website's `data/labs-registry.json` is another
-reproducible derivative, never a second hand-maintained registry.
+Registry paths: `models/<model_id>/model.json`,
+`models/<model_id>/profiles/<profile_id>/profile.json` (schema
+`wumbolabs-eval-profile/2`, explicit `event_ids`), and ordinary events at
+`models/<model_id>/events/<event_id>/REPORT.md` with the structured export.
+`registry.json` in the central repository owns model/profile/event
+relationships; generated indexes and the website's `data/labs-registry.json`
+are reproducible derivatives, never a second hand-maintained registry.
 
-## Publish an accepted event
+## Standing closeout flow
 
-1. Complete the authorized local WELP campaign. Do not start a benchmark, inference,
-   LocalMaxxing submission, or model download merely to satisfy publication work.
-2. Resolve `model_id`, `profile_id`, `event_id`, date, and actual evidence scope.
-   Reuse an existing profile when its material tested surface is unchanged.
-3. Produce `summaries/website-publication.json` and the public-safe report. Until
-   accepted public evidence exists, record `PENDING_HUMAN_GATE`, no URL/commit/path,
-   and proposed target `WumboLabs/evaluations`. Current exports include `identity`.
-4. Validate the campaign, publication export, and any new profile descriptor:
-   `python3 validators/validate_campaign_welp.py CAMPAIGN`,
-   `python3 validators/validate_publication.py EXPORT PROFILE`.
-5. Review all publishable bytes. Exclude credentials, private paths/usernames, raw
-   prompts/debug logs, raw LocalMaxxing payloads, weights, and Nsight Systems traces.
-   Preserve measured values, limitations, classifications, dates, and attribution.
-6. Add the public event files to the existing central checkout. Record native
-   `publication_provenance` (campaign identity, source artifact, and content digest);
-   migration-only legacy provenance must not be invented for new work. Retain old
-   immutable events and append corrections with explicit supersession scope.
-7. Under the campaign's standing automatic-closeout authorization (success
-   branch of the WELP execution-state lifecycle) or explicit human Git
-   authorization, inspect scoped working/staged diffs and commit the evidence
-   files. A file cannot truthfully contain its own future commit
-   SHA: use this evidence commit in the following registry commit.
-8. Update central `registry.json`: model/profile relationships, event metadata,
-   scoped current-state attribution, `website_event_order`, and `canonical_evidence`
-   `{state: "published", repo: "WumboLabs/evaluations", commit: FULL_SHA, path: REPORT_PATH}`.
-   A website export uses the same tuple with state `PUBLISHED`. Optional `url` must
-   equal `https://github.com/<repo>/blob/<commit>/<path>`. Structured/narrative sources
-   carry their own exact commit, relative path, and SHA-256. Update profile `event_ids`.
-9. Run central `python3 scripts/validate.py --generate` twice (second run changes
-   zero files), then `python3 scripts/validate.py`. This checks identity, references,
-   exact Git-object bytes, provenance, path safety, generated indexes, and public
-   safety. Inspect, commit, and push the registry/index update under the same gate.
-10. Pin the pushed registry's full commit, path, and SHA-256 in website
-    `data/evaluations-source.json`. Run `python3 scripts/sync_labs.py` twice (second
-    run no-op), `--check`, `selftest`, publication-gap checks, `zola build`, and
-    `python3 scripts/check_evaluations_site.py`.
-11. Inspect scoped website diffs; commit/push/deploy under the campaign's
-    standing automatic-closeout authorization (success branch) or explicit
-    human authorization.
-    Verify the actual live model page, immutable report/profile links, related
-    shared-event pages, and preserved compatibility URLs before marking published.
-12. Close the local publication disposition and roadmap entry without altering
-    unrelated scientific priorities. Report exact commits/paths and observed results.
+**Evaluation → verify → review → HUMAN_ACCEPTED → automatic public-safe
+publication, with no second approval.**
 
-## Historical compatibility
+1. **Evaluate.** Complete the authorized WELP campaign. Never start a
+   benchmark, inference, or download merely to satisfy publication work.
+2. **Verify.** Every section must finalize and replay-verify:
+   `python3 -m welp_next validate --campaign CAMPAIGN` exits 0. Then export:
+   `python3 -m welp_next.publication CAMPAIGN DEST` produces the canonical
+   `wumbolabs-labs-publication/1` envelope with independent `welp_sections`
+   and `profile_conditions` facets. The export requires an existing
+   disposition in `summaries/website-publication.json` and retains it:
+   `WEBSITE_READY`, `WEBSITE_PUBLISHED`, `WEBSITE_BLOCKED`, or
+   `NOT_FOR_PUBLICATION`. Unreviewed exports stay at
+   `PENDING_HUMAN_GATE` evidence state and cannot invent a public citation.
+3. **Review.** A human scientific review of the finalized, verified record is
+   performed outside the framework. The operator records the decision as a
+   receipt, schema `welp-scientific-acceptance/1`:
+   - `decision`: exactly `HUMAN_ACCEPTED`;
+   - `campaign_id`: the reviewed campaign (must match the export);
+   - `reviewed_at`: `YYYY-MM-DD`;
+   - `basis`: public-safe prose describing the scientific acceptance basis;
+   - `review_source_sha256`: SHA-256 of the private original decision source,
+     bound by hash. Source bytes are never exported;
+   - `section_manifests`: `{section: manifest_sha256}` covering exactly the
+     export's finalized sections.
+4. **Apply acceptance.** Export again with
+   `--acceptance RECEIPT.json --review-source DECISION_SOURCE`. The module
+   binds the decision to the evidence and fails closed unless: the receipt is
+   a recognized `HUMAN_ACCEPTED` receipt for this campaign with a valid date
+   and non-empty basis; the decision source hash matches; every section is
+   `REAL_MODEL` (only actual model findings enter public closeout); the
+   receipt's section manifests equal the export's manifest hashes; no unit
+   carries an unresolved technical `INVALID` outcome; and the export passes
+   the public-safety scan. There is no approval flag: a plain export of a
+   held or unreviewed campaign can never publish. Existing explicit holds do
+   not disappear through acceptance — `WEBSITE_BLOCKED` requires resolving
+   the exceptional website hold first. Only the default NOT_FOR_PUBLICATION
+   development hold may advance through acceptance; an explicit nonpublication
+   reason requires separate correction. An accepted export gains disposition
+   `WEBSITE_READY` with the embedded `scientific_acceptance` receipt and
+   reason "HUMAN_ACCEPTED scientific review; routine public-safe publication
+   is standing-authorized."
+5. **Publish.** Under the standing automatic-closeout authorization, commit
+   the public-safe evidence to `WumboLabs/evaluations` (recording native
+   `publication_provenance`; no invented legacy provenance), update central
+   `registry.json` with the immutable `{state: "published", repo, commit,
+   path}` citation, run the central validator twice plus its checks, pin the
+   registry commit for the website, and run the website sync/validation
+   chain (`sync_labs.py` twice + `--check` + selftest + `zola build` + site
+   checks). Inspect scoped diffs at each commit. Verify the live model page
+   and immutable links, then close the local publication disposition.
 
-Frozen `wumbolabs-labs-publication/1` exports remain valid without optional identity;
-legacy `identity.profile_repo` and legacy URL-only evidence retain their original
-meaning. Historical repo/commit citations without a central `path` remain historical.
-Never reinterpret a legacy repository name as a central path or rewrite frozen
-scientific exports to make them current. The website overlays central citations on
-in-memory derivatives while retaining exact original export bytes.
+### Captured HelicopterBench gameplay
 
-Version 1 profile descriptors preserve `first_event` even where its historical alias
-was not an indexed event ID. Version 2 uses actual indexed `event_ids`; a retained
-`legacy_first_event` is provenance, not a newly manufactured event. Previously
-published role vocabulary and absent precision fields are accepted as historical
-facts. Optional/null metrics mean unmeasured, not zero; narrow events need not repeat
-inherited reliability claims. These compatibility rules do not change WELP science.
+When genuine captured footage exists, provide `--gameplay-media DESCRIPTOR`.
+The descriptor includes `video_path` (private local input only), complete `sha256`,
+`event_id`, `profile_id`, `methodology`, `game_sha256` and `model_artifact_sha256`.
+The producer binds these to the finalized event and extraction record, verifies
+the complete checksum, and uses ffprobe to require positive-duration H.264 MP4.
+Copy those exact bytes to website
+`static/media/evaluations/<event_id>/gameplay.mp4`; the public export contains the
+event-specific URL/hash, dimensions and duration, never the private input path.
+The website verifies bytes and attribution and renders a controls-enabled player.
+Verify actual browser playback before promotion. Footage is supplementary to
+objective scoring and must be actual independent execution of the evaluated game,
+not repaired, reference or synthetic footage. Historical /1 remains separate.
+If genuine footage is unavailable, record `--gameplay-unavailable-reason` instead.
+Never replace missing footage with another event's video.
 
-Run `python3 validators/validate_publication.py selftest` for immutable-citation,
-path, identity, shared-relationship, and legacy acceptance boundaries. The central
-validator additionally checks registry-wide uniqueness and referential integrity.
+The operator executes this finite closeout using the existing registry and site
+commands, returns the verified public URLs and stops. There is no daemon, second
+registry or new approval service.
 
-## Sharing and citations
+## What never enters an export
 
-Share the website model URL for ordinary discussion, the central model/profile index
-for evidence navigation, and a central **full-commit blob URL** for an exact claim.
-A `main` branch URL is discovery, never an immutable scientific citation. The legacy
-`eval-*` repositories were deleted on 2026-09-14 after verified consolidation; their
-repo/commit/path identities remain valid historical provenance, their full Git
-histories are preserved as verified bundles in the WumboServer offline archive, and
-their URLs are retired identifiers that no longer resolve. Record `legacy_repository`
-names, commits, paths, and hashes as provenance; never present a legacy URL as live
-navigation or a current evidence source. During consolidation, archive notices pointed
-to the corresponding central model/profile and website page, and archiving was allowed
-only after the replacement was pushed and live-verified.
+Credentials, private host paths/usernames or home directories, raw
+prompt/debug payloads, model weights, internal filesystem paths, loopback
+URLs, GPU serials/UUIDs, or any key-like material. `publication.public_safe`
+rejects such values outright instead of silently redacting; a rejected value
+requires operator review, not suppression. Exports retain measured values,
+limitations, classifications, dates, attribution, manifest/profile references
+and report hashes. Missing metrics remain unknown, never zero; negative and
+budget-limited outcomes remain explicit. No composite or universal model
+score is fabricated.
+
+## Compatibility and corrections
+
+Frozen `wumbolabs-publication/1` exports remain valid without optional
+identity; legacy identity fields retain their original meaning. Never
+reinterpret legacy repository names as central paths, and never rewrite
+frozen scientific exports to make them current. Retain old immutable events;
+append corrections with explicit supersession scope and an attributed,
+citable correction event. Optional/null metrics mean unmeasured, not zero.
+A `main`-branch URL is discovery, never an immutable scientific citation —
+cite the central full-commit blob URL for an exact claim.

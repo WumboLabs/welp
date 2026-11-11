@@ -1,0 +1,1 @@
+EFFECTIVE DIRECTIVE6, signed off by operations. Pending delivery retention is72hours. Supersedes the retention advice in policy-v1,policy-v2,policy-v3 and faq. No change to unrelated completed-delivery archival.

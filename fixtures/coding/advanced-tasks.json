@@ -1,0 +1,124 @@
+{
+ "schema_version": 1,
+ "status": "FROZEN_PROSPECTIVE; no authentic evaluation has run",
+ "source": {
+  "kind": "authored",
+  "path": "fixtures/coding/advanced-tasks.json",
+  "note": "Authored advanced-coding section tasks; frozen before any authentic evaluation (none has run)."
+ },
+ "tasks": [
+  {
+   "id": "advanced-module-01",
+   "category": "coding",
+   "subtype": "generation",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/coding/advanced-tasks.json",
+    "note": "Authored advanced-coding section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "coding_sandbox",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Write a Python module `stats.py` providing exactly these three functions:\n\n1. median(values) - the median of a non-empty sequence of numbers; for an even count, the average of the two middle values of the sorted input.\n2. mode(values) - the most frequent value in a non-empty sequence; when several values tie for the highest frequency, return the smallest of them.\n3. moving_average(values, window) - a list of the averages of each contiguous window of the given size, in order. Raise ValueError when window is less than 1 or greater than the number of values.\n\nReply with the complete module in exactly one ```python fenced code block. Do not claim you ran tests; the evaluator runs the supplied tests only in an isolated sandbox."
+    }
+   ],
+   "requires": [
+    "sandbox"
+   ],
+   "check": {
+    "kind": "python_unittest",
+    "entry": "stats.py",
+    "module": "test_module",
+    "tests": "import unittest\n\nfrom stats import median, mode, moving_average\n\n\nclass MedianTest(unittest.TestCase):\n    def test_odd_count(self):\n        self.assertEqual(median([1, 3, 2]), 2)\n\n    def test_even_count_averages_middle(self):\n        self.assertEqual(median([1, 2, 3, 4]), 2.5)\n\n    def test_single_value(self):\n        self.assertEqual(median([7]), 7)\n\n\nclass ModeTest(unittest.TestCase):\n    def test_clear_winner(self):\n        self.assertEqual(mode([1, 2, 2, 3]), 2)\n\n    def test_tie_returns_smallest(self):\n        self.assertEqual(mode([3, 1, 1, 2, 2]), 1)\n\n    def test_single_value(self):\n        self.assertEqual(mode([5]), 5)\n\n\nclass MovingAverageTest(unittest.TestCase):\n    def test_windows(self):\n        self.assertEqual(moving_average([1, 2, 3, 4], 2), [1.5, 2.5, 3.5])\n\n    def test_full_window(self):\n        self.assertEqual(moving_average([2], 1), [2.0])\n\n    def test_window_below_one_raises(self):\n        with self.assertRaises(ValueError):\n            moving_average([1, 2], 0)\n\n    def test_window_over_length_raises(self):\n        with self.assertRaises(ValueError):\n            moving_average([1, 2], 5)\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n"
+   },
+   "rationale": "multi-function module generation against a frozen unittest oracle executed only inside the disposable isolated sandbox boundary"
+  },
+  {
+   "id": "advanced-repair-supplied-01",
+   "category": "coding",
+   "subtype": "repair",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/coding/advanced-tasks.json",
+    "note": "Authored advanced-coding section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "coding_sandbox",
+   "messages": [
+    {
+     "role": "user",
+     "content": "File warehouse.py:\n```python\n\"\"\"Small warehouse helpers under audit repair.\"\"\"\n\ndef low_stock(items, threshold):\n    \"\"\"Names of items whose quantity is below threshold, sorted.\"\"\"\n    return sorted(name for name, row in items.items()\n                  if row[\"quantity\"] <= threshold)\n\ndef total_value(items):\n    \"\"\"Sum of price * quantity over all items.\"\"\"\n    return sum(row[\"price\"] * row[\"quantity\"] for row in items.values())\n\ndef apply_discount(items, percent):\n    \"\"\"Return items with each price reduced by percent (in place).\"\"\"\n    for row in items.values():\n        row[\"price\"] = row[\"price\"] - row[\"price\"] * percent / 100\n    return items\n```\n\nwarehouse.py has defects against its specification:\n\n- low_stock must select items whose quantity is strictly BELOW the threshold (the threshold value itself is not low stock).\n- apply_discount must return a NEW mapping with the discounted prices and must not modify the mapping it was given.\n\ntotal_value is correct and must keep working. Reply with the complete corrected contents of warehouse.py in exactly one ```python fenced code block. Do not claim you ran tests; the evaluator runs the supplied tests only in an isolated sandbox."
+    }
+   ],
+   "requires": [
+    "sandbox"
+   ],
+   "check": {
+    "kind": "python_unittest_discover",
+    "target": "warehouse.py",
+    "repository": {
+     "warehouse.py": "\"\"\"Small warehouse helpers under audit repair.\"\"\"\n\ndef low_stock(items, threshold):\n    \"\"\"Names of items whose quantity is below threshold, sorted.\"\"\"\n    return sorted(name for name, row in items.items()\n                  if row[\"quantity\"] <= threshold)\n\ndef total_value(items):\n    \"\"\"Sum of price * quantity over all items.\"\"\"\n    return sum(row[\"price\"] * row[\"quantity\"] for row in items.values())\n\ndef apply_discount(items, percent):\n    \"\"\"Return items with each price reduced by percent (in place).\"\"\"\n    for row in items.values():\n        row[\"price\"] = row[\"price\"] - row[\"price\"] * percent / 100\n    return items\n",
+     "test_warehouse.py": "import unittest\n\nfrom warehouse import low_stock, total_value, apply_discount\n\nITEMS = {\n    \"bolt\": {\"quantity\": 12, \"price\": 2},\n    \"nut\": {\"quantity\": 4, \"price\": 1},\n    \"brace\": {\"quantity\": 6, \"price\": 5},\n}\n\nclass LowStockTest(unittest.TestCase):\n    def test_below_threshold_is_exclusive(self):\n        self.assertEqual(low_stock(ITEMS, 6), [\"nut\"])\n\n    def test_threshold_value_itself_excluded(self):\n        self.assertEqual(low_stock(ITEMS, 4), [])\n\nclass TotalValueTest(unittest.TestCase):\n    def test_sum(self):\n        self.assertEqual(total_value(ITEMS), 12*2 + 4*1 + 6*5)\n\nclass ApplyDiscountTest(unittest.TestCase):\n    def test_returns_new_mapping_without_mutating_input(self):\n        import copy\n        original = copy.deepcopy(ITEMS)\n        discounted = apply_discount(ITEMS, 50)\n        self.assertEqual(discounted[\"bolt\"][\"price\"], 1)\n        self.assertEqual(ITEMS[\"bolt\"][\"price\"], 2)\n        self.assertEqual(original, ITEMS)\n\nif __name__ == \"__main__\":\n    unittest.main()\n"
+    },
+    "command": [
+     "python3",
+     "-B",
+     "-m",
+     "unittest",
+     "discover",
+     "-s",
+     "."
+    ],
+    "allowed_changes": [
+     "warehouse.py"
+    ]
+   },
+   "rationale": "supplied-file defect repair against frozen tests; boundary protects the trusted test module"
+  },
+  {
+   "id": "advanced-repair-multi-01",
+   "category": "coding",
+   "subtype": "repair",
+   "source": {
+    "kind": "authored",
+    "path": "fixtures/coding/advanced-tasks.json",
+    "note": "Authored advanced-coding section tasks; frozen before any authentic evaluation (none has run)."
+   },
+   "scorer": "coding_sandbox",
+   "messages": [
+    {
+     "role": "user",
+     "content": "File app/cart.py:\n```python\n\"\"\"Cart line items and receipt total.\"\"\"\n\nTAX_RATE = 10\n\ndef line_total(item):\n    return item[\"unit_price\"] * item[\"quantity\"]\n\ndef cart_total(items, discount_percent=0):\n    subtotal = sum(line_total(i) for i in items)\n    discounted = subtotal - subtotal * discount_percent / 100\n    tax = discounted * TAX_RATE / 100\n    return round(discounted + tax, 2)\n```\n\nFile app/receipt.py:\n```python\n\"\"\"Receipt rendering for the cart.\"\"\"\n\nfrom cart import cart_total\n\ndef render(items, discount_percent=0):\n    total = cart_total(items, discount_percent)\n    return f\"TOTAL: {total}\"\n```\n\nThe suite in app/tests/test_cart.py fails. The store's pricing rule is that the percentage discount is applied to the subtotal BEFORE tax is added, and the receipt must show exactly what cart_total returns. cart.py currently applies the discount in the wrong place relative to tax. Preserve the public function names and signatures exactly. Reply with the complete corrected contents of app/cart.py in exactly one ```python fenced code block. Do not claim you ran tests; the evaluator runs the supplied tests only in an isolated sandbox."
+    }
+   ],
+   "requires": [
+    "sandbox"
+   ],
+   "check": {
+    "kind": "python_unittest_discover",
+    "target": "app/cart.py",
+    "repository": {
+     "app/cart.py": "\"\"\"Cart line items and receipt total.\"\"\"\n\nTAX_RATE = 10\n\ndef line_total(item):\n    return item[\"unit_price\"] * item[\"quantity\"]\n\ndef cart_total(items, discount_percent=0):\n    subtotal = sum(line_total(i) for i in items)\n    discounted = subtotal - subtotal * discount_percent / 100\n    tax = discounted * TAX_RATE / 100\n    return round(discounted + tax, 2)\n",
+     "app/receipt.py": "\"\"\"Receipt rendering for the cart.\"\"\"\n\nfrom cart import cart_total\n\ndef render(items, discount_percent=0):\n    total = cart_total(items, discount_percent)\n    return f\"TOTAL: {total}\"\n",
+     "app/tests/__init__.py": "",
+     "app/tests/test_cart.py": "import unittest\n\nfrom cart import cart_total\nfrom receipt import render\n\nITEMS = [{\"unit_price\": 200, \"quantity\": 2},\n         {\"unit_price\": 100, \"quantity\": 1}]\n\nclass CartTotalTest(unittest.TestCase):\n    def test_no_discount_tax_added(self):\n        # subtotal 500; tax 10% -> 550.00\n        self.assertEqual(cart_total(ITEMS), 550.00)\n\n    def test_discount_before_tax(self):\n        # subtotal 500; 20% discount -> 400; tax 10% -> 440.00\n        self.assertEqual(cart_total(ITEMS, 20), 440.00)\n\nclass RenderTest(unittest.TestCase):\n    def test_render_matches_cart(self):\n        self.assertEqual(render(ITEMS, 20), \"TOTAL: 440.0\")\n\nif __name__ == \"__main__\":\n    unittest.main()\n"
+    },
+    "command": [
+     "python3",
+     "-B",
+     "-m",
+     "unittest",
+     "discover",
+     "-s",
+     "app/tests",
+     "-t",
+     "app"
+    ],
+    "allowed_changes": [
+     "app/cart.py"
+    ]
+   },
+   "rationale": "multi-file interface-preserving repair; consumer module and trusted tests are boundary-protected"
+  }
+ ]
+}

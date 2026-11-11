@@ -1,0 +1,9 @@
+{
+  "task_id": "agentic-calibration-system-1-catalog-service-v2-proposed",
+  "fixture_version": "0.3.0-proposed",
+  "checker_version": 3,
+  "checker_family": "checker/3-proposed",
+  "status": "PROPOSED; SOFTWARE_TEST ONLY; not part of frozen m3-experimental/1",
+  "log_level_case": "native-upper",
+  "environment_notes": "Offline disposable /workspace only. catalog.py normalizes log_level with upper(); debug/info/warning/error case variants are valid. Execute ./check.sh after final writes/run commands; direct, sh/bash, or cd /workspace && execution is equivalent. Preserve original data bytes and all protected files."
+}

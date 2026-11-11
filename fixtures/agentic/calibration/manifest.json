@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "classification": "NON_SCORED_CALIBRATION_FIXTURES",
+  "provenance": {
+    "source": "Operator-approved queue/catalog/Orion designs; SPEC10.3C",
+    "authorship": "New disjoint workspace/corpus and independent oracle adaptations; no scored answers/data reused",
+    "checker": "welp_next/calibration_checks.py",
+    "checker_sha256": "5763850f9db2d873123aac0d42e1b4e37799f228d181e612bc24fa1980207c14"
+  },
+  "files": {
+    "repository/evaluator/extra_checks.py": "aecd2340a19040984ba78b91a10b26d93c9e2cebc9ae306f5f8e0797b946a6f2",
+    "repository/evaluator/hidden_tests/test_acceptance.py": "c9ef9bf074bad1280a78cb2a479cf634e777680d37daeb1b5a113b5b8ede37d3",
+    "repository/task.json": "5755401866bfadfe0e6bd90bc767aec0012586034f95a7d020e00d88410d57bc",
+    "repository/workspace/README.md": "c36781f1488418946e8be198e9e021ceb557996376321f00b2512dfd047d1d36",
+    "repository/workspace/REVIEW.md": "56eb413ac6a95c8bb37332d6646127d691d8b429c88fd2c2ab96256fbab8377e",
+    "repository/workspace/queue.py": "a02d24dc1a725f1beb714be145e724af19fe622b0ae12f681f03ee4de17bfa10",
+    "repository/workspace/run_tests.sh": "b738d754207b62733f5d72955c1b9d99918aeb2c46dee7dcd2b5cc3fcb5e696e",
+    "repository/workspace/tests/test_queue.py": "f704af1d9faffb7010ae4c35bd6322958db6405c226f993f50f5f0f9b2c4e09f",
+    "research/evaluator/extra_checks.py": "aecd2340a19040984ba78b91a10b26d93c9e2cebc9ae306f5f8e0797b946a6f2",
+    "research/task.json": "4eac61cc247add590fca816aab6cfc2e82c4916e2b9f4decf71b10868bcc9a5e",
+    "research/workspace/question.txt": "541a4b8def1525fef6a186b10c086b1f1ccb8f1c183e163844dfdf4789252012",
+    "research/workspace/sources/changelog.md": "a46f11b48b02ebd62be7f6d9fcc896b8520abab33b0ef7583c9b06e1c46547d9",
+    "research/workspace/sources/effective-directive-6.md": "708b9202096ce9ac9c5027d44d291f7fcfce0b916896100fb956fc99e9d053e2",
+    "research/workspace/sources/faq.md": "e3fa46f969af7bc24dc2d723f3e24f4a86733afa272bd23ab66d928b21ca42a5",
+    "research/workspace/sources/glossary.md": "4858dfcd44633c51fdc06da37712dbd98dba758ca04dea5e01599460cdff619c",
+    "research/workspace/sources/governance.md": "d19fbe8f0b870520f847603013d2839c40d2cb756145def2d8c36038541e9206",
+    "research/workspace/sources/policy-v1.md": "af3ce36458fb8a85237e460ceeff68469ff8747f5b0fc7980d8b9a0147971722",
+    "research/workspace/sources/policy-v2.md": "ccfe91cde932258a9db7563626d3e2bd3e23aa3ee791dd80f7e4cdd320e31202",
+    "research/workspace/sources/policy-v3.md": "eb71ae73bcb71f4d3a61528282811dd39878057143d40fdaf79a9e25cfe3afea",
+    "research/workspace/sources/quickstart.md": "510a45de5bfdd7ec7bb342355e8d694a8ff44521caff950c48bd470ef427c29c",
+    "research/workspace/sources/release-draft-4.md": "d04c3b3e480d0e6ddaa24ad5190d99c1a95d7f9c7934a51674d919fb422a6004",
+    "system/evaluator/extra_checks.py": "aecd2340a19040984ba78b91a10b26d93c9e2cebc9ae306f5f8e0797b946a6f2",
+    "system/task.json": "3d9d398ae14bf9c021f56d986bff5a845878507586525f09b0abe814b6ae5eb3",
+    "system/workspace/README.md": "ef92de5efecfaa4c77af1980265cbd145acc378fdb4bf2778f4ff38035d1d5a4",
+    "system/workspace/catalog.py": "0fb426d7df755d0568f70f776fde9319a1cfee5f75cb169e19ecb5f862e90210",
+    "system/workspace/check.sh": "32733b88cc2e93c4b0d89b5492d69e46de4eee99ff2abdd98043baf189778891",
+    "system/workspace/config/catalog.json": "427b0d6e6a84afe39e53a8e6953ce4c3dcc34d21ca2b436ae3654c746b681ff5",
+    "system/workspace/data/catalog.json": "f881633db2a3a366c28a20c847e18fa02dc308e481b765e09c9ccbafccf1c2fe",
+    "system/workspace/logs/catalog.log": "5d782d06237012214406039b0249c1fe5d8bc73ec266d5912ea9157de33c24d0",
+    "system/workspace/start.sh": "34fea1408ddeaefe8403c50a9f2de08ddcc06465e47ac257c4fbf3b59eac0288"
+  }
+}

@@ -1,14 +1,26 @@
 """Evaluator-only acceptance for agentic-research-1-atlas9-batching (trusted).
 
-Mechanical oracle. Correct resolution (frozen at fixture creation, before
-any model output): the governing source is ops-bulletin-7, whose 96-message
-consumer batch limit supersedes the manuals; ops-bulletin-5 was a withdrawn
-draft. Citations resolve under the word-boundary rule (a cited reference is
-valid when it is the frozen id, or an unambiguous word-boundary extension or
-truncation of exactly one frozen id). Ambiguity is never guessed.
+Mechanical oracle. Extracted from
+welp/fixtures/agentic/research/evaluator/extra_checks.py (adaptation: the
+answer artifact is read through the core's symlink-refusing
+read_workspace_text; see tmp/m3-advancement-agentic/agentic-provenance.json).
+
+Correct resolution (frozen at fixture creation, before any model output): the
+governing source is ops-bulletin-7, whose 96-message consumer batch limit
+supersedes the manuals; ops-bulletin-5 was a withdrawn draft. Citations
+resolve under the word-boundary rule (a cited reference is valid when it is
+the frozen id, or an unambiguous word-boundary extension or truncation of
+exactly one frozen id). Ambiguity is never guessed.
 """
 import re
+import sys
 from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[4]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from welp_next import agentic  # noqa: E402  (trusted core import, setup only)
 
 FROZEN_IDS = ["changelog", "faq", "glossary", "governance", "manual-v1",
               "manual-v2", "manual-v3", "ops-bulletin-5", "ops-bulletin-7",
@@ -38,12 +50,12 @@ def _split_ids(value):
 def extra_checks(record, transcript, workspace, fixture):
     checks = []
     ws = Path(workspace)
-    answer = ws / "research-pack" / "answer.md"
-    if not answer.is_file():
+    try:
+        text = agentic.read_workspace_text(ws, "research-pack/answer.md")
+    except OSError:
         return {"checks": [{"id": "acceptance", "pass": False,
                             "detail": "research-pack/answer.md missing"}],
                 "acceptance_pass": False}
-    text = answer.read_text()
 
     m = re.search(r"maximum\s+recommended\s+consumer\s+batch\s+size\s*:\s*(\d+)\s+messages",
                   text, re.I)
@@ -52,7 +64,8 @@ def extra_checks(record, transcript, workspace, fixture):
 
     mg = re.search(r"governing\s+source\s*:\s*(.+)", text, re.I)
     gov_tok = _split_ids(mg.group(1))[0] if mg else ""
-    gov_ok = _resolve(gov_tok.rstrip(".,") ) == GOVERNING
+    gov_ok = _resolve(gov_tok.rstrip(".,")
+                      ) == GOVERNING
     checks.append({"id": "governing_source_correct", "pass": gov_ok,
                    "detail": f"governing token={gov_tok!r}"})
 

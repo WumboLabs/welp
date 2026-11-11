@@ -1,0 +1,403 @@
+{
+  "schema": "welp-public-extraction-provenance/1",
+  "source_repository": "WumboLabs/welp",
+  "note": "Historical extraction/adaptation provenance. Exact source identities are content hashes, not an invented Git pin. Current public package is separately inventoried; original private provenance remains unchanged. Relative fixture data/ paths are scientific assets, not host filesystem paths.",
+  "assets": [
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/quality/welp-quality-screen-12-v1.json",
+      "source_sha256": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8",
+      "extracted_path": "fixtures/quality/welp-quality-screen-12-v1.json",
+      "extracted_sha256": "4ea5cead9db04ef3d882468bab995b5f4cf0fe5dde6f2a405584ea07fc6094b8"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/useful_context/family-a.json",
+      "source_sha256": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4",
+      "extracted_path": "fixtures/useful_context/family-a.json",
+      "extracted_sha256": "23839a30cf605ed51a0b23776fc899abd2b63f936b1693646bc5e8df29e3f5a4"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/useful_context/multidocument.json",
+      "source_sha256": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f",
+      "extracted_path": "fixtures/useful_context/multidocument.json",
+      "extracted_sha256": "cae1dbb0355a84eacdee44a09c21cb7f2509b5f892803a755c2f574289591a1f"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/real_work/linux-diagnosis.json",
+      "source_sha256": "2a0c8b73490ba37025c10ecdc4d3cfbc1b6bef6ddb6759a929c7478155367ace",
+      "extracted_path": "fixtures/real_work/linux-diagnosis.json",
+      "extracted_sha256": "2a0c8b73490ba37025c10ecdc4d3cfbc1b6bef6ddb6759a929c7478155367ace"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/real_work/multi-turn-correction.json",
+      "source_sha256": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b",
+      "extracted_path": "fixtures/real_work/multi-turn-correction.json",
+      "extracted_sha256": "5d6fecef2fbe4d53ccf06a9588de93539fb399551370705d82b58d0802f2596b"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/real_work/tool-recovery.json",
+      "source_sha256": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2",
+      "extracted_path": "fixtures/real_work/tool-recovery.json",
+      "extracted_sha256": "a53949a0e74efd8d88edb65da32decc8b57c071789512dfc6222610ed725abd2"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/real_work/document-synthesis.json",
+      "source_sha256": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8",
+      "extracted_path": "fixtures/real_work/document-synthesis.json",
+      "extracted_sha256": "7fc42880a655edd832dcab8b913a88710b2cc01f920c93e07fe6a6da8a77baf8"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/real_work/repository-timeout.json",
+      "source_sha256": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7",
+      "extracted_path": "fixtures/real_work/repository-timeout.json",
+      "extracted_sha256": "002087714b2a6dcd885e779597a4302e77060a5f0f15939c12a57252efcbcfd7"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/review/qualitative-qualification.json",
+      "source_sha256": "e3381f63e48ec60701d606afd368ffa9c6b3744af0b7ee15790ef518e27b0b91",
+      "extracted_path": "fixtures/review/qualitative-qualification.json",
+      "extracted_sha256": "e3381f63e48ec60701d606afd368ffa9c6b3744af0b7ee15790ef518e27b0b91"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/harness/context.py",
+      "source_sha256": "799f60f742364b88094586c7e15c52661167622f896b409d83cfde0f5556c99d",
+      "extracted_path": "welp_next/scorers/context_family_a.py",
+      "extracted_sha256": "b63ff4fe6b68990562486d3ad0fdf311c76e7490cba499cb5c2f529e123653d2"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/harness/capabilities.py",
+      "source_sha256": "6a8c513ba494e81f52aa8f0254f6f0777fdb941d290e4a7ac6e6b6b522deb93f",
+      "extracted_path": "welp_next/scorers/context_multidocument.py",
+      "extracted_sha256": "7030cd65149ff2a98f988d2eb3744666d6ac403d4e0a3fe7afbead7f9d290aed"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/harness/capabilities.py",
+      "source_sha256": "6a8c513ba494e81f52aa8f0254f6f0777fdb941d290e4a7ac6e6b6b522deb93f",
+      "extracted_path": "welp_next/scorers/realwork.py",
+      "extracted_sha256": "68c4a1de12c34f70ec981f7ca85993ca34204def92d78f7cfccda5b6f1997774"
+    },
+    {
+      "source_path": "welp/harness/neohorse_adaptive_runner.py",
+      "source_sha256": "afe4696d68416ed5f660c09360c65e839c344759a33472303d6e8ac40d7bb98a"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/harness/quality.py",
+      "source_sha256": "6c3eae0fda750b5465fd9922b812236778483b70d5baa62fc22e87e82c246a72",
+      "extracted_path": "welp_next/scorers/quality_checks.py",
+      "extracted_sha256": "fa5224ff96f05eb3c5225fcb122d083507036bf2106bf56a46d201905965e276"
+    },
+    {
+      "source_path": "welp/harness/context.py",
+      "source_sha256": "799f60f742364b88094586c7e15c52661167622f896b409d83cfde0f5556c99d"
+    },
+    {
+      "source_path": "welp/harness/neohorse_adaptive_runner.py",
+      "source_sha256": "afe4696d68416ed5f660c09360c65e839c344759a33472303d6e8ac40d7bb98a"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/reliability/welp-reliability-sample-20-v3.json",
+      "source_sha256": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41",
+      "extracted_path": "fixtures/reliability/welp-reliability-sample-20-v3.json",
+      "extracted_sha256": "bc8bf545f49db9e9e77e4e56be13c4ac08929a4e51be325da12822efd033ac41"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/scorers/score_reliability_fixtures.json",
+      "source_sha256": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858",
+      "extracted_path": "fixtures/scorer-selftests.json",
+      "extracted_sha256": "060fc3a6adc5e7f8aea3c6eb173004d4f1bcdd1c1e670c5ec04b797a95178858"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/scorers/score_reliability.py",
+      "source_sha256": "59b769f2056ee0e98626f847001f461435c56ba0799068624b2033a027305adc",
+      "extracted_path": "welp_next/scorers/score_reliability.py",
+      "extracted_sha256": "fec37f8122cd81fb20e23fd1c3ac837e4287610dd7959f442e3e5d9a07c93583"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/scorers/safety_review.py",
+      "source_sha256": "6f210e86ba2c9d095083ad71dff03f3a20de4c5f9426600433646eacfe3cc1e5",
+      "extracted_path": "welp_next/scorers/safety_review.py",
+      "extracted_sha256": "80b9d58ead5ca6d17d4b8ed15975354efcb81381a9d097881c66317d00539189"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/fixtures/agentic/qualification/evaluator/extra_checks.py",
+      "source_sha256": "b1176df0bc94fe4a914f554f57fc6b1705d66023721cfb980bbe5ee0ccaafaa6",
+      "extracted_path": "fixtures/agentic/qualification/evaluator/extra_checks.py",
+      "extracted_sha256": "dec9c3b245ee64221673bc691f1af3b2b1f0fe3b1aa25061ae162864ad734358"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/qualification/task.json",
+      "source_sha256": "ab0fcc2f5bcdafbc34be12663b158fc3448f471b1ff595e84dc54646685d3211",
+      "extracted_path": "fixtures/agentic/qualification/task.json",
+      "extracted_sha256": "ab0fcc2f5bcdafbc34be12663b158fc3448f471b1ff595e84dc54646685d3211"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/qualification/workspace/formatters.py",
+      "source_sha256": "82d864d888206bd1554b390de327df5ded47191db5a921100fd9691e4a23fc22",
+      "extracted_path": "fixtures/agentic/qualification/workspace/formatters.py",
+      "extracted_sha256": "82d864d888206bd1554b390de327df5ded47191db5a921100fd9691e4a23fc22"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/qualification/workspace/greet.py",
+      "source_sha256": "18681c9e97454fa0bf804d28e6132597533999a49366b0cf66816d2913aac7db",
+      "extracted_path": "fixtures/agentic/qualification/workspace/greet.py",
+      "extracted_sha256": "18681c9e97454fa0bf804d28e6132597533999a49366b0cf66816d2913aac7db"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/qualification/workspace/run_tests.sh",
+      "source_sha256": "b738d754207b62733f5d72955c1b9d99918aeb2c46dee7dcd2b5cc3fcb5e696e",
+      "extracted_path": "fixtures/agentic/qualification/workspace/run_tests.sh",
+      "extracted_sha256": "b738d754207b62733f5d72955c1b9d99918aeb2c46dee7dcd2b5cc3fcb5e696e"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/qualification/workspace/tests/test_greet.py",
+      "source_sha256": "a629fc619b7f0926a5fa7c6355eca6e00a00491cd648a88ce08050981ba791d3",
+      "extracted_path": "fixtures/agentic/qualification/workspace/tests/test_greet.py",
+      "extracted_sha256": "a629fc619b7f0926a5fa7c6355eca6e00a00491cd648a88ce08050981ba791d3"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/fixtures/agentic/repository/evaluator/extra_checks.py",
+      "source_sha256": "c9d8339912ce98cd2a3a11db153c72d6553cca15c78d8829746b4d35682b1fd4",
+      "extracted_path": "fixtures/agentic/repository/evaluator/extra_checks.py",
+      "extracted_sha256": "536a31dc65e15bf989e8231e4816c89114534b9df78e37c36bbd431bfab65985"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/evaluator/hidden_tests/test_acceptance.py",
+      "source_sha256": "56d42939eecccc8900c181e6763886bc8380200d53c74f8c1abfb1d750e11bdf",
+      "extracted_path": "fixtures/agentic/repository/evaluator/hidden_tests/test_acceptance.py",
+      "extracted_sha256": "56d42939eecccc8900c181e6763886bc8380200d53c74f8c1abfb1d750e11bdf"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/task.json",
+      "source_sha256": "3a0947a9905aeecd8b6bc6fc41123cbe5b6ccbcf1edcc986bec07f9e2b925ddf",
+      "extracted_path": "fixtures/agentic/repository/task.json",
+      "extracted_sha256": "3a0947a9905aeecd8b6bc6fc41123cbe5b6ccbcf1edcc986bec07f9e2b925ddf"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/workspace/README.md",
+      "source_sha256": "89984d5d384e6016994900022fa94f96f59038e694d02ffc9ce302a23f2aa9e1",
+      "extracted_path": "fixtures/agentic/repository/workspace/README.md",
+      "extracted_sha256": "89984d5d384e6016994900022fa94f96f59038e694d02ffc9ce302a23f2aa9e1"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/workspace/REVIEW.md",
+      "source_sha256": "dc9083c0541597f866f53d5c8f7a450d77893b15ce300a0fb751341c2b4f095d",
+      "extracted_path": "fixtures/agentic/repository/workspace/REVIEW.md",
+      "extracted_sha256": "dc9083c0541597f866f53d5c8f7a450d77893b15ce300a0fb751341c2b4f095d"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/workspace/notes.py",
+      "source_sha256": "187545e7c52c5488cc284ad9d4d6efa92cfd8d689850bfe116812ec46165e7f7",
+      "extracted_path": "fixtures/agentic/repository/workspace/notes.py",
+      "extracted_sha256": "187545e7c52c5488cc284ad9d4d6efa92cfd8d689850bfe116812ec46165e7f7"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/workspace/run_tests.sh",
+      "source_sha256": "8e3519c78992025fdfa51cf2b8b77f2bde361482b8b278a35e2132eb392bc7b2",
+      "extracted_path": "fixtures/agentic/repository/workspace/run_tests.sh",
+      "extracted_sha256": "8e3519c78992025fdfa51cf2b8b77f2bde361482b8b278a35e2132eb392bc7b2"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/repository/workspace/tests/test_notes.py",
+      "source_sha256": "e9cbd8fed43e88746f387a1f5ba78e708fc5b5a112ce5aa42cbd64af676bd765",
+      "extracted_path": "fixtures/agentic/repository/workspace/tests/test_notes.py",
+      "extracted_sha256": "e9cbd8fed43e88746f387a1f5ba78e708fc5b5a112ce5aa42cbd64af676bd765"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/fixtures/agentic/system/evaluator/extra_checks.py",
+      "source_sha256": "e43f29afc27cd11339eb32861febedae7e90d55e861ee0e70767e21ef78af086",
+      "extracted_path": "fixtures/agentic/system/evaluator/extra_checks.py",
+      "extracted_sha256": "ef7f32f259f9fb86ea1b8dca7e3a74d200e6d95afcd23f91d88e8d7e358b8dbc"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/task.json",
+      "source_sha256": "d2b857374251e68399580ae7d00bf8a1c19f192e20db543bf1a9b46f3f4fbb1d",
+      "extracted_path": "fixtures/agentic/system/task.json",
+      "extracted_sha256": "d2b857374251e68399580ae7d00bf8a1c19f192e20db543bf1a9b46f3f4fbb1d"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/README.md",
+      "source_sha256": "7c4f0f725bf978d2ffd4b29f1c7e2a5f27de1fd8bcc3e73fbddf8b5807de451b",
+      "extracted_path": "fixtures/agentic/system/workspace/README.md",
+      "extracted_sha256": "7c4f0f725bf978d2ffd4b29f1c7e2a5f27de1fd8bcc3e73fbddf8b5807de451b"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/check.sh",
+      "source_sha256": "7e08dfde730fdadea69d7929b13f62e7709b29cd7e4e79a8e9556c8e3540e683",
+      "extracted_path": "fixtures/agentic/system/workspace/check.sh",
+      "extracted_sha256": "7e08dfde730fdadea69d7929b13f62e7709b29cd7e4e79a8e9556c8e3540e683"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/config/service.json",
+      "source_sha256": "df1e656c928568e05633c4dbeda14c1f598f07997a6b8dd9c2cd2192bbbc5268",
+      "extracted_path": "fixtures/agentic/system/workspace/config/service.json",
+      "extracted_sha256": "df1e656c928568e05633c4dbeda14c1f598f07997a6b8dd9c2cd2192bbbc5268"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/logs/service.log",
+      "source_sha256": "cdc51b990c3566e359443d704aae738d12d5ba2c78319424d264b27bf0e7e74d",
+      "extracted_path": "fixtures/agentic/system/workspace/logs/service.log",
+      "extracted_sha256": "cdc51b990c3566e359443d704aae738d12d5ba2c78319424d264b27bf0e7e74d"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/service.py",
+      "source_sha256": "9021f104de42db7b4b474c081debfe53c6932f5e7e58a20610772fb05d288394",
+      "extracted_path": "fixtures/agentic/system/workspace/service.py",
+      "extracted_sha256": "9021f104de42db7b4b474c081debfe53c6932f5e7e58a20610772fb05d288394"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/start.sh",
+      "source_sha256": "86f444da4176235382f7a3772032c851a979a9ebbdc77e228bd8db81e4ea328f",
+      "extracted_path": "fixtures/agentic/system/workspace/start.sh",
+      "extracted_sha256": "86f444da4176235382f7a3772032c851a979a9ebbdc77e228bd8db81e4ea328f"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/fixtures/agentic/research/evaluator/extra_checks.py",
+      "source_sha256": "0c0e0c9d4e6bd9b0952290383885070292b1ce55018c8396bef1cdd0bcf86538",
+      "extracted_path": "fixtures/agentic/research/evaluator/extra_checks.py",
+      "extracted_sha256": "9bf195b181119105d673503f1ee6b8b35acbdc3eddfa30bacf0cae60eb843cf8"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/task.json",
+      "source_sha256": "32196112b384c64cca2303026d6a468227dce9b609aa965ba07a0994b586569a",
+      "extracted_path": "fixtures/agentic/research/task.json",
+      "extracted_sha256": "32196112b384c64cca2303026d6a468227dce9b609aa965ba07a0994b586569a"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/question.txt",
+      "source_sha256": "987efe79e4285578bb96758c3a48f2dba1b41defa0b7aacb3c18f5e5f52b6684",
+      "extracted_path": "fixtures/agentic/research/workspace/question.txt",
+      "extracted_sha256": "987efe79e4285578bb96758c3a48f2dba1b41defa0b7aacb3c18f5e5f52b6684"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/changelog.md",
+      "source_sha256": "f1fa48037d74affa3c8193e0bf7197a5c1cbd8c95f8866ccab976de057ec915c",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/changelog.md",
+      "extracted_sha256": "f1fa48037d74affa3c8193e0bf7197a5c1cbd8c95f8866ccab976de057ec915c"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/faq.md",
+      "source_sha256": "b5b28ad22a4c6b66a3f3e1d5d3a562f0324e12b429e6d661fd617f16dd34cb72",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/faq.md",
+      "extracted_sha256": "b5b28ad22a4c6b66a3f3e1d5d3a562f0324e12b429e6d661fd617f16dd34cb72"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/glossary.md",
+      "source_sha256": "37cb9dbf3c569665f190c268094d65f0ce690d15b948b2c73c206a214a7da53e",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/glossary.md",
+      "extracted_sha256": "37cb9dbf3c569665f190c268094d65f0ce690d15b948b2c73c206a214a7da53e"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/governance.md",
+      "source_sha256": "ee34f169b07526d835062720c81c15c863ba6668e76b7aec1a6337aacff26656",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/governance.md",
+      "extracted_sha256": "ee34f169b07526d835062720c81c15c863ba6668e76b7aec1a6337aacff26656"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/manual-v1.md",
+      "source_sha256": "18ae93b6a38448a46ada4cd2821a6933bf2fb4e8a56e32a2ce54971665bc08ca",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/manual-v1.md",
+      "extracted_sha256": "18ae93b6a38448a46ada4cd2821a6933bf2fb4e8a56e32a2ce54971665bc08ca"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/manual-v2.md",
+      "source_sha256": "bee84d08322ae5eccaa27be2b3dba25e9419aeec5d0c0bbf1fd5b1bd7d658dbf",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/manual-v2.md",
+      "extracted_sha256": "bee84d08322ae5eccaa27be2b3dba25e9419aeec5d0c0bbf1fd5b1bd7d658dbf"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/manual-v3.md",
+      "source_sha256": "9b58fbbd8d1ee7449fe9e039b0462267692db390c74203570bea6216d0d82e1f",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/manual-v3.md",
+      "extracted_sha256": "9b58fbbd8d1ee7449fe9e039b0462267692db390c74203570bea6216d0d82e1f"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/ops-bulletin-5.md",
+      "source_sha256": "117b423530b751a9e9675d97b1005f83fbe28cda4cad8df4f501c2aa65976507",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/ops-bulletin-5.md",
+      "extracted_sha256": "117b423530b751a9e9675d97b1005f83fbe28cda4cad8df4f501c2aa65976507"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/ops-bulletin-7.md",
+      "source_sha256": "fee5b75b019970b3574350f6ba2708e67bbfba30c7605d5fe2fc2abb13c6ae3f",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/ops-bulletin-7.md",
+      "extracted_sha256": "fee5b75b019970b3574350f6ba2708e67bbfba30c7605d5fe2fc2abb13c6ae3f"
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/research/workspace/sources/quickstart.md",
+      "source_sha256": "302af4dbefc60eb988afa21e98ad8ef0b88dd23d8b1f6618f5bcbb6f53734b02",
+      "extracted_path": "fixtures/agentic/research/workspace/sources/quickstart.md",
+      "extracted_sha256": "302af4dbefc60eb988afa21e98ad8ef0b88dd23d8b1f6618f5bcbb6f53734b02"
+    },
+    {
+      "decision": "ADAPT",
+      "source_path": "welp/harness/agentic.py",
+      "source_sha256": "bc0654684ec640e76b2abddef86e64f5452abc122130d59875df1878a6e3f68e"
+    },
+    {
+      "decision": "REUSE",
+      "source_sha256": "dd32a6ee3889c68ee44129226a4f37a0da723d63f068ee42639d502d158bdbe5",
+      "extracted_path": "fixtures/contracts/welp-review-rubric-0.2.0-draft.json",
+      "extracted_sha256": "dd32a6ee3889c68ee44129226a4f37a0da723d63f068ee42639d502d158bdbe5",
+      "source_asset_name": "welp-review-rubric-0.2.0-draft.json",
+      "source_location_note": "Private historical extraction location omitted; source bytes remain identified by SHA-256."
+    },
+    {
+      "decision": "REUSE",
+      "source_path": "welp/fixtures/agentic/system/workspace/data/quotes.json",
+      "source_sha256": "da29f582adcd9ca6b1f8526aefe51bbd75377826c85820653cc68fe4b9c61385",
+      "extracted_path": "fixtures/agentic/system/workspace/data/quotes.json",
+      "extracted_sha256": "da29f582adcd9ca6b1f8526aefe51bbd75377826c85820653cc68fe4b9c61385"
+    }
+  ]
+}
