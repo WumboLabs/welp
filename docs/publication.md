@@ -52,6 +52,12 @@ publication, with no second approval.**
    `WEBSITE_READY`, `WEBSITE_PUBLISHED`, `WEBSITE_BLOCKED`, or
    `NOT_FOR_PUBLICATION`. Unreviewed exports stay at
    `PENDING_HUMAN_GATE` evidence state and cannot invent a public citation.
+   Excluded and missing identities remain explicit rows: `NOT_RUN`, no numeric
+   score, frozen exclusion reason, technical applicability, coverage impact,
+   attempted/not-attempted and original outcome where present. Valid but
+   non-evaluable attempts retain their original facets; they are not zeros or
+   semantic failures. Exporting a partial inventory is technical reporting,
+   not scientific completion or permission to publish. Explicit holds remain.
 3. **Review.** A human scientific review of the finalized, verified record is
    performed outside the framework. The operator records the decision as a
    receipt, schema `welp-scientific-acceptance/1`:
@@ -63,6 +69,10 @@ publication, with no second approval.**
      bound by hash. Source bytes are never exported;
    - `section_manifests`: `{section: manifest_sha256}` covering exactly the
      export's finalized sections.
+   - For `helicopterbench/3` only, `helicopterbench_human_review_sha256`: the
+     exact completed, reconciled human-review sidecar digest. This additional
+     binding prevents replacing a review while retaining the same automated
+     section manifest. Historical /1 and /2 receipts do not gain this requirement.
 4. **Apply acceptance.** Export again with
    `--acceptance RECEIPT.json --review-source DECISION_SOURCE`. The module
    binds the decision to the evidence and fails closed unless: the receipt is
@@ -80,6 +90,15 @@ publication, with no second approval.**
    `WEBSITE_READY` with the embedded `scientific_acceptance` receipt and
    reason "HUMAN_ACCEPTED scientific review; routine public-safe publication
    is standing-authorized."
+   HelicopterBench /3 additionally requires the separately attributed human review
+   to be finalized, with all questions answered and material disagreements
+   resolved. Its independent /100 score remains separate from the automated /100
+   result; the acceptance overlay never averages or replaces either result.
+   If generation produced no admissible submission, the human channel is
+   `NOT_APPLICABLE_NO_SUBMISSION`: no game was played and neither a human
+   score nor a gameplay score is invented. Scientific acceptance still binds
+   the original generation/budget finding and section manifest. This exception
+   cannot conceal an existing scored game or waive review of a submitted game.
 5. **Publish.** Under the standing automatic-closeout authorization, commit
    the public-safe evidence to `WumboLabs/evaluations` (recording native
    `publication_provenance`; no invented legacy provenance), update central

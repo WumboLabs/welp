@@ -87,7 +87,7 @@ class MethodAcceptanceGate(unittest.TestCase):
         self.profile['framework'] = {'version': policy.FRAMEWORK_M2,
                                      'methodology': policy.METHODOLOGY_M2}
         self.profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
 
     def test_real_model_requires_recorded_acceptance(self):
         profile = self.profile
@@ -168,7 +168,7 @@ class Rubric(unittest.TestCase):
         # reconstructs the same raw 34/PARTIAL under v2, and the normalized
         # 37.8 exists only as an illustrative conversion — never an official
         # retroactive v2 score (read-only use of frozen evidence).
-        record_path = (policy.PROJECT_ROOT.parent / 'research/model-evaluations'
+        record_path = (preflight.WORKSPACE_ROOT / 'research/model-evaluations'
                        / 'qwen35-9b/campaign-groups'
                        / 'qwen35-9b-rtx5070-cuda-helicopterbench-2026-11-07'
                        / 'sections/helicopterbench/heli-verification.json')
@@ -190,7 +190,7 @@ class SectionEndToEnd(unittest.TestCase):
         profile['framework'] = {'version': policy.FRAMEWORK_M2,
                                 'methodology': policy.METHODOLOGY_M2}
         profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
         fixture, tasks = helicopterbench.load_fixture()
         server = support.SyntheticEndpoint(
             tasks_by_id=tasks, payloads={'helicopterbench-01': payload(content, finish)},

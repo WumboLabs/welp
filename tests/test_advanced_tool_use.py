@@ -54,7 +54,7 @@ def make_profile(workdir, campaign, server_url=None, native_tools=True):
                                'qualification_source': 'SOFTWARE_TEST',
                                'isolation_approval': 'SOFTWARE_TEST'}
     profile['sampling']['qualification_source'] = \
-        support.SUPPORT_PATH
+        str(Path(support.__file__).resolve())
     return profile
 
 

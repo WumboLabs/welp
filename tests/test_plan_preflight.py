@@ -65,8 +65,10 @@ class InvalidProfilesFailClosed(unittest.TestCase):
         return support.write_profile(self.workdir, profile, name=f'{name}.json')
 
     def variants(self):
-        bad_backend = json.loads(json.dumps(self.base))
-        bad_backend['runtime']['backend'] = 'QUANTUM'
+        # runtime.backend is a supplied deployment condition (recorded
+        # verbatim); only an empty/absent identity is a profile defect.
+        empty_backend = json.loads(json.dumps(self.base))
+        empty_backend['runtime']['backend'] = ''
         sha_mismatch = json.loads(json.dumps(self.base))
         sha_mismatch['model']['artifact']['sha256'] = 'not-a-model-digest'
         bad_capacity = json.loads(json.dumps(self.base))
@@ -76,7 +78,7 @@ class InvalidProfilesFailClosed(unittest.TestCase):
         # (name, profile-path, substrings any-of which must appear in the
         # named check; empty set = only require a nonempty check string)
         return [
-            ('bad-backend', self.write_variant('bad-backend', bad_backend), {'backend'}),
+            ('empty-backend', self.write_variant('empty-backend', empty_backend), {'backend'}),
             ('artifact-sha-mismatch', self.write_variant('artifact-sha-mismatch', sha_mismatch), {'sha', 'artifact'}),
             ('bad-context-capacity', self.write_variant('bad-context-capacity', bad_capacity), {'capacity'}),
             ('context-target-exceeds-capacity', self.write_variant('target-exceeds', wrong_target), {'capacity', 'target', 'context'}),
@@ -102,7 +104,7 @@ class InvalidProfilesFailClosed(unittest.TestCase):
         self.assertEqual(self.endpoint.request_count(), 0)
 
     def test_run_rejects_invalid_profile_before_campaign_evidence(self):
-        name, path, _ = self.variants()[0]  # bad backend enum
+        name, path, _ = self.variants()[0]  # empty backend identity
         proc = support.cli(['run', '--profile', path])
         self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
         doc = support.cli_json(proc)

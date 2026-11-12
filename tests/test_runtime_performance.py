@@ -46,6 +46,20 @@ def gpu_snapshot(pci_bytes=1073741824, declared='0000:04:00.0', foreign='0000:99
         {'pci_id': foreign, 'vram_used_bytes': 4096}]}}
 
 
+def timing_row(*, usage, cache_state, native_timings=None, native_rate=(812.8, 55.6),
+               ttft=0.1364, latency=0.9642, first_byte=0.0101):
+    """One recorded timings row in the standardized runner shape."""
+    rates = {'prompt': 'UNKNOWN' if native_rate is None else native_rate[0],
+             'generation': 'UNKNOWN' if native_rate is None else native_rate[1]}
+    timings = {'streaming': True, 'ttft_seconds': ttft, 'first_byte_seconds': first_byte,
+               'latency_seconds': latency, 'usage': usage,
+               'usage_source': 'sse_usage_frame', 'tokens_per_second': rates,
+               'cache_state': cache_state}
+    if native_timings is not None:
+        timings['native_timings'] = native_timings
+    return timings
+
+
 def variant_profile(profile, **overrides):
     """A materially different deployment variant for comparison tests."""
     variant = json.loads(json.dumps(profile))
@@ -63,7 +77,7 @@ class RuntimePerformance(unittest.TestCase):
                                 'methodology': policy.METHODOLOGY_M2}
         profile['runtime']['engine']['name'] = engine
         profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
         fixture, tasks = perf.load_fixture()
         server = support.SyntheticEndpoint(
             tasks_by_id=tasks, payloads=payloads,
@@ -331,7 +345,7 @@ class RuntimePerformance(unittest.TestCase):
         profile['framework'] = {'version': policy.FRAMEWORK_M2,
                                 'methodology': policy.METHODOLOGY_M2}
         profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
         _, tasks = perf.load_fixture()
         profile['runtime']['engine']['name'] = 'llama.cpp'
         native = runner.request_body(profile, tasks['perf-short'])
@@ -508,6 +522,212 @@ class RuntimePerformance(unittest.TestCase):
         (path / 'gpu-after.json').write_text(json.dumps(foreign_only))
         self.assertEqual(policy.performance_gaps({'path': str(path)}, profile, task),
                          ['memory_consumption'])
+
+    # -- 13. native input/cache interpretation (native-input-cache-split/1) -
+    TOTAL_INPUT = {'prompt_tokens': 3659, 'completion_tokens': 47, 'total_tokens': 3706}
+
+    def uncached_row(self):
+        """Native no-reuse evidence: the interval IS the full prompt."""
+        return timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': 0, 'prompt_n': 3659},
+            native_timings={'prompt_n': 3659, 'predicted_n': 47, 'cache_n': 0,
+                            'prompt_per_second': 812.8, 'predicted_per_second': 55.6},
+            native_rate=(812.8, 55.6))
+
+    def cached_row(self):
+        """The measured Strata shape: 5 uncached of 3,659 total input tokens."""
+        return timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': 3654, 'prompt_n': 5},
+            native_timings={'prompt_n': 5, 'predicted_n': 47, 'cache_n': 3654,
+                            'prompt_per_second': 43.9, 'predicted_per_second': 55.6},
+            native_rate=(43.9, 55.6), ttft=0.0061, latency=0.8995)
+
+    def test_uncached_full_prompt_counts_are_compatible(self):
+        repeat = perf._repeat_measurement(self.uncached_row(), 'stop')
+        split = repeat['input_usage']
+        self.assertEqual(split['total_input_tokens'], 3659)
+        self.assertEqual(split['cache_n'], 0)
+        self.assertEqual(split['native_prompt_n'], 3659)
+        self.assertEqual(split['uncached_native_prompt_tokens'], 3659)
+        self.assertEqual(split['native_cache_state'], 'SPLIT')
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'full_prompt')
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['prompt_per_second'], round(3659 / 0.1364, 3))
+        self.assertEqual(wall['prompt_numerator_scope'], 'full_prompt')
+        self.assertIsNone(wall['prompt_estimate_basis'])
+
+    def test_cached_interval_is_never_a_full_prompt_rate(self):
+        repeat = perf._repeat_measurement(self.cached_row(), 'stop')
+        split = repeat['input_usage']
+        # total input usage, uncached native count and cache reuse stay distinct
+        self.assertEqual(split['total_input_tokens'], 3659)
+        self.assertEqual(split['native_prompt_n'], 5)
+        self.assertEqual(split['cache_n'], 3654)
+        self.assertEqual(split['uncached_native_prompt_tokens'], 5)
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'uncached_native_interval')
+        wall = repeat['observed_wall_clock']
+        # the estimate divides the five-token uncached interval by its window —
+        # never the 3,659-token total over that window (a giant fake rate)
+        self.assertEqual(wall['prompt_per_second'], round(5 / 0.0061, 3))
+        self.assertEqual(wall['prompt_numerator_scope'], 'uncached_native_interval')
+        self.assertLess(wall['prompt_per_second'], 3659 / 0.0061 / 2)
+        self.assertIsNone(wall['prompt_estimate_basis'])
+
+    def test_split_explained_prompt_difference_is_not_a_disagreement(self):
+        # native prompt_n=5 + cache_n=3654 == usage 3659: compatible quantities,
+        # both preserved verbatim, no manufactured finding
+        self.assertEqual(perf._metering_consistency([self.cached_row()]), [])
+        # an unexplained split is still a labeled finding, never reconciled
+        mismatched = timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': 100, 'prompt_n': 5},
+            native_timings={'prompt_n': 5, 'predicted_n': 47, 'cache_n': 100},
+            native_rate=None)
+        findings = perf._metering_consistency([mismatched])
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]['quantity'], 'input_tokens_split')
+        self.assertIn('prompt_n=5 + cache_n=100 != usage prompt_tokens=3659',
+                      findings[0]['finding'])
+        self.assertIn('never reconciled', findings[0]['resolution'])
+
+    def test_cache_unobserved_withholds_prompt_estimate_never_fabricates(self):
+        row = timing_row(usage=self.TOTAL_INPUT, cache_state='UNKNOWN',
+                         native_timings=None, native_rate=None)
+        repeat = perf._repeat_measurement(row, 'stop')
+        split = repeat['input_usage']
+        self.assertEqual(split['native_cache_state'], 'UNOBSERVED')
+        self.assertEqual(split['uncached_native_prompt_tokens'], 'UNKNOWN')
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'UNKNOWN')
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['prompt_per_second'], 'UNKNOWN')
+        self.assertIn('not a compatible full-prompt numerator',
+                      wall['prompt_estimate_basis'])
+        # inclusive completion over its own window stays computable
+        self.assertIsInstance(wall['generation_per_second'], float)
+
+    def test_partial_evidence_and_negative_counters_fail_closed(self):
+        prompt_only = timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': None, 'prompt_n': 3659},
+            native_timings={'prompt_n': 3659}, native_rate=None)
+        repeat = perf._repeat_measurement(prompt_only, 'stop')
+        self.assertEqual(repeat['input_usage']['native_cache_state'], 'PARTIAL')
+        self.assertEqual(repeat['input_usage']['cache_n'], 'UNKNOWN')
+        self.assertEqual(repeat['input_usage']['uncached_native_prompt_tokens'], 3659)
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'native_prompt_interval')
+        self.assertEqual(repeat['observed_wall_clock']['prompt_numerator_scope'],
+                         'native_prompt_interval')
+        negative = timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': -1, 'prompt_n': 3659},
+            native_timings={'prompt_n': 3659, 'cache_n': -1}, native_rate=None)
+        repeat = perf._repeat_measurement(negative, 'stop')
+        self.assertEqual(repeat['input_usage']['native_cache_state'], 'INCOHERENT')
+        self.assertEqual(repeat['input_usage']['uncached_native_prompt_tokens'],
+                         'UNKNOWN')
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'UNKNOWN')
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['prompt_per_second'], 'UNKNOWN')
+        self.assertIn('negative native counter', wall['prompt_estimate_basis'])
+        findings = perf._metering_consistency([negative])
+        self.assertEqual(findings[0]['quantity'], 'native_counters')
+        self.assertIn('cache_n=-1', findings[0]['finding'])
+
+    def test_unreconciled_split_withholds_derived_prompt_rates(self):
+        # counters that do not reconcile with the runtime's total input
+        # accounting (2 + 3654 != 3659): verbatim interval count retained,
+        # but no derived prompt rate is manufactured from the disputed shape
+        unreconciled = timing_row(
+            usage=self.TOTAL_INPUT,
+            cache_state={'cache_n': 3654, 'prompt_n': 2},
+            native_timings={'prompt_n': 2, 'predicted_n': 47, 'cache_n': 3654},
+            native_rate=None)
+        repeat = perf._repeat_measurement(unreconciled, 'stop')
+        self.assertEqual(repeat['input_usage']['native_cache_state'], 'SPLIT')
+        self.assertEqual(repeat['input_usage']['uncached_native_prompt_tokens'], 2)
+        self.assertEqual(repeat['native_tokens_per_second']['prompt_interval_scope'],
+                         'native_prompt_interval')
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['prompt_per_second'], 'UNKNOWN')
+        self.assertIn('does not reconcile', wall['prompt_estimate_basis'])
+        findings = perf._metering_consistency([unreconciled])
+        self.assertEqual(findings[0]['quantity'], 'input_tokens_split')
+        self.assertIn('prompt_n=2 + cache_n=3654 != usage prompt_tokens=3659',
+                      findings[0]['finding'])
+
+    def test_missing_counters_stay_unavailable_never_zero(self):
+        repeat = perf._repeat_measurement(
+            timing_row(usage=None, cache_state='UNKNOWN',
+                       native_timings=None, native_rate=None), 'stop')
+        split = repeat['input_usage']
+        self.assertEqual(split['total_input_tokens'], 'UNAVAILABLE')
+        self.assertEqual(split['cache_n'], 'UNKNOWN')
+        self.assertEqual(split['native_prompt_n'], 'UNKNOWN')
+        self.assertEqual(split['uncached_native_prompt_tokens'], 'UNKNOWN')
+        self.assertNotIn(0, split.values())
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['prompt_per_second'], 'UNKNOWN')
+        self.assertEqual(wall['generation_per_second'], 'UNKNOWN')
+
+    def test_reasoning_inclusive_usage_carried_and_scoped(self):
+        usage = {**self.TOTAL_INPUT,
+                 'completion_tokens_details': {'reasoning_tokens': 12}}
+        repeat = perf._repeat_measurement(
+            timing_row(usage=usage,
+                       cache_state={'cache_n': 0, 'prompt_n': 3659},
+                       native_timings={'prompt_n': 3659, 'predicted_n': 59,
+                                       'cache_n': 0}), 'stop')
+        # inclusive completion accounting verbatim; reasoning surfaced, not merged
+        self.assertEqual(repeat['usage']['completion_tokens'], 47)
+        self.assertEqual(repeat['reasoning_tokens'], 12)
+        wall = repeat['observed_wall_clock']
+        self.assertEqual(wall['completion_numerator_scope'], 'runtime_completion_tokens')
+        self.assertIn('inclusive', wall['completion_tokens_note'])
+        # predicted_n counts generated tokens including reasoning: 59 vs 47 is a
+        # same-quantity disagreement, labeled never reconciled
+        findings = perf._metering_consistency(
+            [timing_row(usage=usage, cache_state={'cache_n': 0, 'prompt_n': 3659},
+                        native_timings={'prompt_n': 3659, 'predicted_n': 59,
+                                        'cache_n': 0})])
+        self.assertEqual(findings[0]['quantity'], 'generated_tokens')
+        self.assertIn('predicted_n=59', findings[0]['finding'])
+
+    def test_reasoning_detail_absent_stays_unavailable(self):
+        repeat = perf._repeat_measurement(
+            timing_row(usage=dict(self.TOTAL_INPUT), cache_state='UNKNOWN',
+                       native_timings=None, native_rate=None), 'stop')
+        self.assertEqual(repeat['reasoning_tokens'], 'UNAVAILABLE')
+
+    def test_mixed_prompt_intervals_aggregate_per_scope_only(self):
+        repeats = [perf._repeat_measurement(self.cached_row(), 'stop') for _ in range(2)]
+        repeats.append(perf._repeat_measurement(self.uncached_row(), 'stop'))
+        aggregation = perf._aggregate(repeats)
+        # the mixed-interval aggregates are suppressed entirely
+        self.assertNotIn('native_tokens_per_second.prompt', aggregation)
+        self.assertNotIn('observed_wall_clock.prompt_per_second', aggregation)
+        by_scope = aggregation['native_tokens_per_second.prompt_by_scope']
+        self.assertEqual(sorted(by_scope),
+                         ['full_prompt', 'uncached_native_interval'])
+        self.assertEqual(by_scope['uncached_native_interval']['samples'], 2)
+        self.assertEqual(by_scope['uncached_native_interval']['min'], 43.9)
+        self.assertEqual(by_scope['full_prompt']['samples'], 1)
+        self.assertEqual(by_scope['full_prompt']['max'], 812.8)
+        wall_by_scope = aggregation['observed_wall_clock.prompt_per_second_by_scope']
+        self.assertEqual(sorted(wall_by_scope),
+                         ['full_prompt', 'uncached_native_interval'])
+        # uniform interval keeps the flat aggregate, now scoped
+        uniform = perf._aggregate(
+            [perf._repeat_measurement(self.cached_row(), 'stop')])
+        flat = uniform['native_tokens_per_second.prompt']
+        self.assertEqual(flat['scope'], 'uncached_native_interval')
+        self.assertEqual(flat['samples'], 1)
 
     # -- CLI registration --------------------------------------------------
     def test_cli_section_registered(self):

@@ -106,6 +106,17 @@ def plan(profile, part=None):
         policy.baseline_coverage(fixture, {}, profile)
         plan_value['inventory_ids'] = plan_value['unit_ids']
         plan_value['unit_ids'] = [task['id'] for task in applicable]
+        plan_value['coverage'] = {
+            'requirement': policy.coverage_requirement(profile),
+            'explicit': 'requirement' in (profile.get('coverage') or {}),
+            'required_units': plan_value['inventory_ids'],
+            'admitted_units': plan_value['unit_ids'],
+            'excluded_units': [{'unit_id': uid, 'reason': reason,
+                                'cause': policy.exclusion_cause(reason)}
+                               for uid, reason in sorted(excluded.items())],
+            'plan_complete': not excluded,
+            'required_baseline_satisfied': (
+                policy.coverage_requirement(profile) == 'full' and not excluded)}
         plan_value['planned_units'] = [
             {'unit_id': t['id'], 'category': t.get('category'),
              'max_tokens': policy.task_budget(profile, t)['max_tokens'],
@@ -116,6 +127,33 @@ def plan(profile, part=None):
     return plan_value
 
 
+def _require_full_coverage(profile, fixture, excluded):
+    """The explicit full-coverage precommitment (profile ``coverage.requirement:
+    "full"``): a required complete baseline fails BEFORE any scored request
+    when the plan excludes a required identity, or when the declared context
+    meter's retained evidence cannot cover every required context unit (SPEC
+    §10.1). Partial precommitment (or no field) keeps the historical behavior
+    and needs no approval workflow."""
+    if policy.coverage_requirement(profile) != 'full':
+        return
+    if excluded:
+        rows = ', '.join(f'{uid} ({reason})' for uid, reason in sorted(excluded.items()))
+        raise policy.CheckError(
+            'coverage.full: the profile requires the complete required baseline '
+            f'({len(fixture["tasks"])} identities) but the plan excludes '
+            f'{len(excluded)}: {rows}')
+    if policy.context_meter_declaration(profile) is None:
+        # No declared generic meter: the admitted inventory already covers the
+        # required context units through their own admission route (native
+        # llama.cpp /props or the synthetic software route). Those routes
+        # prove geometry FRESH before the first scored generation — the all-8
+        # pre-preparation in run() — so a declaration is not demanded here.
+        return
+    defects = policy.geometry_coverage_defects(profile, fixture)
+    if defects:
+        raise policy.CheckError('coverage.full: ' + '; '.join(defects))
+
+
 def initialize(profile, section, part=None):
     resolved = resolve_part(profile, part)
     fixture, m2 = load_inventory(profile)
@@ -123,6 +161,7 @@ def initialize(profile, section, part=None):
     if m2:
         applicable, excluded = m2_split(fixture, profile)
         policy.baseline_coverage(fixture, {}, profile)
+        _require_full_coverage(profile, fixture, excluded)
         unit_ids = [t['id'] for t in applicable]
     else:
         unit_ids = [t['id'] for t in fixture['tasks']]
@@ -149,6 +188,17 @@ def initialize(profile, section, part=None):
         if saved.get('part', default_part) != config['part']:
             raise policy.CheckError('recovery.part: changed; use a new authorized campaign, not resume')
         return saved
+    # NEW REAL_MODEL baseline dispatch requires the explicit coverage
+    # precommitment: the profile must declare full or partial BEFORE the run
+    # identity exists (fixed-before-output). Omitted fields keep defaulting
+    # (normalized partial) only for historical/software-test evidence, so
+    # frozen profiles reconstruct and old campaigns resume unchanged.
+    if profile.get('evidence_kind') == 'REAL_MODEL' and \
+            'requirement' not in (profile.get('coverage') or {}):
+        raise policy.CheckError(
+            'coverage.requirement: REAL_MODEL baseline dispatch requires an explicit '
+            'coverage.requirement precommitment ("full" or "partial"); the omitted '
+            'default is reserved for historical and software-test profiles')
     # An interruption during initialization is safely repeatable; snapshots are
     # published exclusively and checked before completing the initialization commit.
     if any(p.name not in ('fixture.json', 'profile.json') and not p.name.startswith('.pending-')
@@ -712,7 +762,7 @@ def _prepare_failure(profile, task, path, revision, admission, budget, exc):
     return False
 
 
-def execute(profile, task, path, revision, admission):
+def execute(profile, task, path, revision, admission, preprepared=None):
     m2 = policy.is_m2(profile)
     started = now()
     budget = policy.task_budget(profile, task)
@@ -723,8 +773,20 @@ def execute(profile, task, path, revision, admission):
     if m2:
         try:
             from . import baseline
-            prepared, evidence = baseline.prepare_task(profile, task)
-            baseline.validate_preparation(profile, task, prepared, evidence)
+            if preprepared is not None:
+                # Reuse the retained full-coverage pre-preparation receipt:
+                # the construction already passed its native geometry gates
+                # before dispatch; the offline validation re-derives every
+                # byte-identity here. No second construction, no second engine.
+                prepared = preprepared.get('prepared_task')
+                evidence = preprepared.get('construction_evidence')
+                if not isinstance(prepared, dict):
+                    raise policy.CheckError(
+                        f"unit {task['id']}: prepreparation receipt has no prepared task")
+                baseline.validate_preparation(profile, task, prepared, evidence)
+            else:
+                prepared, evidence = baseline.prepare_task(profile, task)
+                baseline.validate_preparation(profile, task, prepared, evidence)
             _reject_preloaded_answers(prepared)
             followups = _followups(prepared)
             repetitions = _repetitions(prepared)
@@ -1336,6 +1398,61 @@ def replay_attempt(profile, task, path):
 # Section driver
 
 
+def _meter_required(profile, task):
+    """True when this task is one of the pinned native context constructions."""
+    return policy.is_m2(profile) and 'context_meter' in (task.get('requires') or [])
+
+
+def _prepreparation_valid(receipt, uid, revision):
+    return (isinstance(receipt, dict) and receipt.get('unit_id') == uid
+            and receipt.get('profile_revision') == revision
+            and isinstance(receipt.get('prepared_task'), dict)
+            and receipt.get('prepared_sha256') == policy.digest(receipt['prepared_task']))
+
+
+def _preprepare_required_context(profile, section, tasks, pending, revision):
+    """Full-coverage precommitment: every required context construction passes
+    native geometry validation BEFORE the first scored generation, so a
+    failing construction can never surface only after earlier scored units.
+    Uses the qualified serving endpoint's metadata routes only (/apply-template
+    + /tokenize — no inference, no second engine). Receipts are retained per
+    CURRENT profile revision and reused verbatim by execute(); a compatible
+    incidental profile update (new revision, same scientific configuration)
+    preserves the old receipts and rebuilds the required geometry live before
+    the next scored generation instead of blocking recovery. An interruption
+    loses at most the in-flight construction."""
+    if policy.coverage_requirement(profile) != 'full':
+        return {}
+    from . import baseline
+    receipts = {}
+    root = Path(section) / 'prepreparation' / revision
+    for uid in pending:
+        task = tasks[uid]
+        if not _meter_required(profile, task):
+            continue
+        path = root / f'{uid}.json'
+        receipt = None
+        if path.exists():
+            candidate = store.read_json(path)
+            if _prepreparation_valid(candidate, uid, revision):
+                receipt = candidate
+            else:
+                raise policy.CheckError(
+                    f'coverage.full: retained prepreparation receipt for {uid} at the '
+                    'current profile revision is invalid; review the section evidence')
+        if receipt is None:
+            prepared, evidence = baseline.prepare_task(profile, task)
+            baseline.validate_preparation(profile, task, prepared, evidence)
+            _reject_preloaded_answers(prepared)
+            receipt = {'unit_id': uid, 'profile_revision': revision,
+                       'prepared_task': prepared,
+                       'construction_evidence': evidence,
+                       'prepared_sha256': policy.digest(prepared)}
+            store.put_json(path, receipt)
+        receipts[uid] = receipt
+    return receipts
+
+
 def run(profile, part=None):
     policy.validate_profile(profile)
     resolved = resolve_part(profile, part)
@@ -1374,6 +1491,9 @@ def run(profile, part=None):
             store.put_json(profile_file, profile)
         store.put_json(preflight_dir / ('preflight-' + uuid.uuid4().hex + '.json'), admission)
         tasks = {t['id']: t for t in store.read_json(section / 'fixture.json')['tasks']}
+        # Full-coverage precommitment: all required native context constructions
+        # pass here — BEFORE the first scored generation is dispatched.
+        preprepared = _preprepare_required_context(profile, section, tasks, pending, revision)
         interruption = None
         stop_requested = False
 
@@ -1394,7 +1514,8 @@ def run(profile, part=None):
                     path = store.new_attempt(section, uid, preparing=True)
                     store.append_event(section, {'event': 'PREPARING', 'unit_id': uid,
                                       'attempt_id': path.name, 'at': now()})
-                    fatal = execute(profile, tasks[uid], path, revision, admission)
+                    fatal = execute(profile, tasks[uid], path, revision, admission,
+                                    preprepared=preprepared.get(uid))
                     setup_failed = store.preparation_only(path)
                     store.append_event(section, {'event': 'PREPARATION_FAILED' if setup_failed else 'FINALIZED',
                                       'unit_id': uid, 'attempt_id': path.name, 'at': now()})

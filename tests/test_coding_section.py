@@ -7,6 +7,7 @@ evaluation is claimed or exercised.
 import copy
 import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from welp_next import coding, policy
@@ -66,7 +67,7 @@ class GateAndConfig(unittest.TestCase):
                                         'qualification_source': 'SOFTWARE_TEST',
                                         'isolation_approval': 'SOFTWARE_TEST'}
         self.profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
 
     def test_plan_requires_finalized_baseline_before_any_gate(self):
         with self.assertRaises(policy.CheckError):
@@ -112,7 +113,7 @@ class CodingSectionExecution(unittest.TestCase):
                                    'qualification_source': 'SOFTWARE_TEST',
                                    'isolation_approval': 'SOFTWARE_TEST'}
         profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
         fixture, tasks = coding.load_tasks()
         payloads = {uid: payload(content) for uid, content in {
             'advanced-module-01': GOOD_CODE['advanced-module-01'],
@@ -162,7 +163,7 @@ class CodingSectionExecution(unittest.TestCase):
                                    'qualification_source': 'SOFTWARE_TEST',
                                    'isolation_approval': 'SOFTWARE_TEST'}
         profile['sampling']['qualification_source'] = \
-            support.SUPPORT_PATH
+            str(Path(support.__file__).resolve())
         fixture, tasks = coding.load_tasks()
         wrong = GOOD_CODE['advanced-module-01'].replace('window<1', 'window<0')
         payloads = {uid: payload(content) for uid, content in {

@@ -17,7 +17,7 @@ from . import policy
 from .policy import CheckError, validate_profile
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_ROOT = PROJECT_ROOT.parent
+WORKSPACE_ROOT = Path(os.environ.get("WELP_WORKSPACE_ROOT", PROJECT_ROOT.parent / "local-llm"))
 GET_TIMEOUT_SECONDS = 10.0
 MAX_BODY_BYTES = 1 << 20
 USER_AGENT = f"{policy.FRAMEWORK} preflight"
@@ -50,6 +50,7 @@ def _fail_closed(evidence):
 
 def offline(profile):
     validate_profile(profile)
+    meter_defects = policy.meter_evidence_defects(profile)
     root = Path(profile["campaign_root"]).resolve()
     if profile["evidence_kind"] == "REAL_MODEL":
         expected = (WORKSPACE_ROOT / "research/model-evaluations" /
@@ -70,10 +71,16 @@ def offline(profile):
         "model_science_eligible": profile["evidence_kind"] == "REAL_MODEL",
         "contact": {"endpoint": False, "gpu": False},
         "checks": [_check("profile.schema", "PASS", {"scientific_configuration": policy.scientific_configuration(profile)}),
-                   _check("campaign.routing", "PASS" if routed and usable else "FAIL", {"campaign_root": str(root), "writable": usable})],
+                   _check("campaign.routing", "PASS" if routed and usable else "FAIL", {"campaign_root": str(root), "writable": usable}),
+                   _check("context.meter.evidence", "FAIL" if meter_defects else "PASS",
+                          {"defects": meter_defects,
+                           "declared": policy.context_meter_declaration(profile) is not None,
+                           "label": "retained qualification: hashed original witnesses and "
+                                    "geometry records verified offline; fresh runtime "
+                                    "admission still required online before dispatch"})],
         "supplied_conditions": {key: profile[key] for key in ("model", "runtime", "hardware", "deployment", "qualification", "environment") if key in profile},
         "provenance_authority": "operating agent; not independently rehashed or machine-attested by WELP"}
-    if not routed or not usable:
+    if not routed or not usable or meter_defects:
         _fail_closed(evidence)
     return evidence
 
@@ -134,7 +141,52 @@ def online(profile):
             raise _HttpFailure("endpoint.model", {"requested": model_id, "available": ids})
         raw = metadata(profile["runtime"]["serve"]["echo_path"])
         echo = {"admission_version": policy.ADMISSION_VERSION}
-        if profile["runtime"]["engine"]["name"] == "llama.cpp":
+        declaration = policy.context_meter_declaration(profile)
+        if declaration is not None:
+            # Generic qualified-meter route, ANY engine (declaration first, so
+            # even a declared llama.cpp deployment takes the model-native
+            # reasoning route instead of the historical <think> suffix probe).
+            # Fresh runtime admission: live meter probe plus LIVE REPLAY of
+            # every retained qualification witness through the same two native
+            # metadata routes — metadata only, no generation.
+            probe = {"messages": [{"role": "user", "content": "WELP preflight template rendering only."}],
+                     **profile["reasoning"]["controls"]}
+            rendered = metadata("/apply-template", probe)
+            tokens = metadata("/tokenize", {"content": rendered.get("prompt"), "add_special": True, "parse_special": True})
+            repeat = metadata("/apply-template", probe)
+            repeat_tokens = metadata("/tokenize", {"content": repeat.get("prompt"), "add_special": True, "parse_special": True})
+            replay = []
+            for witness in declaration.get("witnesses") or []:
+                name = witness.get("name")
+                try:
+                    body = json.loads(Path((witness.get("request") or {}).get("path", "")).read_bytes())
+                except (OSError, ValueError):
+                    raise _HttpFailure("meter.witness.request", {"witness": name})
+                if not isinstance(body, dict):
+                    raise _HttpFailure("meter.witness.request", {"witness": name})
+                witness_render = metadata("/apply-template", body)
+                witness_tokens = metadata("/tokenize", {"content": witness_render.get("prompt"), "add_special": True, "parse_special": True})
+                count = None
+                if isinstance(witness_tokens, dict) and isinstance(witness_tokens.get("tokens"), list):
+                    count = len(witness_tokens["tokens"])
+                replay.append({"name": name,
+                               "request_sha256": (witness.get("request") or {}).get("sha256"),
+                               "render_request": body,
+                               "render_response": witness_render,
+                               "tokenize_request": {"content": witness_render.get("prompt"), "add_special": True, "parse_special": True},
+                               "tokenize_response": witness_tokens,
+                               "live_tokens": count})
+            echo["configuration"] = raw
+            echo["meter_probe"] = {
+                "request": probe,
+                "render_response": rendered,
+                "tokenize_request": {"content": rendered.get("prompt"), "add_special": True, "parse_special": True},
+                "tokenize_response": tokens,
+                "repeat_render_response": repeat,
+                "repeat_tokenize_request": {"content": repeat.get("prompt"), "add_special": True, "parse_special": True},
+                "repeat_tokenize_response": repeat_tokens,
+                "witness_replay": replay}
+        elif profile["runtime"]["engine"]["name"] == "llama.cpp":
             probe = {"messages": [{"role": "user", "content": "WELP preflight template rendering only."}],
                      **profile["reasoning"]["controls"]}
             rendered = metadata("/apply-template", probe)

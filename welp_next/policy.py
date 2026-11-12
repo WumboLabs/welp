@@ -70,10 +70,30 @@ M1_SEED = 42
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOP_P = 0.95
 
-BACKENDS = ("CUDA", "HIP", "Vulkan")
+#: ``runtime.backend`` is a supplied deployment condition (SPEC §3.1/§3.2):
+#: the operating agent records the executed backend identity and WELP reports
+#: it verbatim. It is not an admission vocabulary — no enumeration here, only
+#: a nonempty recorded identity.
 MODEL_EVIDENCE_KINDS = ("REAL_MODEL", "SOFTWARE_TEST")
 EVIDENCE_KINDS = (*MODEL_EVIDENCE_KINDS, "TECHNICAL_DIAGNOSTIC", "CALIBRATION")
 REASONING_ARMS = ("ON", "OFF", "NOT_CONFIGURABLE")
+
+#: Explicit baseline-coverage precommitment carried in the profile under
+#: ``coverage.requirement``. ``full`` = the complete required baseline: the
+#: plan may exclude no required identity and the declared meter evidence must
+#: cover every required context unit BEFORE the first scored request (SPEC
+#: §10.1: all native constructions pass before scored inference). ``partial``
+#: keeps the historical pinned-exclusion behavior. Absent means ``partial``.
+COVERAGE_REQUIREMENTS = ("full", "partial")
+
+#: Generic qualified context-meter contract (any qualified engine; the native
+#: llama.cpp ``/props`` route keeps its own historical contract). A declared
+#: meter must expose the two native metadata routes — POST /apply-template
+#: and POST /tokenize with llama.cpp-compatible semantics — on the serving
+#: endpoint, bind hashed adapter/geometry/witness evidence files, and witness
+#: token counts against the ORIGINAL retained native responses.
+CONTEXT_METER_CONTRACT = "context-meter/1"
+METER_WITNESS_CLASSES = ("serialization", "literal_protection", "tool_continuation")
 
 #: Facet vocabularies (SPEC §5.1). Exactly these values, nothing else.
 EXECUTION_FACETS = ("VALID", "INVALID", "NOT_RUN")
@@ -225,7 +245,14 @@ def task_applicability(profile: dict, task: dict) -> tuple[bool, str]:
                       and profile["runtime"]["serve"]["echo_path"] == "/props")
             synthetic_meter = (profile.get("evidence_kind") == "SOFTWARE_TEST"
                                and capabilities.get("context_meter") is True)
-            if not native and not synthetic_meter:
+            # Generic qualified meter (context-meter/1): a user-authorized,
+            # engine-agnostic declaration. Admission here only recognizes the
+            # declaration; the binding verification is meter_evidence_defects
+            # (hashed witnesses vs original native responses) offline and the
+            # live render/tokenize probe in preflight.online — never the
+            # declaration alone and never an engine-name exception.
+            generic_meter = context_meter_declaration(profile) is not None
+            if not native and not synthetic_meter and not generic_meter:
                 return False, "INTEGRATION_BLOCKED: no rendered-token context meter"
         elif requirement == "sandbox":
             if (capabilities.get("sandbox") is not True
@@ -350,6 +377,299 @@ def baseline_coverage(fixture: dict, units: dict, profile: dict) -> dict:
     return {"status": overall, "categories": categories,
             "rule": "Every fixed applicable task identity; one result per identity, no duplicated credit",
             "classification": None, "advancement": "NOT_CALIBRATED"}
+
+
+# ---------------------------------------------------------------------------
+# Coverage precommitment and the generic qualified context meter
+
+
+def coverage_requirement(profile: dict) -> str:
+    """The profile's explicit baseline-coverage precommitment.
+
+    Absent (all historical profiles) means ``partial``: excluded identities
+    are pinned in the run identity exactly as before. ``full`` additionally
+    requires the complete required baseline before the first scored request.
+    """
+    requirement = (profile.get("coverage") or {}).get("requirement", "partial")
+    if requirement not in COVERAGE_REQUIREMENTS:
+        _fail("coverage.requirement", f"must be one of {COVERAGE_REQUIREMENTS}")
+    return requirement
+
+
+def exclusion_cause(reason: str) -> str:
+    """Precise plan cause for an excluded identity: an integration gap in the
+    qualified deployment, an unsupported model/runtime condition, or an
+    unclassified reason. Never silently merged."""
+    if isinstance(reason, str) and reason.startswith("INTEGRATION_BLOCKED"):
+        return "integration"
+    if isinstance(reason, str) and reason.startswith("UNSUPPORTED"):
+        return "unsupported"
+    return "unclassified"
+
+
+def context_meter_declaration(profile: dict) -> dict | None:
+    """The declared generic qualified context meter, or None. A legacy boolean
+    ``capabilities.context_meter`` is NOT a declaration: it keeps only its
+    historical native-llama.cpp / SOFTWARE_TEST meanings."""
+    declaration = (profile.get("capabilities") or {}).get("context_meter")
+    return declaration if isinstance(declaration, dict) else None
+
+
+def _validate_file_reference(value: Any, field: str) -> None:
+    ref = _mapping(value, field)
+    _abs_path(ref.get("path"), field + ".path")
+    _hex64(ref.get("sha256"), field + ".sha256")
+
+
+def _validate_meter_declaration(declaration: dict) -> None:
+    """Structural validation only (stable for historical reconstruction);
+    content verification runs at admission in meter_evidence_defects."""
+    if declaration.get("contract") != CONTEXT_METER_CONTRACT:
+        _fail("capabilities.context_meter.contract",
+              f"must be {CONTEXT_METER_CONTRACT!r}")
+    for key in ("adapter", "geometry_evidence"):
+        _validate_file_reference(declaration.get(key),
+                                 f"capabilities.context_meter.{key}")
+    witnesses = declaration.get("witnesses")
+    if not isinstance(witnesses, list) or not witnesses:
+        _fail("capabilities.context_meter.witnesses", "must be a nonempty list")
+    for index, witness in enumerate(witnesses):
+        field = f"capabilities.context_meter.witnesses[{index}]"
+        witness = _mapping(witness, field)
+        _nonempty_str(witness.get("name"), field + ".name")
+        if witness.get("class") not in METER_WITNESS_CLASSES:
+            _fail(field + ".class", f"must be one of {METER_WITNESS_CLASSES}")
+        _validate_file_reference(witness.get("request"), field + ".request")
+        _validate_file_reference(witness.get("response"), field + ".response")
+        _int_at_least(witness.get("meter_tokens"), 1, field + ".meter_tokens")
+
+
+def _meter_json(path: str) -> tuple[Any, str | None]:
+    try:
+        return json.loads(Path(path).read_bytes()), None
+    except (OSError, ValueError, UnicodeDecodeError) as exc:
+        return None, str(exc)
+
+
+def _meter_file_defects(reference: Any, name: str) -> list[str]:
+    """Hashed-evidence check: the declared file must exist and hash-match."""
+    if not isinstance(reference, dict):
+        return [f"meter.{name}.reference"]
+    path, sha = reference.get("path"), reference.get("sha256")
+    if not isinstance(path, str) or not path.strip() or not _HEX64.fullmatch(str(sha)):
+        return [f"meter.{name}.identity"]
+    try:
+        if file_sha(path) != sha:
+            return [f"meter.{name}.sha256"]
+    except (OSError, ValueError):
+        return [f"meter.{name}.unreadable"]
+    return []
+
+
+def _witness_native_prompt_tokens(raw: bytes) -> int | None:
+    """``usage.prompt_tokens`` from one ORIGINAL retained response body: a
+    JSON envelope, or an SSE stream whose frames carry usage (last wins)."""
+    def _from_usage(usage):
+        if isinstance(usage, dict) and _is_int(usage.get("prompt_tokens")) \
+                and usage["prompt_tokens"] > 0:
+            return usage["prompt_tokens"]
+        return None
+
+    try:
+        envelope = json.loads(raw)
+    except (ValueError, UnicodeDecodeError):
+        envelope = None
+    if isinstance(envelope, dict):
+        value = _from_usage(envelope.get("usage"))
+        if value is not None:
+            return value
+    value = None
+    for line in raw.splitlines():
+        if not line.startswith(b"data:"):
+            continue
+        payload = line[5:].strip()
+        if payload == b"[DONE]":
+            break
+        try:
+            frame = json.loads(payload)
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if isinstance(frame, dict):
+            candidate = _from_usage(frame.get("usage"))
+            if candidate is not None:
+                value = candidate
+    return value
+
+
+def meter_evidence_defects(profile: dict) -> list[str]:
+    """Offline verification of a declared generic context meter. Accepts no
+    asserted verdict: every declared file must exist and hash-match, each
+    witness's meter count must equal the native ``usage.prompt_tokens`` of
+    the SAME hashed original response, witness requests must carry the
+    profile's model/sampler/reasoning contract, and the geometry records must
+    be passed native constructions bound to this deployment's engine/artifact/
+    template identity. No endpoint contact; the live compatibility probe runs
+    in preflight.online."""
+    declaration = context_meter_declaration(profile)
+    if declaration is None:
+        return []
+    defects = []
+
+    def check(name, ok):
+        if not ok:
+            defects.append("meter." + name)
+
+    check("contract", declaration.get("contract") == CONTEXT_METER_CONTRACT)
+    for key in ("adapter", "geometry_evidence"):
+        defects.extend(_meter_file_defects(declaration.get(key), key))
+    witnesses = declaration.get("witnesses")
+    if not isinstance(witnesses, list) or not witnesses:
+        check("witnesses", False)
+        return defects
+    model_id = profile["runtime"]["serve"]["model_id"]
+    samplers = sampling_settings(profile)
+    controls = profile["reasoning"]["controls"]
+    classes = set()
+    for index, witness in enumerate(witnesses):
+        prefix = f"witness[{index}]"
+        if not isinstance(witness, dict):
+            check(prefix, False)
+            continue
+        if isinstance(witness.get("class"), str):
+            classes.add(witness["class"])
+        for key in ("request", "response"):
+            defects.extend(_meter_file_defects(witness.get(key), f"{prefix}.{key}"))
+        request, error = _meter_json(str((witness.get("request") or {}).get("path", "")))
+        if error is not None or not isinstance(request, dict):
+            check(prefix + ".request.body", False)
+        else:
+            check(prefix + ".request.model", request.get("model") == model_id)
+            for key, want in samplers.items():
+                if key in request:
+                    check(f"{prefix}.request.sampling.{key}", request[key] == want)
+            for key, want in controls.items():
+                check(f"{prefix}.request.control.{key}", request.get(key) == want)
+        response = witness.get("response")
+        if isinstance(response, dict):
+            try:
+                raw = Path(response["path"]).read_bytes()
+            except (OSError, ValueError):
+                raw = None
+            native_tokens = _witness_native_prompt_tokens(raw) if raw is not None else None
+            check(prefix + ".parity",
+                  native_tokens is not None
+                  and witness.get("meter_tokens") == native_tokens)
+        else:
+            check(prefix + ".response.reference", False)
+    check("witness.classes", {
+        # serialization + literal/control-token protection are mandatory for
+        # every qualified meter; the tool-continuation witness is required
+        # only when the qualified profile actually declares native tools.
+        "serialization", "literal_protection",
+        *({"tool_continuation"} if (profile.get("capabilities") or {}).get("native_tools") is True else set()),
+    } <= classes)
+    defects.extend(_geometry_rows_defects(profile, declaration))
+    return defects
+
+
+def _geometry_rows_defects(profile: dict, declaration: dict) -> list[str]:
+    """Every geometry record must be a passed native construction bound to
+    this deployment's engine/artifact/template identity."""
+    reference = declaration.get("geometry_evidence")
+    if not isinstance(reference, dict):
+        return ["meter.geometry.reference"]
+    rows, error = _meter_json(str(reference.get("path", "")))
+    if error is not None or not isinstance(rows, list) or not rows:
+        return ["meter.geometry.records"]
+    defects = []
+    engine = profile["runtime"]["engine"]
+    expected_meta = {
+        "engine": f"{engine['name']}/{engine['version']}",
+        "model_sha256": profile["model"]["artifact"]["sha256"],
+        "template_sha256": profile["model"]["tokenizer_chat_template"]["sha256"],
+    }
+    for index, row in enumerate(rows):
+        prefix = f"meter.geometry[{index}]"
+        if not isinstance(row, dict) or not isinstance(row.get("unit_id"), str):
+            defects.append(prefix + ".unit_id")
+            continue
+        evidence = row.get("evidence")
+        prepared = row.get("prepared")
+        construction = (prepared or {}).get("construction") if isinstance(prepared, dict) else None
+        meta = (evidence or {}).get("measure_meta") if isinstance(evidence, dict) else None
+        gates = (evidence or {}).get("gates") if isinstance(evidence, dict) else None
+        if not isinstance(evidence, dict) or evidence.get("kind") != "constructed_context":
+            defects.append(prefix + ".evidence")
+            continue
+        if not isinstance(construction, dict) or not isinstance(meta, dict):
+            defects.append(prefix + ".identity")
+            continue
+        for field, want in expected_meta.items():
+            if meta.get(field) != want:
+                defects.append(f"{prefix}.{field}")
+        rendered = evidence.get("rendered_tokens")
+        occupancy = evidence.get("occupancy_pct")
+        if (construction.get("rendered_tokens") != rendered
+                or not _is_int(rendered) or rendered <= 0
+                or not _is_num(occupancy) or not math.isfinite(occupancy)
+                or not 97.0 <= occupancy <= 100.0):
+            defects.append(prefix + ".occupancy")
+        if not ((gates or {}).get("occupancy") or {}).get("hard_pass") \
+                or not ((gates or {}).get("placement") or {}).get("pass"):
+            defects.append(prefix + ".gates")
+    return defects
+
+
+def geometry_coverage_defects(profile: dict, fixture: dict) -> list[str]:
+    """Bind the declared geometry evidence to THIS fixture's required context
+    units and re-validate each record with the unchanged M2 predicate
+    (baseline.validate_preparation): byte-exact reconstruction, geometry
+    re-derivation from the recorded token evidence, gates, and the retained
+    tokenizer identity bound to this deployment. Also checks the CURRENT
+    completion reserve against the qualified capacity for every recorded
+    construction. Offline; no endpoint. Without a declared meter there is
+    nothing to bind — an empty list lets the native/synthetic route prove
+    geometry live before the first scored generation."""
+    required = {task["id"]: task for task in fixture["tasks"]
+                if "context_meter" in (task.get("requires") or [])}
+    if not required:
+        return []
+    declaration = context_meter_declaration(profile)
+    if declaration is None:
+        return []
+    reference = declaration.get("geometry_evidence")
+    rows, error = _meter_json(str((reference or {}).get("path", ""))) \
+        if isinstance(reference, dict) else (None, "missing")
+    if error is not None or not isinstance(rows, list):
+        return ["meter.geometry.records"]
+    qualified = {}
+    for row in rows:
+        if isinstance(row, dict) and isinstance(row.get("unit_id"), str):
+            qualified.setdefault(row["unit_id"], row)
+    defects = []
+    from . import baseline
+    capacity = profile["runtime"]["context_capacity"]
+    for uid, task in sorted(required.items()):
+        row = qualified.get(uid)
+        if row is None:
+            defects.append(f"meter.geometry.coverage: {uid} has no qualified native construction")
+            continue
+        prepared = row.get("prepared")
+        evidence = row.get("evidence")
+        if not isinstance(prepared, dict) or not isinstance(evidence, dict):
+            defects.append(f"meter.geometry.coverage: {uid} record is incomplete")
+            continue
+        try:
+            baseline.validate_preparation(profile, task, prepared, evidence)
+        except CheckError as exc:
+            defects.append(f"meter.geometry.validation: {uid}: {exc}")
+            continue
+        rendered = evidence.get("rendered_tokens")
+        reserve = task_budget(profile, task)["max_tokens"]
+        if _is_int(rendered) and rendered + reserve > capacity:
+            defects.append(f"meter.geometry.capacity: {uid} rendered {rendered} plus "
+                           f"generation reserve {reserve} exceeds qualified capacity {capacity}")
+    return defects
 
 # ---------------------------------------------------------------------------
 # Profile validation (structural + internal-consistency, fail-closed)
@@ -645,9 +965,9 @@ def validate_profile(profile: dict) -> None:
     engine = _mapping(_need(profile, "runtime.engine"), "runtime.engine")
     _nonempty_str(engine.get("name"), "runtime.engine.name")
     _nonempty_str(engine.get("version"), "runtime.engine.version")
-    backend = _nonempty_str(_need(profile, "runtime.backend"), "runtime.backend")
-    if backend not in BACKENDS:
-        _fail("runtime.backend", f"must be one of {BACKENDS}")
+    # Supplied deployment condition, reported verbatim (SPEC §3.1); never an
+    # admission vocabulary. Only a nonempty recorded identity is required.
+    _nonempty_str(_need(profile, "runtime.backend"), "runtime.backend")
     _validate_serve(profile)
     _int_at_least(
         _need(profile, "runtime.context_capacity"), 1, "runtime.context_capacity"
@@ -686,6 +1006,21 @@ def validate_profile(profile: dict) -> None:
         )
 
     _validate_budgets(profile)
+
+    capabilities = profile.get("capabilities")
+    if capabilities is not None:
+        _mapping(capabilities, "capabilities")
+        meter = capabilities.get("context_meter")
+        if isinstance(meter, dict):
+            if evidence_kind != "REAL_MODEL":
+                _fail("capabilities.context_meter",
+                      "a declared generic context meter requires REAL_MODEL evidence")
+            _validate_meter_declaration(meter)
+    coverage = profile.get("coverage")
+    if coverage is not None:
+        _mapping(coverage, "coverage")
+        if coverage.get("requirement", "partial") not in COVERAGE_REQUIREMENTS:
+            _fail("coverage.requirement", f"must be one of {COVERAGE_REQUIREMENTS}")
 
 
 
@@ -753,8 +1088,9 @@ def scientific_configuration(profile: dict) -> dict:
 
     Full supplied profiles are retained separately. Paths, server incarnations,
     OS/build versions and transport binaries are not scientific identities.
-    The GPU backend (CUDA/HIP/Vulkan) is a supplied deployment condition per
-    SPEC §3.2 — it is recorded in the profile, bound into every attempt's
+    The GPU backend is a supplied deployment condition per
+    SPEC §3.2 (recorded verbatim, e.g. CUDA/HIP/Vulkan/CPU/Metal) — it is
+    recorded in the profile, bound into every attempt's
     profile-revision digest and reported in the conditions annex, but it is
     not one of §3.3's material scientific identities (artifact, template,
     reasoning, samplers, context, interfaces, budgets).
@@ -771,6 +1107,7 @@ def scientific_configuration(profile: dict) -> dict:
         "context_capacity": profile["runtime"]["context_capacity"],
         "context": profile["context"], "reasoning": profile["reasoning"],
         "sampling": sampling_settings(profile),
+        "coverage": {"requirement": coverage_requirement(profile)},
         "budgets": {key: budgets[key] for key in ("max_tokens", "timeout_seconds", "by_category") if key in budgets},
         "capabilities": profile.get("capabilities", {}),
     }
@@ -789,11 +1126,100 @@ def recorded_profile(config: dict, conditions: dict) -> dict:
     return profile
 
 
+def _generic_meter_defects(profile: dict, echo: object) -> list[str]:
+    """Generic qualified-meter route checks on the OBSERVED (or saved) echo.
+
+    Template-agnostic by contract: no reasoning markup is forced (model-native
+    reasoning representation is the qualification's business — the historical
+    llama.cpp ``<think>`` suffix checks stay untouched on their own route).
+    Verified here: the live adapter echo's retained NATIVE template identity,
+    the NATIVE context geometry, the probe echo identity, real token IDs,
+    render/tokenize determinism, and the LIVE REPLAY of every retained
+    qualification witness — each original witness request re-serialized
+    through the live meter must reproduce the count that the offline
+    verification bound to that request's original native response. The same
+    predicate runs at admission and offline finalization over the saved echo."""
+    defects = []
+
+    def check(name, ok):
+        if not ok:
+            defects.append("serve.meter." + name)
+
+    if not isinstance(echo, dict):
+        return ["serve.meter.body"]
+    configuration = echo.get("configuration")
+    probe = echo.get("meter_probe")
+    if not isinstance(configuration, dict) or not isinstance(probe, dict):
+        return ["serve.meter.observations.missing"]
+    native_props = configuration.get("native_props")
+    settings = (native_props or {}).get("default_generation_settings") if \
+        isinstance(native_props, dict) else None
+    check("template.identity", isinstance(native_props, dict)
+          and isinstance(native_props.get("chat_template"), str)
+          and hashlib.sha256(native_props["chat_template"].encode()).hexdigest() ==
+          profile["model"]["tokenizer_chat_template"]["sha256"])
+    check("context.geometry", isinstance(settings, dict)
+          and type(settings.get("n_ctx")) is int
+          and settings["n_ctx"] == profile["runtime"]["context_capacity"])
+    expected_request = {"messages": [{"role": "user",
+                                      "content": "WELP preflight template rendering only."}],
+                        **profile["reasoning"]["controls"]}
+    prompt = (probe.get("render_response") or {}).get("prompt")
+    tokens = (probe.get("tokenize_response") or {}).get("tokens")
+    check("render.echo", probe.get("request") == expected_request
+          and isinstance(prompt, str) and bool(prompt))
+    check("tokenize", isinstance(tokens, list) and bool(tokens)
+          and all(type(token) is int for token in tokens)
+          and probe.get("tokenize_request") == {"content": prompt,
+                                                "add_special": True, "parse_special": True})
+    repeat_prompt = (probe.get("repeat_render_response") or {}).get("prompt")
+    repeat_tokens = (probe.get("repeat_tokenize_response") or {}).get("tokens")
+    check("determinism", probe.get("repeat_render_response") is not None
+          and probe.get("repeat_tokenize_response") is not None
+          and repeat_prompt == prompt and repeat_tokens == tokens)
+    witnesses = (context_meter_declaration(profile) or {}).get("witnesses") or []
+    replay = probe.get("witness_replay")
+    check("witness.replay", isinstance(replay, list) and len(replay) == len(witnesses))
+    if isinstance(replay, list):
+        declared = {w.get("name"): w for w in witnesses if isinstance(w, dict)}
+        seen = set()
+        for row in replay:
+            if not isinstance(row, dict):
+                check("witness.replay.row", False)
+                continue
+            name = row.get("name") if isinstance(row.get("name"), str) else None
+            seen.add(name)
+            witness = declared.get(name)
+            row_prompt = (row.get("render_response") or {}).get("prompt")
+            row_tokens = (row.get("tokenize_response") or {}).get("tokens")
+            check(f"witness.replay.{name}", witness is not None
+                  and row.get("request_sha256") == (witness.get("request") or {}).get("sha256")
+                  and isinstance(row_prompt, str) and bool(row_prompt)
+                  and isinstance(row_tokens, list) and bool(row_tokens)
+                  and all(type(token) is int for token in row_tokens)
+                  and row.get("tokenize_request") == {"content": row_prompt,
+                                                      "add_special": True, "parse_special": True}
+                  and row.get("live_tokens") == witness.get("meter_tokens"))
+        check("witness.replay.names", seen == set(declared))
+    return defects
+
+
 def protocol_defects(profile: dict, echo: object) -> list[str]:
     """Scientific endpoint checks only; never claim independent GPU attestation."""
     if not isinstance(echo, dict) or echo.get("admission_version") != ADMISSION_VERSION:
         return ["serve.protocol.observation"]
     native = profile["runtime"]["engine"]["name"] == "llama.cpp"
+    if context_meter_declaration(profile) is not None:
+        # Declared generic qualified meter: this route applies to ANY engine
+        # (llama.cpp included when the operator declares a meter) and checks
+        # model-native reasoning representation — no forced markup.
+        observed = echo.get("configuration")
+        expected = expected_echo(profile)
+        keys = ("artifact_sha256", "sampling", "reasoning", "context_capacity")
+        defects = ["serve.echo." + key for key in keys
+                   if not isinstance(observed, dict) or observed.get(key) != expected[key]]
+        defects.extend(_generic_meter_defects(profile, echo))
+        return defects
     if not native:
         observed = echo.get("configuration")
         expected = expected_echo(profile)

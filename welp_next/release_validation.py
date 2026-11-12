@@ -80,7 +80,12 @@ def validate_section(campaign_root, section):
                 fixture = _read(fixture_file)
                 if section == 'helicopterbench':
                     from . import helicopterbench
-                    pinned, tasks = helicopterbench.load_fixture()
+                    # Version-specific pinned fixture: frozen /1-/2 fixture
+                    # for the accepted /2 methodology, v3 fixture for the
+                    # prospective /3 methodology (original /1 /2 evidence
+                    # and reconstruction unaffected).
+                    pinned, tasks = helicopterbench.load_fixture(
+                        config.get('methodology'))
                     if policy.digest(fixture) != policy.digest(pinned):
                         raise policy.CheckError('validation.helicopterbench: changed fixture')
                     task = tasks.get(uid)
@@ -104,17 +109,57 @@ def validate_section(campaign_root, section):
         result['units_replayed'] = len(units)
         result['replay_failures'] = replay_failures
         result['verified'] = not replay_failures
-    if (section == 'helicopterbench'
-            and result.get('methodology') == 'helicopterbench/2'
-            and _read(target / 'extraction.json').get('artifact_sha256') is not None):
-        from .scorers import helicopterbench as heli
-        recorded_score = _read(target / 'heli-score.json')
-        verification = _read(target / 'heli-verification.json')
-        expected = heli.rubric_score(verification)
-        if any(recorded_score.get(key) != expected.get(key)
-               for key in ('final_score', 'mechanical_points', 'mechanical_max', 'class', 'categories')):
-            result['replay_failures'].append('helicopterbench: objective score reconstruction mismatch')
-            result['verified'] = False
+    if section == 'helicopterbench' \
+            and result.get('methodology') in ('helicopterbench/2',
+                                              'helicopterbench/3'):
+        # Version-specific offline score reconstruction: the frozen /2
+        # scorer for accepted /2 campaigns, the native 100-point /3 scorer
+        # for prospective /3 campaigns. /1 evidence is never rescored.
+        # /3 reconstructs ONLY an actually gameplay-scored completed
+        # submission: a truncated reply can carry an extractable artifact
+        # SHA with gameplay_scored=False — that is evidence, never a score.
+        extraction = _read(target / 'extraction.json')
+        if result['methodology'] == 'helicopterbench/2':
+            from .scorers import helicopterbench as heli
+            reconstructable = extraction.get('artifact_sha256') is not None
+        else:
+            from .scorers import helicopterbench_v3 as heli
+            reconstructable = (extraction.get('artifact_sha256') is not None
+                               and extraction.get('gameplay_scored') is True)
+        if reconstructable:
+            recorded_score = _read(target / 'heli-score.json')
+            verification = _read(target / 'heli-verification.json')
+            expected = heli.rubric_score(verification)
+            if any(recorded_score.get(key) != expected.get(key)
+                   for key in ('final_score', 'mechanical_points', 'mechanical_max', 'class', 'categories')):
+                result['replay_failures'].append('helicopterbench: objective score reconstruction mismatch')
+                result['verified'] = False
+    if section == 'helicopterbench' \
+            and result.get('methodology') == 'helicopterbench/3':
+        # Exact v3 human-playtesting sidecar: verify its binding against the
+        # finalized evidence and expose the reconciliation gate. The sidecar
+        # lives outside the section manifest and never alters it.
+        from . import heli_review
+        review = heli_review.status(campaign_root)
+        result['human_review'] = {
+            key: review[key] for key in ('state', 'reconciled', 'reviewer',
+                                         'earned_points', 'final_points',
+                                         'max', 'answered', 'total_items',
+                                         'unresolved_items', 'open_disputes',
+                                         'reconciled_disputes',
+                                         'stale_reconciliations',
+                                         'review_sha256',
+                                         'reconciliation_sha256',
+                                         'human_review_sha256')}
+        if review['review_sha256'] is not None:
+            try:
+                heli_review.binding(campaign_root)  # exact binding check
+                review_summary = heli_review.safe_summary(campaign_root)
+                result['human_review']['artifact_sha256'] = \
+                    review_summary['artifact_sha256']
+            except policy.CheckError as exc:
+                result['replay_failures'].append(f'helicopterbench: {exc}')
+                result['verified'] = False
     return result
 
 

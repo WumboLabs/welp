@@ -34,10 +34,6 @@ from welp_next import policy, scoring  # noqa: E402  (contract interfaces, setup
 MODEL_ID = 'synthetic-echo'
 ECHO_PATH = '/echo'
 API_BASE = '/v1'
-# Absolute path recorded as a sampling/budget qualification_source that
-# documents a SOFTWARE_TEST deviation; resolved at runtime so the suite is
-# checkout-location independent.
-SUPPORT_PATH = str(Path(__file__).resolve())
 TEMP_ROOT = PROJECT_ROOT / 'tmp' / 'm1-consumer-tests'
 
 

@@ -8,6 +8,7 @@ and human-directed/EXPLORATORY preserves the standard eligibility result.
 """
 import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from welp_next import advancement, long_context, policy, reporting, store
@@ -35,7 +36,7 @@ def make_profile(workdir, campaign, server_url=None, capacity=16384):
                                'qualification_source': 'SOFTWARE_TEST',
                                'isolation_approval': 'SOFTWARE_TEST'}
     profile['sampling']['qualification_source'] = \
-        support.SUPPORT_PATH
+        str(Path(support.__file__).resolve())
     return profile
 
 

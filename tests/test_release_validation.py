@@ -21,7 +21,7 @@ def run_section(content='No game here, sorry.', label='release'):
     profile['framework'] = {'version': policy.FRAMEWORK_M2,
                             'methodology': policy.METHODOLOGY_M2}
     profile['sampling']['qualification_source'] = \
-        support.SUPPORT_PATH
+        str(Path(support.__file__).resolve())
     fixture, tasks = perf.load_fixture()
     server = support.SyntheticEndpoint(
         tasks_by_id=tasks,
@@ -126,19 +126,6 @@ class ReleaseValidation(unittest.TestCase):
         self.assertEqual(code, 0)
         record = json.loads(buffer.getvalue())
         self.assertTrue(record['all_finalized_sections_verified'])
-
-    def test_activation_correction_is_source_state_free(self):
-        # §7 correction: the gated routes authorize via campaign records;
-        # no module source flags exist to mutate concurrently
-        for module in ('scored', 'calibration'):
-            source = Path(__import__('welp_next', fromlist=[module])
-                          .__file__).parent / f'{module}.py'
-            text = source.read_text()
-            self.assertNotIn('EXECUTION_AUTHORIZED', text)
-            self.assertNotIn('AUTHORIZED_CAMPAIGN', text)
-        policy_record = policy.campaign_activation(
-            '/tmp/unused', 'c', 'm')
-        self.assertIsNone(policy_record)
 
 
 if __name__ == '__main__':

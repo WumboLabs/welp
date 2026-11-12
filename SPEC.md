@@ -1,10 +1,14 @@
 # WELP — Successor Design Specification
 
-**Status: WELP v1.0 released — owner HUMAN_ACCEPTED 2026-11-11.**
+**Status: WELP v1.1.0 source release (2026-11-11) — carries the owner-accepted
+v1.1 corrections and the prospective HelicopterBench /3 rubric; the accepted
+v1.0 scientific evidence, methodology pins and the published `v1.0.0` tag
+remain unchanged.**
 Licensed under Apache License, Version 2.0 (see `LICENSE`).
-Public availability of v1.0 is established by ordinary promotion of this
-source through the repository's `main` history (no history rewrite); the
-pre-v1.0 public snapshot remains a discoverable historical reference.
+Public availability is established by ordinary promotion of this source
+through the repository's `main` history (no history rewrite); the published
+`v1.0.0` tag and the pre-v1.0 public snapshot remain discoverable historical
+references. No new model campaign is authorized by this source release.
 
 This is the authoritative, implementation-ready specification for WELP. It
 consolidates the operator's established redesign decisions into one coherent
@@ -112,7 +116,7 @@ actually consume.
 | `model.artifact` | Path, format, revision/quantization and SHA-256 provenance | Agent-established identity recorded; no repeated weight hashing |
 | `model.tokenizer_chat_template` | Native template source and SHA-256 | Native endpoint template agrees; local source is not rehashed at every launch |
 | `runtime.engine` | Engine name and supplied build/version | Protocol compatibility checked; actual endpoint build recorded, not historically pinned |
-| `runtime.backend` | CUDA / HIP / Vulkan execution condition | Supplied by the operating agent, not inferred from local device paths |
+| `runtime.backend` | Supplied execution backend (for example CUDA / HIP / Vulkan / CPU / Metal) | Recorded condition, not a vendor-name admission whitelist |
 | `runtime.serve` | Endpoint, requested model ID and metadata path | Current API/model/configuration compatibility; command/digest/PID optional metadata |
 | `runtime.context_capacity` | Configured context capacity (tokens) | Native settings agree; input plus completion reserve must fit |
 | `reasoning.arm` | `ON` / `OFF` / `NOT_CONFIGURABLE` (+ control settings) | Server echo agrees |
@@ -167,6 +171,41 @@ changes cannot silently mix. Source attribution is a readable implementation/met
 version, not a launch-time hash of every helper. Frozen tasks/oracles and finalized
 evidence retain their integrity checks. Archived admission predicates remain only
 for reconstructing original sealed observations under their recorded contract.
+
+### 3.4 Qualified native context admission and required baseline coverage
+
+Prospective context admission is capability-based, not engine-name-based.
+Retain qualified native llama.cpp paths. Another runtime may use the same
+profile/admission machinery when original qualification evidence binds:
+native request serialization for the actual model; native token counting of
+that serialization; tokenizer/template identity; exact request controls and
+compatible response handling; configured context capacity; prompt occupancy
+plus fixed generation reserve; and original evidence/provenance. A bare
+`context_meter=true`, asserted pass flag or runtime brand is insufficient.
+Wrong/missing tokenizer evidence or incompatible geometry is an integration
+failure before scored inference, never evidence of semantic model incapability.
+
+Offline admission validates qualification identity, original witnesses and
+geometry; online admission still verifies current native metadata and compatible
+request handling. Retained qualification is not fresh operating/resource
+permission. Archived profiles without the new contract retain their original
+admission interpretation and exclusions for reconstruction; no original
+inventory is silently expanded or resumed.
+
+A complete-baseline assignment must explicitly precommit required coverage.
+Pre-dispatch output names required and admitted identities, exact exclusions
+and reasons, separating integration blocks from unsupported model/profile
+capabilities. If explicitly required identities cannot be admitted, scored
+dispatch fails before its first generation, including native construction and
+reserve admission for required context identities. Explicitly precommitted
+partial/exploratory coverage remains legitimate and is labeled as such; it
+does not become complete Model/Core coverage or acquire missing observations.
+No second approval workflow is introduced.
+New REAL_MODEL baseline dispatch must declare `coverage.requirement` as `full`
+or `partial`; omission is not a new partial-execution precommitment.
+Historical omitted profiles retain their recorded reconstruction semantics.
+The normalized coverage requirement is a material recovery condition and
+cannot be loosened after outputs.
 
 `deployment-diagnostic/1` with `TECHNICAL_DIAGNOSTIC` is a separate, non-scored
 technical section using the existing five commands, HTTP client, append-only
@@ -747,6 +786,67 @@ integrity hold; the frozen fixture is byte-identical to the accepted
 precommitment sha. Full regression suite: **293/293 PASS** (historical
 289/289 baseline preserved and not rerun).
 
+### 4.11.1 Prospective HelicopterBench /3 — owner-approved 2026-11-11
+
+`helicopterbench/3` is a separately versioned prospective methodology. It
+scores the generated game, not the operating agent's playing skill. Keep the
+one-shot generation, original HTML, fixed budgets, independent browser inputs
+and mechanical observations. Do not change the /1 or /2 fixture, score an old
+campaign as /3, or infer human answers from historical screenshots/video.
+The first official /3 result requires a new, separately authorized evaluation.
+
+The same fixed Yes/No weights apply independently to automated mechanical
+verification and human playtesting:
+
+| Category (20 points each) | Human question | Points |
+|---|---|---:|
+| Launch and rendering | Does the game start without crashing? | 8 |
+| Launch and rendering | Does the game display its playing area? | 6 |
+| Launch and rendering | Does the game visibly animate? | 6 |
+| Controls and physics | Does holding the control make the helicopter rise? | 7 |
+| Controls and physics | Does releasing the control make it descend? | 7 |
+| Controls and physics | Does the helicopter respond consistently to input? | 6 |
+| Obstacles and collisions | Do obstacles appear? | 7 |
+| Obstacles and collisions | Do obstacles move toward the helicopter? | 6 |
+| Obstacles and collisions | Can hitting an obstacle end the game? | 7 |
+| Scoring, game over and restart | Does the score increase during gameplay? | 10 |
+| Scoring, game over and restart | Does a game-over message or screen appear? | 5 |
+| Scoring, game over and restart | Can the player restart after losing? | 5 |
+| Difficulty progression | Does the game become harder over time? | 10 |
+| Difficulty progression | Does the game speed up as play progresses? | 10 |
+| **Total** | **14 questions** | **100** |
+
+Yes earns the question's full weight; No earns zero. Unanswered, uncertain or
+disputed human observations are unresolved, not No. A running earned-points
+display is not a finalized human score. All questions must be answered and
+material disputes reconciled before human-score finalization and scientific
+acceptance. Numeric control-state checks may need supplementary mechanical
+evidence; accessible human wording does not weaken the behavior being tested.
+
+Human review binds the exact original artifact SHA-256, attributed reviewer,
+individual answers and resulting total. Preserve original automated observations
+and their independent /100 score alongside the human /100 score. Never average
+them, replace one with the other, allow the tested model to score itself, or
+allow an operating agent to invent a human's answers. Every material difference
+requires an explicit attributed review with evidence/rationale; unknowns stay
+visible. A review sidecar cannot silently rewrite a finalized automated section.
+Scientific acceptance must bind the exact reconciled human review as well as
+the original automated section manifest. No /90 normalization applies to /3.
+
+Human playtesting uses a small local checklist and safely isolated execution of
+the exact game, without a hosted application, persistent service or database.
+The prepared ordinary-browser document is checklist-only and cannot execute the
+game. Actual play launches both checklist and game inside a disposable
+network-isolated bubblewrap namespace; CSP alone cannot block all WebRTC
+exfiltration. Only a fresh browser profile and session review-export directory
+are writable. Interactive display uses a narrow Wayland socket, never an X11
+fallback; missing isolation/display prerequisites fail closed.
+It must prevent the untrusted game from changing checklist answers or accessing
+private host/browser resources. Independently scripted verification remains the
+existing disposable browser boundary; it awards behavior, not successful input
+delivery alone. A separately labeled exploratory review of a historical game is
+not an official /3 campaign result.
+
 ### 4.12 Runtime Performance section — 2026-11-08
 
 **Purpose:** answer "how efficiently does this particular qualified model
@@ -833,6 +933,41 @@ measurement-validity finding attributed to the runtime/interface — never
 silently reconciled by WELP. A WELP-side counting or timing defect fails
 offline replay validation (an evidence-integrity problem, never a scored
 outcome).
+
+**Prospective correction — 2026-11-11, `native-input-cache-split/1`:**
+the supported native timing envelope's `prompt_n` is the prompt-processing
+interval count; `cache_n` is an independent reuse count. Neither is the other's
+subset. Compare `prompt_n + cache_n` with total `usage.prompt_tokens` when both
+native counts are reported; do not subtract the cache twice or compare an
+uncached count directly with total input. Retain usage detail blocks and
+reasoning-inclusive completion usage; compare `predicted_n` only with the
+compatible inclusive completion quantity. Missing optional counters remain
+UNAVAILABLE/UNKNOWN, not zero. Other native counter semantics require an
+appropriately qualified adapter, not an engine-name exception.
+
+Native prompt rates and wall-clock estimates identify their interval scope.
+Use total input over TTFT only with observed no-reuse evidence and no
+contradicting count; otherwise use the compatible processed-interval numerator
+or withhold the estimate. A five-token cache-hit interval cannot establish
+full-prompt throughput. Negative or unexplained incompatible counters remain
+unresolved findings and do not produce a derived prompt rate. Mixed cached
+and full-prompt intervals aggregate separately by scope, never into a misleading
+full-prompt median. Native engine rates are never replaced by these derivatives.
+
+This interpretation is source/version-attributed in prospective workload and
+section summaries, not written into original attempt observations. Manifest-
+verified historical reports keep their original metering findings
+and formulas; current-rule analysis of retained observations is separately
+labeled DERIVED, not a new measurement or retroactive correction.
+
+Optional AMD boundary collection uses the existing deployment observation argv
+contract via `python -m welp_next.observe_amd`. The installed `amd-smi` adapter
+selects the declared PCI device, validates device identity and native units,
+retains native whole-MB figures and records the verified binary-unit conversion.
+Reported bytes therefore have whole-MiB granularity, not byte precision.
+Missing/error/foreign-device data remains UNAVAILABLE. Device-wide boundary
+samples are neither model-process allocations nor true peaks; no monitoring
+service or inference permission is introduced.
 
 **Comparison semantics (corrected 2026-11-08, before any authentic
 generation):** `compare_profiles` classifies from recorded attribution
@@ -1171,6 +1306,10 @@ calibration, this spec does not invent values; see §12.
 
 Successor campaigns live under the established research tree, per the
 existing routing policy: `research/model-evaluations/<model-key>/campaign-groups/<campaign-id>/`.
+The evidence umbrella root defaults to the source checkout's sibling
+`local-llm/` and is selected explicitly with the `WELP_WORKSPACE_ROOT`
+environment variable; it is never the source directory itself, and the
+required routing under the selected root is still enforced.
 Campaign identity records the successor framework + methodology pin
 (distinguishing successor records from historical staged layouts, which
 remain verbatim).
@@ -1199,11 +1338,13 @@ remain verbatim).
   (`COMPLETED_PARTIAL`), and indeterminate adjudications are reported as
   first-class findings.
 
-### 9.3 WumboLabs.dev publication (required at final project closeout; deferred from early implementation)
+### 9.3 WumboLabs.dev publication
 
-Website integration was deferred from early implementation, authorized offline
-with staged verification on 2026-11-11, and accepted with the v1.0 release.
-At closeout it must:
+Website integration was accepted with the v1.0 release and remains in force.
+Standing sequence: Evaluation → evidence verification → scientific
+review → HUMAN_ACCEPTED → automatic public-safe publication. No separate
+campaign publication approval follows acceptance. New inference remains
+separately gated.
 
 - Automatically publish finalized, validated findings — never present
   preliminary measurements as final results.
@@ -1223,16 +1364,29 @@ established publication contract (`docs/publication.md` in this release,
 adapted from the archived legacy contract) governs the mechanics. Nothing in the evaluation core depends
 on publication at run time.
 
-The offline `python -m welp_next.publication CAMPAIGN DEST` adapter and existing
-website registry consumer preserve configuration-specific section outcomes and
-manifest/profile provenance. Export retains existing visibility dispositions;
-held records cannot enter the website consumer. Staged verification does not
-grant public visibility, fabricate immutable citations or authorize deployment.
-Staged export/website verification completed before release. A separately
-recorded, evidence-bound HUMAN_ACCEPTED review receipt (`welp-scientific-acceptance/1`)
-admits routine public-safe closeout without another approval; it cannot
-override the holds above and is documented in `docs/publication.md`. The final
-v1.0 release was accepted by the owner on 2026-11-11.
+The offline `python -m welp_next.publication CAMPAIGN DEST` adapter retains
+existing visibility by default. After a genuine human scientific decision,
+`--acceptance` and `--review-source` bind an external receipt to the exact
+finalized manifests and original decision-source hash. This creates a
+public-safe WEBSITE_READY overlay, never a rewrite of original campaign
+evidence or a Boolean approval bypass. Explicit privacy/scope holds require
+correction. Unresolved review, failed integrity, unsafe content and technical
+INVALID coverage stop promotion; genuine FAILs and budget limits do not.
+
+Excluded or non-evaluable identities have technically valid export rows even
+when no effective score exists. Retain exact task identity, frozen exclusion
+reason, technical applicability, coverage impact, attempted/not-attempted and
+original outcome when present; never invent a score or substitute zero.
+An honest partial export does not satisfy required baseline coverage or remove
+scientific-acceptance/publication holds.
+
+Publish event files to `WumboLabs/evaluations`, cite their actual full commit/path
+in the central registry, pin the pushed registry commit/hash in the website,
+sync and validate, deploy through existing Cloudflare Pages, verify actual URLs
+and close with those URLs. Never fabricate future commits. Event-specific verified
+H.264 MP4 gameplay is carried when available, supplementary to objective scoring;
+otherwise record the reason, never substitute footage or conflate /1 with /2.
+Nothing in the evaluation core depends on publication at run time.
 
 ## 10. Agentic scientific rules and calibration (M3) — 2026-10-22
 
@@ -1740,6 +1894,17 @@ the owner on 2026-11-11; the earlier historical-manifest discrepancies were
 resolved by authorized evidence-preserving relocation of unsealed companion
 files, with original manifests and scientific results unchanged.
 
+2026-11-11 v1.1.0 source release: the owner accepted the prospective
+portability corrections — capability-based native context admission and
+explicit full-inventory pre-dispatch enforcement (§3.4), backend-name
+neutrality (§3.1), excluded-identity export rows (§9.3), cache-aware native
+timing interpretation and optional device-wide AMD boundary observations
+(§4.12), the portable `WELP_WORKSPACE_ROOT` deployment root (§9.1) and the
+prospective `helicopterbench/3` rubric with independent attributed human
+review (§4.11.1). No new campaign ran and no accepted v1.0 evidence,
+methodology pin or published result changed; the first official /3 result
+still requires separate prospective authorization.
+
 ## 12. Open calibration items (bounded future work — no values invented here)
 
 1. **Advanced-section eligibility:** §10's diagnostic `capability-witness/2`
@@ -1764,7 +1929,8 @@ files, with original manifests and scientific results unchanged.
 
 ---
 
-*This specification is released with WELP v1.0 (Apache License 2.0). Dated
+*This specification is released with WELP v1.1.0 (Apache License 2.0),
+carrying the accepted v1.0 scientific record unchanged. Dated
 milestone assignments, historical campaign narratives and internal workspace
 reports referenced by earlier drafts are not part of this public
 specification; the methodology, accepted limits and their provenance above

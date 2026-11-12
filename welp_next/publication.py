@@ -29,6 +29,48 @@ def public_safe(value):
         raise policy.CheckError('publication.public_safety: private value requires operator review')
 
 
+def _unit_rows(config, units, resolved):
+    """Public outcome rows, including identities without an effective score.
+
+    Applicability comes from the frozen inventory, not current runtime support.
+    No missing or excluded identity acquires a numeric score.
+    """
+    excluded = config.get('excluded_units') or {}
+    rows = []
+    for uid in sorted(set(config['unit_ids']) | set(excluded) | set(resolved)):
+        result = resolved.get(uid)
+        attempts = units.get(uid, [])
+        original = policy.resolved_attempt(attempts)
+        reason = excluded.get(uid)
+        applicable = uid not in excluded
+        applicability = ('APPLICABLE' if applicable else
+                         'INTEGRATION_BLOCKED' if reason.startswith('INTEGRATION_BLOCKED:')
+                         else 'UNSUPPORTED' if reason.startswith('UNSUPPORTED:')
+                         else 'EXCLUDED')
+        facets = ({k: result.get(k) for k in FACETS} if result is not None else
+                  {**policy.derive_outcome('NOT_RUN', 'NOT_APPLICABLE',
+                                          'NOT_APPLICABLE', 'NONE'),
+                   'reason': reason or 'No finalized measurement'})
+        attempted = any(
+            any(Path(attempt['path']).glob('generation-*-intent.json'))
+            or ((Path(attempt['path']) / 'response.raw').exists()
+                and not (Path(attempt['path']) / 'trial-boundary.json').exists())
+            for attempt in attempts)
+        impact = ('EXCLUDED_NO_MEASUREMENT' if not applicable else
+                  'NO_FINALIZED_MEASUREMENT' if result is None else
+                  'INVALID_MEASUREMENT' if result.get('execution') != 'VALID' else
+                  'VALID_UNSCORED_MEASUREMENT' if result.get('scoring') not in
+                  ('SCORED_PASS', 'SCORED_FAIL') else 'MEASURED_AND_SCORED')
+        rows.append({'unit_id': uid, **facets,
+                     'technical_applicability': applicability,
+                     'exclusion_reason': reason, 'coverage_impact': impact,
+                     'attempted': attempted, 'recorded_attempts': len(attempts),
+                     'original_outcome': original.get('outcome') if original else None,
+                     'original_result': ({k: original.get(k) for k in FACETS}
+                                         if original else None)})
+    return rows
+
+
 def export_campaign(campaign):
     campaign = Path(campaign)
     validated = release_validation.validate_campaign(campaign)
@@ -45,15 +87,13 @@ def export_campaign(campaign):
         config, units = store.inventory(section)
         profile = config['profile']
         profiles[profile['profile_id']] = profile
-        rows = []
         model = None
         if section.name == 'baseline':
             _, model = reporting.finalized_model_evidence(section)
             resolved = model['effective_scores']
         else:
             resolved = {uid: policy.resolved_attempt(attempts) for uid, attempts in units.items()}
-        for uid, result in sorted(resolved.items()):
-            rows.append({'unit_id': uid, **{k: result.get(k) for k in FACETS}})
+        rows = _unit_rows(config, units, resolved)
         item = {'section': section.name, 'profile_id': profile['profile_id'],
                 'profile_revision': config['profile_revision'],
                 'methodology': config.get('methodology') or profile['framework']['methodology'],
@@ -71,9 +111,14 @@ def export_campaign(campaign):
         path = section / 'heli-score.json'
         if path.exists():
             item['objective_benchmark'] = store.read_json(path)
+        if item['methodology'] == 'helicopterbench/3':
+            from . import heli_review
+            item['human_benchmark_review'] = heli_review.safe_summary(campaign)
         if section.name == 'runtime-performance':
             observations = []
             for uid, result in resolved.items():
+                if result is None:
+                    continue
                 path = Path(result['path'])
                 for sample in sorted(path.glob('*conditions.json')):
                     conditions = store.read_json(sample)
@@ -171,6 +216,32 @@ def accepted_export(export, acceptance, review_source):
     require(all(not any(u.get(k) == 'INVALID' for k in ('outcome', 'execution'))
                 for s in sections for u in s['units']),
             'unresolved technical INVALID coverage requires correction')
+    human_review_sha = None
+    for section in sections:
+        if section.get('methodology') != 'helicopterbench/3':
+            continue
+        human = section.get('human_benchmark_review')
+        if isinstance(human, dict) and human.get('state') == 'NOT_APPLICABLE_NO_SUBMISSION':
+            objective = section.get('objective_benchmark') or {}
+            require(human.get('artifact_sha256') is None
+                    and objective.get('final_score') is None
+                    and objective.get('mechanical_points') is None
+                    and objective.get('categories') is None,
+                    'no-submission disposition cannot conceal a scored game')
+            continue
+        require(isinstance(human, dict) and human.get('state') == 'FINALIZED',
+                'HelicopterBench /3 requires a completed attributed human review')
+        require(human.get('unresolved_items') == []
+                and human.get('open_disputes') == [],
+                'HelicopterBench /3 material questions/disagreements remain unresolved')
+        require(type(human.get('final_points')) is int and 0 <= human['final_points'] <= 100,
+                'HelicopterBench /3 human score is not finalized')
+        human_review_sha = human.get('human_review_sha256')
+        require(isinstance(human_review_sha, str)
+                and re.fullmatch(r'[0-9a-f]{64}', human_review_sha),
+                'HelicopterBench /3 exact human-review identity required')
+        require(acceptance.get('helicopterbench_human_review_sha256') == human_review_sha,
+                'acceptance does not bind the exact reconciled human review')
     # Existing explicit privacy/scope holds cannot disappear through acceptance.
     require(export['disposition'] != 'WEBSITE_BLOCKED',
             'resolve the exceptional website hold before closeout')
@@ -181,6 +252,8 @@ def accepted_export(export, acceptance, review_source):
     receipt = {k: acceptance[k] for k in (
         'schema', 'decision', 'campaign_id', 'reviewed_at', 'basis',
         'review_source_sha256', 'section_manifests')}
+    if human_review_sha is not None:
+        receipt['helicopterbench_human_review_sha256'] = human_review_sha
     public_safe(receipt)
     result = dict(export, disposition='WEBSITE_READY',
                   scientific_acceptance=receipt,

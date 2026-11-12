@@ -67,6 +67,64 @@ class ScientificAcceptance(unittest.TestCase):
         with self.assertRaises(policy.CheckError):
             publication.accepted_export(self.export, receipt, self.source)
 
+    def helicopter_v3(self):
+        export = copy.deepcopy(self.export)
+        section = export['welp_sections'][0]
+        section.update(section='helicopterbench', methodology='helicopterbench/3',
+                       objective_benchmark={'final_score': 25, 'mechanical_max': 100},
+                       human_benchmark_review={
+                           'state': 'FINALIZED', 'final_points': 86,
+                           'human_review_sha256': 'c' * 64,
+                           'unresolved_items': [], 'open_disputes': []})
+        receipt = dict(self.receipt, section_manifests={'helicopterbench': 'a' * 64},
+                       helicopterbench_human_review_sha256='c' * 64)
+        return export, receipt
+
+    def test_v3_acceptance_binds_human_review_without_replacing_automation(self):
+        export, receipt = self.helicopter_v3()
+        result = publication.accepted_export(export, receipt, self.source)
+        section, = result['welp_sections']
+        self.assertEqual(section['objective_benchmark']['final_score'], 25)
+        self.assertEqual(section['human_benchmark_review']['final_points'], 86)
+        self.assertEqual(result['scientific_acceptance']['helicopterbench_human_review_sha256'],
+                         'c' * 64)
+        self.assertEqual(export['disposition'], 'NOT_FOR_PUBLICATION')
+        with self.assertRaisesRegex(policy.CheckError, 'exact reconciled human review'):
+            publication.accepted_export(export, dict(receipt,
+                helicopterbench_human_review_sha256='d' * 64), self.source)
+
+    def test_v3_missing_unanswered_disputed_or_nonfinal_review_cannot_publish(self):
+        for update in ({'state': 'DRAFT'}, {'final_points': None},
+                       {'unresolved_items': ['input_causes_ascent']},
+                       {'open_disputes': ['score_accrues']},
+                       {'human_review_sha256': None}):
+            export, receipt = self.helicopter_v3()
+            export['welp_sections'][0]['human_benchmark_review'].update(update)
+            with self.subTest(update=update), self.assertRaises(policy.CheckError):
+                publication.accepted_export(export, receipt, self.source)
+        export, receipt = self.helicopter_v3()
+        del export['welp_sections'][0]['human_benchmark_review']
+        with self.assertRaisesRegex(policy.CheckError, 'human review'):
+            publication.accepted_export(export, receipt, self.source)
+
+    def test_v3_no_submission_has_no_invented_human_or_gameplay_score(self):
+        export, receipt = self.helicopter_v3()
+        section = export['welp_sections'][0]
+        section['objective_benchmark'] = {
+            'final_score': None, 'mechanical_points': None, 'categories': None,
+            'generation_outcome': 'NOT_EVALUABLE', 'generation_reason': 'BUDGET_LIMITED'}
+        section['human_benchmark_review'] = {
+            'state': 'NOT_APPLICABLE_NO_SUBMISSION', 'artifact_sha256': None,
+            'final_points': None}
+        receipt.pop('helicopterbench_human_review_sha256')
+        accepted = publication.accepted_export(export, receipt, self.source)
+        self.assertIsNone(accepted['welp_sections'][0]['objective_benchmark']['final_score'])
+        self.assertIsNone(accepted['welp_sections'][0]['human_benchmark_review']['final_points'])
+        self.assertNotIn('helicopterbench_human_review_sha256', accepted['scientific_acceptance'])
+        section['human_benchmark_review']['artifact_sha256'] = 'd' * 64
+        with self.assertRaisesRegex(policy.CheckError, 'conceal a scored game'):
+            publication.accepted_export(export, receipt, self.source)
+
 
 if __name__ == '__main__':
     unittest.main()

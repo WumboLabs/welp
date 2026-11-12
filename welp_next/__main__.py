@@ -34,6 +34,11 @@ def parser():
             sub.add_argument('--campaign', required=True, type=Path)
         if name == 'resume':
             sub.add_argument('--profile', type=Path, help='current compatible deployment conditions')
+        if name in ('plan', 'run', 'resume'):
+            sub.add_argument('--methodology', default=None,
+                             choices=['helicopterbench/3'],
+                             help='select the prospective helicopterbench/3 '
+                                  'methodology; helicopterbench section only')
         if name in ('run', 'resume'):
             sub.add_argument('--prepare', action='store_true', help='arm the next calibration preparation clock; no generation')
         sub.add_argument('--section', choices=['baseline', 'diagnostic', 'calibration',
@@ -57,12 +62,45 @@ def parser():
         if name == 'report':
             sub.add_argument('--reviews', type=Path, default=None,
                              help='optional recorded review records for section finalization')
+    heli_review_cli = commands.add_parser(
+        'heli-review',
+        description='HelicopterBench /3 independent human playtesting '
+                    'review (local self-contained surface; never alters '
+                    'finalized automated evidence)')
+    heli_review_cli.add_argument('--campaign', required=True, type=Path)
+    heli_review_cli.add_argument('action',
+                                 choices=('status', 'prepare', 'play', 'import',
+                                          'reconcile'))
+    heli_review_cli.add_argument('--review', type=Path, default=None,
+                                 help='saved reviewer file for import')
+    heli_review_cli.add_argument('--reconciliation', type=Path, default=None,
+                                 help='reconciliation record file to append')
+    heli_review_cli.add_argument('--browser', default=None,
+                                 help='browser binary for the play session')
+    heli_review_cli.add_argument('--timeout', type=float, default=3600.0,
+                                 help='hard wall-clock bound for the play session')
+    heli_review_cli.add_argument('--headless', action='store_true',
+                                 help='SOFTWARE_TEST launch check without a display')
+    heli_review_cli.add_argument('--json', action='store_true',
+                                 help='compact machine-readable JSON')
     return cli
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if getattr(args, 'methodology', None) \
+                and getattr(args, 'section', None) != 'helicopterbench':
+            raise policy.CheckError(
+                'methodology.scope: --methodology selects the prospective '
+                'helicopterbench/3 rubric and is valid only with --section '
+                'helicopterbench')
+        if args.command == 'heli-review':
+            from . import heli_review
+            value = heli_review.cli(args)
+            print(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                             indent=None if args.json else 2))
+            return 0
         if args.command == 'validate':
             from . import release_validation
             value = release_validation.release_readiness(
@@ -123,15 +161,21 @@ def main(argv=None):
                     or getattr(args, 'reviews', None)
                     or getattr(args, 'scored', False)):
                 raise policy.CheckError(f'{scope}: no offline, calibration, advancement or review inputs')
+            selection = ({'methodology': args.methodology}
+                         if getattr(args, 'methodology', None) else None)
             if args.command == 'plan':
-                value = section.plan(preflight.load_profile(args.profile))
+                value = section.plan(preflight.load_profile(args.profile), selection)
             elif args.command == 'run':
-                value = section.run(preflight.load_profile(args.profile))
+                value = section.run(preflight.load_profile(args.profile), selection)
             elif args.command == 'status':
                 value = section.status(args.campaign)
             elif args.command == 'resume':
-                value = section.resume(args.campaign,
-                                       preflight.load_profile(args.profile) if args.profile else None)
+                profile = (preflight.load_profile(args.profile)
+                           if args.profile else None)
+                if args.section == 'helicopterbench':
+                    value = section.resume(args.campaign, profile, selection)
+                else:
+                    value = section.resume(args.campaign, profile)
             else:
                 value = section.report_section(args.campaign)
             print(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=None if args.json else 2))
