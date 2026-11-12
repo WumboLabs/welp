@@ -104,6 +104,7 @@ def export_campaign(campaign):
             item['advancement'] = {k: config['gate'].get(k) for k in ('decision',)}
         if model is not None:
             item['coverage'] = model['coverage']
+            item['coverage_requirement'] = policy.coverage_requirement(profile)
             item['performance_observations'] = [
                 {k: row[k] for k in ('unit_id', 'sample', 'elapsed_seconds', 'timings')}
                 for row in model['performance'] if row['category'] == 'performance']
@@ -124,6 +125,9 @@ def export_campaign(campaign):
                     conditions = store.read_json(sample)
                     observations.append({'unit_id': uid, 'timings': conditions.get('timings')})
             item['performance_observations'] = observations
+            summary = store.read_json(section / 'performance-summary.json')
+            item['performance_summary'] = {k: summary[k] for k in (
+                'overall', 'workloads', 'timing_interpretation') if k in summary}
         sections.append(item)
     first = next(iter(profiles.values()))
     artifact = first['model']['artifact']
@@ -155,13 +159,16 @@ def export_campaign(campaign):
         'reason': visibility.get('reason') or 'Existing campaign visibility retained; export does not authorize publication.',
         'model': {'display_name': identity['model_id']},
         'artifact': {'tested': identity['model_id'], 'precision': artifact.get('quantization', 'UNKNOWN'),
-                     'format': artifact['format'], 'revision': artifact['revision'], 'sha256': artifact['sha256']},
+                     'format': artifact['format'], 'revision': artifact['revision'], 'sha256': artifact['sha256'],
+                     'shards': [{k: shard[k] for k in ('bytes', 'sha256')}
+                                for shard in artifact.get('shards', [])]},
         'runtime': {'engine': first['runtime']['engine']['name'],
                     'version': first['runtime']['engine']['version'], 'backend': first['runtime']['backend']},
         'hardware': {'gpu': first.get('hardware', {}).get('device', {}).get('name', 'UNKNOWN')},
         'welp': {'outcome': 'Finalized independent section findings',
                  'classification': classification or 'NOT_ASSIGNED', 'snapshot': first['framework']['methodology']},
-        'context': {'practical_default_tokens': first['context']['target'], 'envelope_complete': False,
+        'context': {'practical_default_tokens': None, 'envelope_complete': False,
+                    'configured_capacity_tokens': first['runtime']['context_capacity'],
                     'native_maximum_disposition': 'NOT_CLAIMED'},
         'quality': {'constrained_result': 'See configuration-specific section findings; no composite model score.',
                     'capability_highlights': [s['section'] + ': ' + str(len(s['units'])) + ' recorded identities' for s in sections],
@@ -174,11 +181,28 @@ def export_campaign(campaign):
             'profile_id': p['profile_id'], 'artifact_sha256': p['model']['artifact']['sha256'],
             'framework': p['framework'], 'runtime': {'engine': p['runtime']['engine']['name'],
                 'version': p['runtime']['engine']['version'], 'backend': p['runtime']['backend']},
+                'serve_model_id': p['runtime']['serve']['model_id'],
             'context_capacity': p['runtime']['context_capacity'], 'reasoning': p['reasoning'],
             'sampling': {k: v for k, v in p['sampling'].items() if k != 'qualification_source'},
             'template_sha256': p['model']['tokenizer_chat_template']['sha256']}
             for p in profiles.values()],
         'public_summary': 'Finalized configuration-specific WELP sections with original negative and limited outcomes retained. No composite model score, public release or operational activation is implied.'}
+    decisions = []
+    for path in sorted((campaign / 'decisions').glob('*.json')):
+        from . import m3
+        saved = store.read_json(path)
+        reconstructed = m3.decisions(campaign, saved['inputs'])
+        if saved != reconstructed:
+            raise policy.CheckError('publication.advancement: decision does not reproduce')
+        decisions.append({
+            'decision_sha256': saved['decision_sha256'],
+            'source_sha256': policy.file_sha(path),
+            'methodology': saved['methodology'],
+            'decisions': {name: {k: row.get(k) for k in (
+                'decision', 'standard_eligibility', 'reason', 'scheduling')}
+                for name, row in saved['decisions']['result']['decisions'].items()}})
+    if decisions:
+        result['capability_advancement'] = decisions
     public_safe(result)
     return result
 
@@ -207,12 +231,54 @@ def accepted_export(export, acceptance, review_source):
             'scientific acceptance basis required')
     require(acceptance.get('review_source_sha256') == policy.file_sha(review_source),
             'original human decision source mismatch')
-    sections = export.get('welp_sections') or []
+    original_sections = export.get('welp_sections') or []
+    manifests = acceptance.get('section_manifests')
+    require(isinstance(manifests, dict) and manifests,
+            'review must identify the accepted finalized sections')
+    available = {s['section']: s for s in original_sections}
+    require(len(available) == len(original_sections)
+            and set(manifests) <= set(available),
+            'review names unknown or duplicate sections')
+    require(all(manifests[name] == available[name]['manifest_sha256']
+                for name in manifests),
+            'review does not cover the exact finalized sections')
+    exclusions = acceptance.get('excluded_sections', {})
+    require(isinstance(exclusions, dict)
+            and set(exclusions) == set(available) - set(manifests),
+            'every omitted section requires an explicit owner deferral')
+    optional = {'coding', 'advanced-reasoning', 'advanced-long-context',
+                'advanced-tool-use', 'agentic-readiness', 'agentic',
+                'helicopterbench'}
+    excluded_sections = []
+    for name, decision in exclusions.items():
+        require(name in optional, 'mandatory baseline/performance cannot be omitted')
+        require(isinstance(decision, dict)
+                and set(decision) == {'manifest_sha256', 'status', 'reason'}
+                and decision['manifest_sha256'] == available[name]['manifest_sha256']
+                and decision['status'] == 'DEFERRED_BY_OWNER'
+                and isinstance(decision['reason'], str) and decision['reason'].strip(),
+                'owner deferral must bind the original manifest and public-safe basis')
+        item = {k: available[name][k] for k in (
+            'section', 'methodology', 'profile_id', 'profile_revision',
+            'manifest_sha256', 'report_sha256') if k in available[name]}
+        excluded_sections.append(dict(item, **decision, accepted=False))
+    sections = [s for s in original_sections if s['section'] in manifests]
     require(sections and all(s.get('evidence_kind') == 'REAL_MODEL' for s in sections),
             'only actual model findings can enter public scientific closeout')
-    manifests = {s['section']: s['manifest_sha256'] for s in sections}
-    require(acceptance.get('section_manifests') == manifests,
-            'review does not cover the exact finalized sections')
+    for section in sections:
+        if section['section'] != 'baseline':
+            continue
+        coverage = section.get('coverage') or {}
+        categories = coverage.get('categories') or {}
+        require(coverage.get('status') in (
+                    'COMPLETE', 'COMPLETE_WITH_DOCUMENTED_LIMITATIONS')
+                and categories
+                and all(not row.get('missing') and not row.get('indeterminate')
+                        for row in categories.values()),
+                'incomplete or unresolved mandatory baseline evidence')
+        require(section.get('coverage_requirement') != 'full'
+                or all(not row.get('excluded') for row in categories.values()),
+                'required full baseline coverage is incomplete')
     require(all(not any(u.get(k) == 'INVALID' for k in ('outcome', 'execution'))
                 for s in sections for u in s['units']),
             'unresolved technical INVALID coverage requires correction')
@@ -254,10 +320,24 @@ def accepted_export(export, acceptance, review_source):
         'review_source_sha256', 'section_manifests')}
     if human_review_sha is not None:
         receipt['helicopterbench_human_review_sha256'] = human_review_sha
+    if exclusions:
+        receipt['excluded_sections'] = exclusions
     public_safe(receipt)
     result = dict(export, disposition='WEBSITE_READY',
                   scientific_acceptance=receipt,
                   reason='HUMAN_ACCEPTED scientific review; routine public-safe publication is standing-authorized.')
+    if exclusions:
+        result['welp_sections'] = sections
+        result['excluded_sections'] = excluded_sections
+        result['acceptance_scope'] = 'SELECTED_SECTIONS_ONLY'
+        result['quality'] = dict(export.get('quality') or {},
+            capability_highlights=[s['section'] + ': ' + str(len(s['units']))
+                                   + ' recorded identities' for s in sections])
+        result['public_summary'] = (
+            'Only the explicitly accepted independent sections are public findings. '
+            'Owner-deferred sections retain historical manifest attribution, '
+            'not accepted scores. Original negative and limited outcomes remain.')
+        public_safe(result)
     return result
 
 

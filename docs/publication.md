@@ -47,8 +47,19 @@ publication, with no second approval.**
    `python3 -m welp_next validate --campaign CAMPAIGN` exits 0. Then export:
    `python3 -m welp_next.publication CAMPAIGN DEST` produces the canonical
    `wumbolabs-labs-publication/1` envelope with independent `welp_sections`
-   and `profile_conditions` facets. The export requires an existing
-   disposition in `summaries/website-publication.json` and retains it:
+   and `profile_conditions` facets. The export keeps every finalized section,
+   and validation covers all original manifests. Section facets retain the
+   original runtime performance summary (`overall`, `workloads`,
+   `timing_interpretation`: native/cache timing distinctions, missing metrics
+   and memory limits as recorded), artifact shard `bytes`/`sha256`
+   provenance, `serve_model_id` in `profile_conditions`, and
+   `capability_advancement` decisions reconstructed from the exact original
+   saved decision inputs (a decision that does not reproduce fails the
+   export closed). Configured context is `context.configured_capacity_tokens`,
+   not a validated practical default; `practical_default_tokens` stays null
+   without a separate supported practical-profile finding. Bounded context
+   task results retain their original measured geometry. The export requires
+   an existing disposition in `summaries/website-publication.json` and retains it:
    `WEBSITE_READY`, `WEBSITE_PUBLISHED`, `WEBSITE_BLOCKED`, or
    `NOT_FOR_PUBLICATION`. Unreviewed exports stay at
    `PENDING_HUMAN_GATE` evidence state and cannot invent a public citation.
@@ -68,7 +79,18 @@ publication, with no second approval.**
    - `review_source_sha256`: SHA-256 of the private original decision source,
      bound by hash. Source bytes are never exported;
    - `section_manifests`: `{section: manifest_sha256}` covering exactly the
-     export's finalized sections.
+     accepted section subset; every named hash must equal the export's
+     finalized-section manifest hash.
+   - Optional `excluded_sections`: when the owner defers optional specialist
+     sections from this acceptance, every omitted finalized section appears
+     here, mapped to `{manifest_sha256, status: "DEFERRED_BY_OWNER",
+     reason}`, meaning the original manifest hash plus a non-empty, public-safe,
+     owner-directed basis. Only optional specialist sections may be
+     excluded; `baseline` and `runtime-performance` cannot be omitted when
+     present, and required baseline dependencies remain verified in place.
+     A receipt without this key keeps the
+     historical full-scope meaning: `section_manifests` must then cover
+     every finalized section.
    - For `helicopterbench/3` only, `helicopterbench_human_review_sha256`: the
      exact completed, reconciled human-review sidecar digest. This additional
      binding prevents replacing a review while retaining the same automated
@@ -77,17 +99,36 @@ publication, with no second approval.**
    `--acceptance RECEIPT.json --review-source DECISION_SOURCE`. The module
    binds the decision to the evidence and fails closed unless: the receipt is
    a recognized `HUMAN_ACCEPTED` receipt for this campaign with a valid date
-   and non-empty basis; the decision source hash matches; every section is
-   `REAL_MODEL` (only actual model findings enter public closeout); the
-   receipt's section manifests equal the export's manifest hashes; no unit
-   carries an unresolved technical `INVALID` outcome; and the export passes
-   the public-safety scan. There is no approval flag: a plain export of a
+   and non-empty basis; the decision source hash matches; every accepted
+   section is `REAL_MODEL` (only actual model findings enter public
+   closeout); the receipt's section manifests equal the accepted sections'
+   manifest hashes, with every omitted finalized section carrying an
+   explicit owner deferral; no unit carries an unresolved technical
+   `INVALID` outcome; and the export passes the public-safety scan.
+   Acceptance covers exactly the receipt's `section_manifests` subset. The
+   accepted overlay `welp_sections` then contains only accepted sections;
+   when exclusions exist it is marked `acceptance_scope: "SELECTED_SECTIONS_ONLY"`, and
+   each accepted section keeps every original row including FAILs; deferred
+   sections move to an `excluded_sections` facet retaining section,
+   methodology, profile/manifest and report provenance, `accepted: false`
+   and the deferral reason: never scores, and never a reclassification of the
+   original outcomes (a deferral is owner scheduling, not FAIL/INVALID/
+   NOT_RUN). Exclusions never bypass validation: the export still verifies
+   every original manifest, and accepted findings additionally require
+   complete mandatory baseline coverage: no missing or indeterminate
+   category, and no excluded identities when the precommitted requirement
+   is `full`; a historical legitimate partial baseline stays partial and is
+   never presented as complete. An accepted `helicopterbench/3` section
+   keeps the attributed-human-review binding below; a deferred section
+   keeps its recorded state.
+   There is no approval flag: a plain export of a
    held or unreviewed campaign can never publish. Existing explicit holds do
    not disappear through acceptance — `WEBSITE_BLOCKED` requires resolving
    the exceptional website hold first. Only the default NOT_FOR_PUBLICATION
    development hold may advance through acceptance; an explicit nonpublication
    reason requires separate correction. An accepted export gains disposition
-   `WEBSITE_READY` with the embedded `scientific_acceptance` receipt and
+   `WEBSITE_READY` with the embedded `scientific_acceptance` receipt (which
+   carries any `excluded_sections` deferral records) and
    reason "HUMAN_ACCEPTED scientific review; routine public-safe publication
    is standing-authorized."
    HelicopterBench /3 additionally requires the separately attributed human review

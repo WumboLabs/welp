@@ -1,6 +1,6 @@
 {
   "schema": "welp-public-source-manifest/1",
-  "release": "WELP v1.1.0",
+  "release": "WELP v1.1.1",
   "scientific_acceptance_date": "2026-11-11",
   "legacy_reference_commit": "228dfe6cd0785470d7e4f778f0e3f08ca413bbc7",
   "license": "Apache-2.0",
@@ -25,21 +25,21 @@
     },
     {
       "path": "README.md",
-      "bytes": 11862,
+      "bytes": 13287,
       "mode": 420,
-      "sha256": "ce926aa3266fb6e65344d5365c0961f21ed1d38a6ca33c5342234be00b59de98"
+      "sha256": "3ae28872856f28b61fa298322f06c56d2f8cd6f2f3cf5312ee4ad1034507f294"
     },
     {
       "path": "SPEC.md",
-      "bytes": 130179,
+      "bytes": 132712,
       "mode": 420,
-      "sha256": "8d3c57cc404fe260f04a4c986a4e5da410d956da39e18f03655f70ed4d7dfeb3"
+      "sha256": "b7a3456461927d2bf21602bfbc54b9a5828240c3dc34dbbad1a18651faffd61d"
     },
     {
       "path": "docs/publication.md",
-      "bytes": 9897,
+      "bytes": 12760,
       "mode": 420,
-      "sha256": "e4cf7da46a700a5bc53134492eb6684dd49a0326764eeccbd5de79d7572fc361"
+      "sha256": "6ed631f823cacc49caa22f4d3083a0099d0eaf30d728707889cfe6bfd804cc4e"
     },
     {
       "path": "docs/release-validation.md",
@@ -829,15 +829,15 @@
     },
     {
       "path": "tests/test_publication_acceptance.py",
-      "bytes": 7535,
+      "bytes": 13374,
       "mode": 420,
-      "sha256": "9e1a65022676853623cec9d71b6d6997ab76dbdeedc167a9f58589256b1e7a24"
+      "sha256": "96697fa9f97116db95b4a1dd54cfa2815b56438f83ca9f0e17cf46002afdc53d"
     },
     {
       "path": "tests/test_publication_exclusions.py",
-      "bytes": 3932,
+      "bytes": 4615,
       "mode": 420,
-      "sha256": "46526b554e1f04f5a8244ffb52926d650e0ea9fd5e1710a67a1ed0c280cadd02"
+      "sha256": "dd31244db7b75d7a61e1bc46e7c4dce30ea07cf318c22811534418b870f00938"
     },
     {
       "path": "tests/test_release_validation.py",
@@ -1051,9 +1051,9 @@
     },
     {
       "path": "welp_next/publication.py",
-      "bytes": 19956,
+      "bytes": 24648,
       "mode": 420,
-      "sha256": "39a1cf35f057f2af18f08c084fe19e9122cea587d371bbc76dda7bb6051d6f6c"
+      "sha256": "9a8104baca60695573955f11d55afe7d4b6fbad552813e1bdaeb07548cee40f7"
     },
     {
       "path": "welp_next/release_validation.py",
@@ -1188,11 +1188,11 @@
   ],
   "validation": {
     "result": "PASS",
-    "software_tests_run": 430,
-    "passed": 427,
+    "software_tests_run": 437,
+    "passed": 434,
     "skipped": 3,
     "failures": 0,
     "errors": 0,
-    "note": "Public-source behavioral regression; private evidence-dependent checks are skipped. Separate canonical validation passed 430/430 with no skips and preserved-campaign offline replay."
+    "note": "Public-source behavioral regression; private evidence-dependent checks are skipped. Separate canonical validation passed 436/436 with preserved-campaign offline replay (historical, previous turn)."
   }
 }

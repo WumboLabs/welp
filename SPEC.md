@@ -1,7 +1,9 @@
 # WELP — Successor Design Specification
 
-**Status: WELP v1.1.0 source release (2026-11-11) — carries the owner-accepted
-v1.1 corrections and the prospective HelicopterBench /3 rubric; the accepted
+**Status: WELP v1.1.1 source release (2026-11-11) — carries the owner-accepted
+v1.1 corrections, the prospective HelicopterBench /3 rubric and the
+section-scoped publication-acceptance correction (§4.1.1, §9.3,
+`docs/publication.md`); the accepted
 v1.0 scientific evidence, methodology pins and the published `v1.0.0` tag
 remain unchanged.**
 Licensed under Apache License, Version 2.0 (see `LICENSE`).
@@ -261,6 +263,17 @@ release disposition.
 | Agentic | `agentic-readiness` + `agentic` (three frozen specialist tasks) | AUTHENTICALLY_VALIDATED (scored, 2026-11-06 campaigns); scientific acceptance pending human review |
 | HelicopterBench | `helicopterbench` one-shot complete HTML5 game construction (§4.11) | methodology /1: AUTHENTICALLY_VALIDATED (2026-11-07, Qwen3.5-9B RTX 5070 16K CUDA: completed submission 6,202/8,192 tokens finish=stop; mechanical 34/90 PARTIAL; visual 10 points PENDING independent review — total PROVISIONAL 34/100; preserved historical evidence, never rescored). Methodology /2: HUMAN_ACCEPTED methodology, AUTHENTICALLY_VALIDATED (2026-11-11 LFM2.5: 19/90 raw, 21.1/100 normalized PARTIAL; objective 14 checks, no visual score); result acceptance pending owner review. Historical gameplay video + MP4 publication evidence HUMAN_ACCEPTED (2026-11-08) |
 | Runtime Performance | `runtime-comparison` section (§4.12: dedicated deployment-attributed measurement; reuses the M2 performance identities verbatim) | AUTHENTICALLY_VALIDATED (2026-11-08, Qwen3.5-9B RTX 5070 16K CUDA, campaign `qwen35-9b-rtx5070-cuda-runtime-performance-2026-11-08`: six streaming measurements MEASURED/PASS; corrected comparison semantics fixed prospectively; scientific acceptance pending human review). Comparison classification: §4.12 SAME_DEPLOYMENT / MATCHED_RUNTIME / DEPLOYMENT_STACK / INSUFFICIENT_COMPARABILITY |
+
+2026-11-11 owner decision (`DEFERRED_BY_OWNER`): HelicopterBench is excluded
+from routine evaluation scheduling. The existing explicit
+`--section helicopterbench` selection remains available only for separately
+authorized experimental campaigns; no new runner flag is introduced. This is
+a scheduling and applicability decision, not an outcome change: no existing
+attempt becomes FAIL, INVALID or NOT_RUN, and previously recorded scientific
+acceptance stays final and is not reopened. All /1 /2 /3 methods, scores,
+games, manifests, human reviews and gameplay videos are preserved verbatim.
+Publication-side acceptance-subset semantics are documented in §9.3 and
+`docs/publication.md`; the future Build/Play direction is §12 item 6.
 
 ### 4.2 Advancement decisions
 
@@ -751,6 +764,9 @@ REAL_MODEL dispatch additionally requires a recorded
 objective-score v2 methodology); every real-model evaluation additionally
 requires owner-authorized compute and fresh qualified resource admission.
 SOFTWARE_TEST validation is exempt. CLI: `--section helicopterbench`.
+2026-11-11 `DEFERRED_BY_OWNER`: excluded from routine evaluation
+scheduling (§4.1.1); the explicit selection remains for separately
+authorized experimental campaigns.
 
 **Software validation (2026-11-07):** focused suite 16 tests through the
 REAL section path and REAL sandbox: the reference-correct game (3940 bytes,
@@ -1905,6 +1921,16 @@ review (§4.11.1). No new campaign ran and no accepted v1.0 evidence,
 methodology pin or published result changed; the first official /3 result
 still requires separate prospective authorization.
 
+2026-11-11 v1.1.1 source release: the owner-accepted section-scoped
+publication correction (`DEFERRED_BY_OWNER` deferral of optional specialist
+sections from an acceptance subset; §4.1.1, §9.3, `docs/publication.md`)
+plus an export reporting-honesty correction: configured context capacity is
+exported as `context.configured_capacity_tokens` from the qualified
+deployment profile, and `context.practical_default_tokens` stays null
+unless a separately supported practical-profile finding exists. No new
+campaign ran, and no methodology, scoring or accepted evidence changed;
+the release is backward-compatible.
+
 ## 12. Open calibration items (bounded future work — no values invented here)
 
 1. **Advanced-section eligibility:** §10's diagnostic `capability-witness/2`
@@ -1926,10 +1952,23 @@ still requires separate prospective authorization.
    bounded escalation operation are defined in the accepted M2 review methodology. Each evaluation still
    needs an available qualified evaluator; lack of review never invents a
    grade. Broader deployment/default-reviewer selection remains unproven.
+6. **HelicopterBench future direction (owner-directed 2026-11-11; no
+   implementation now):** ONE HelicopterBench suite with two independently
+   evaluated parts: **Build**, assessing complete-game software
+   construction (controls, physics, obstacles, scoring and restart) with
+   independent verification and genuine human gameplay when appropriate;
+   and **Play**, assessing a computer-use agent's visual observation,
+   decisions, input control, timing, adaptation and performance on a known
+   functional game, responding to events rather than blindly following
+   fixed inputs. Each part has independent eligibility and scoring:
+   text-only Build and code-free Play are valid; gameplay skill is never
+   credited as build skill. No universal Build+Play total is authorized.
+   Future scoring methods require prospective scientific approval;
+   existing historical results retain their original methodology pins.
 
 ---
 
-*This specification is released with WELP v1.1.0 (Apache License 2.0),
+*This specification is released with WELP v1.1.1 (Apache License 2.0),
 carrying the accepted v1.0 scientific record unchanged. Dated
 milestone assignments, historical campaign narratives and internal workspace
 reports referenced by earlier drafts are not part of this public

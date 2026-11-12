@@ -68,6 +68,18 @@ class PublicationExclusions(unittest.TestCase):
         self.assertEqual(row['original_outcome'], 'INVALID')
         self.assertEqual(row['coverage_impact'], 'INVALID_MEASUREMENT')
 
+    def test_configured_capacity_does_not_become_a_practical_context_claim(self):
+        from test_release_validation import run_section
+        campaign, profile = run_section(label='context-export')
+        self.addCleanup(lambda: shutil.rmtree(campaign.parent))
+        from welp_next import reporting
+        reporting.report_campaign(campaign)
+        export = publication.export_campaign(campaign)
+        self.assertIsNone(export['context']['practical_default_tokens'])
+        self.assertFalse(export['context']['envelope_complete'])
+        self.assertEqual(export['context']['configured_capacity_tokens'],
+                         profile['runtime']['context_capacity'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,8 +10,13 @@ appear only where a section explicitly compares configurations for one model.
 
 WELP v1.0 was HUMAN_ACCEPTED on 2026-11-11 after end-to-end validation with three
 diverse real-model families and is published as `WumboLabs/welp` tag `v1.0.0`.
-This tree is the **v1.1.0 source release**: it carries the owner-accepted
-prospective corrections — capability-based native context admission and
+This tree is the **v1.1.1 source release**: the v1.1.0 release plus the
+owner-accepted section-scoped publication correction and an export
+reporting-honesty fix (configured context capacity is exported as
+`configured_capacity_tokens`; `practical_default_tokens` stays null without
+a separately supported practical-profile finding). It carries the
+owner-accepted prospective corrections — capability-based native context
+admission and
 explicit full-inventory pre-dispatch enforcement (SPEC §3.4), backend-name
 neutrality, excluded-identity export rows, cache-aware native timing
 interpretation with optional AMD boundary observations (§4.12), the portable
@@ -38,7 +43,16 @@ Eight scientific sections, independently finalized and reported:
   with frozen mechanical scoring; the prospective `helicopterbench/3`
   methodology adds a true 100-point rubric and an independent attributed
   human playtesting review channel (the default remains the frozen `/2`;
-  historical /1 and /2 campaigns are never rescored).
+  historical /1 and /2 campaigns are never rescored). Owner decision
+  (2026-11-11, `DEFERRED_BY_OWNER`): excluded from routine evaluation
+  scheduling; the existing explicit `--section helicopterbench` selection
+  remains for separately authorized experimental campaigns, with no new
+  flag. A deferral is a scheduling decision, never a reclassification: all
+  /1 /2 /3 methods, scores, games, manifests, human reviews and gameplay
+  videos are preserved verbatim. Future direction (owner-directed, no
+  implementation now): separate **Build** and **Play** capabilities with
+  independent eligibility and scoring; no combined Build+Play total is
+  authorized.
 - **Runtime Performance** (`runtime-performance`) — measured serving
   conditions (tokens/s, latency, boundary memory), always reported separately
   from quality and never mixed into scoring.
@@ -187,16 +201,24 @@ recorded, evidence-bound `HUMAN_ACCEPTED` scientific review receipt
 public-safe basis and the reviewed section manifests — admits routine
 public-safe publication to the central registry (`WumboLabs/evaluations`) and
 site (wumbolabs.dev/evaluations) through the standing closeout flow, with no
-additional approval. The receipt contains neither private decision-source
-bytes nor reviewer identity. Exports never contain credentials, private
-paths, raw prompts, or model weights; unsafe values fail closed. The full
+additional approval. The receipt's `section_manifests` names the accepted
+section subset; optional `excluded_sections` records each owner-deferred
+optional specialist section (`DEFERRED_BY_OWNER` plus a public-safe reason)
+with its original manifest and report provenance. `baseline` and
+`runtime-performance` cannot be omitted when present, and required baseline
+dependencies stay verified in place. Exclusions never bypass validation;
+accepted sections keep every original row including FAILs; deferred
+sections contribute provenance, never scores. The receipt contains neither
+private decision-source bytes nor reviewer identity. Exports never contain
+credentials, private paths, raw prompts, or model weights; unsafe values
+fail closed. The full
 contract, including the evaluation → verify → review → HUMAN_ACCEPTED →
 automatic publication flow, is in `docs/publication.md`.
 
 ## License, provenance and limits
 
 Released under the Apache License, Version 2.0 — see `LICENSE` and `NOTICE`.
-WELP (v1.0, carried unchanged into this v1.1.0 source release) is the
+WELP (v1.0, carried unchanged into this v1.1.1 source release) is the
 successor of the legacy WumboLabs WELP framework: the
 reused scientific fixtures listed in `SPEC.md` §8 carry recorded provenance
 (source + SHA-256), and the framework itself was authored fresh under this
